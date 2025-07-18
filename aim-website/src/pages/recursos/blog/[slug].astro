@@ -1,0 +1,164 @@
+---
+// src/pages/recursos/blog/[slug].astro
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+
+export const prerender = false;
+
+export async function getStaticPaths() {
+  const blogEntries = await getCollection('blog');
+  return blogEntries.map(entry => ({
+    params: { slug: entry.slug },
+    props: { entry },
+  }));
+}
+
+// Get the blog entry based on the slug from the URL
+const { slug } = Astro.params;
+const blogEntries = await getCollection('blog');
+const entry = blogEntries.find(e => e.slug === slug);
+
+// If no entry found, return 404
+if (!entry) {
+  return new Response(null, { status: 404 });
+}
+
+const { Content } = await entry.render();
+---
+
+<BaseLayout 
+  title={entry.data?.title || 'Blog Post'} 
+  description={entry.data?.description || 'Artículo de blog sobre automatización industrial'}
+>
+  <!-- Article Header -->
+  <div class="bg-gradient-to-b from-teal-600 to-teal-700 text-white pt-24 pb-16">
+    <div class="container mx-auto px-4 max-w-4xl">
+      <!-- Breadcrumb -->
+      <nav class="mb-6">
+        <a href="/recursos/blog" class="text-teal-200 hover:text-white transition-colors text-sm">
+          ← Volver al Blog
+        </a>
+      </nav>
+      
+      <!-- Article Meta -->
+      <div class="mb-6">
+        {entry.data?.pubDate && (
+          <time class="text-teal-200 text-sm font-medium">
+            {new Date(entry.data.pubDate).toLocaleDateString('es-ES', { 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            })}
+          </time>
+        )}
+        {entry.data?.author && (
+          <>
+            <span class="text-teal-200 text-sm mx-2">•</span>
+            <span class="text-teal-200 text-sm">Por {entry.data.author}</span>
+          </>
+        )}
+      </div>
+      
+      <!-- Title -->
+      <h1 class="text-3xl md:text-5xl font-black leading-tight mb-6">
+        {entry.data?.title || 'Artículo de Blog'}
+      </h1>
+      
+      <!-- Description -->
+      {entry.data?.description && (
+        <p class="text-xl text-teal-100 leading-relaxed">
+          {entry.data.description}
+        </p>
+      )}
+      
+      <!-- Tags -->
+      {entry.data?.tags && entry.data.tags.length > 0 && (
+        <div class="mt-6 flex flex-wrap gap-2">
+          {entry.data.tags.map(tag => (
+            <span class="inline-block px-3 py-1 bg-teal-500 text-white text-sm font-medium rounded-full">
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  </div>
+
+  <!-- Article Content -->
+  <div class="py-20 bg-white">
+    <div class="container mx-auto px-4">
+      <article class="max-w-4xl mx-auto">
+        <!-- Content with proper typography -->
+        <div class="prose lg:prose-lg max-w-none prose-headings:text-teal-800 prose-p:text-teal-700 prose-a:text-teal-600 hover:prose-a:text-teal-800 prose-strong:text-teal-800 prose-code:text-teal-600 prose-code:bg-teal-50 prose-pre:bg-teal-50 prose-pre:border prose-pre:border-teal-200">
+          <Content />
+        </div>
+        
+        <!-- Article Footer -->
+        <div class="mt-16 pt-8 border-t border-teal-200">
+          <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <!-- Share buttons -->
+            <div class="flex items-center space-x-4">
+              <span class="text-sm font-medium text-teal-700">Compartir:</span>
+              <a 
+                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(entry.data?.title || 'Artículo de blog')}&url=${encodeURIComponent(Astro.url.href)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-teal-600 hover:text-teal-800 transition-colors"
+                aria-label="Compartir en Twitter"
+              >
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                </svg>
+              </a>
+              <a 
+                href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(Astro.url.href)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-teal-600 hover:text-teal-800 transition-colors"
+                aria-label="Compartir en LinkedIn"
+              >
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                </svg>
+              </a>
+            </div>
+            
+            <!-- CTA -->
+            <a 
+              href="/contacto" 
+              class="bg-teal-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-teal-700 transition-colors"
+            >
+              ¿Tienes preguntas? Contáctanos
+            </a>
+          </div>
+        </div>
+      </article>
+    </div>
+  </div>
+
+  <!-- Related Posts CTA -->
+  <div class="bg-teal-50 py-16">
+    <div class="container mx-auto px-4 text-center">
+      <h2 class="text-3xl md:text-4xl font-bold text-teal-800 mb-6">
+        ¿Te pareció útil este artículo?
+      </h2>
+      <p class="text-lg text-teal-600 mb-8 max-w-2xl mx-auto">
+        Explora más contenido sobre automatización industrial y descubre cómo podemos ayudarte a optimizar tus procesos.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a 
+          href="/recursos/blog" 
+          class="bg-white text-teal-600 font-bold py-3 px-6 rounded-lg hover:bg-teal-50 transition-colors border border-teal-200"
+        >
+          Ver Más Artículos
+        </a>
+        <a 
+          href="/herramientas/calculadora-roi" 
+          class="bg-teal-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-teal-700 transition-colors"
+        >
+          Calcular tu ROI
+        </a>
+      </div>
+    </div>
+  </div>
+</BaseLayout> 

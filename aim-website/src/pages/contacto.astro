@@ -1,0 +1,58 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { Icon } from 'astro-icon/components';
+---
+
+<BaseLayout
+  title="Agendar Demo"
+  description="Hablemos de tu proyecto. Estamos listos para escuchar tus desafíos y diseñar una solución de automatización a medida."
+>
+ <div class="py-20 sm:py-28">
+    <div class="container mx-auto px-4">
+      <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-16">
+        <!-- Columna de información -->
+        <div>
+          <span class="text-brand-primary font-bold">CONTACTO</span>
+          <h1 class="mt-2 text-4xl md:text-5xl font-black text-brand-dark tracking-tighter">Hablemos de tu Proyecto</h1>
+          <p class="mt-4 text-lg text-brand-gray">
+            La mejor forma de entender el poder de un Agente Inteligente es viéndolo en acción. Agenda una demo y te mostraremos cómo podemos automatizar TUS procesos.
+          </p>
+          <div class="mt-8 pt-8 border-t border-slate-200 space-y-4">
+             <a href="mailto:contacto@automatizacionmireles.com" class="flex items-center group">
+                <Icon name="tabler:mail" class="w-6 h-6 text-brand-primary"/>
+                <span class="ml-3 text-brand-gray group-hover:text-brand-primary">contacto@automatizacionmireles.com</span>
+             </a>
+             <p class="flex items-center group">
+                <Icon name="tabler:phone" class="w-6 h-6 text-brand-primary"/>
+                <span class="ml-3 text-brand-gray">+52 (55) 1234 5678</span>
+             </p>
+          </div>
+        </div>
+
+        <!-- Columna de formulario -->
+        <div class="bg-white p-8 rounded-lg border border-slate-200 shadow-lg">
+            <h2 class="text-2xl font-bold text-brand-dark mb-6">Solicita tu Demo Gratuita</h2>
+            <form action="#" method="POST" class="space-y-6">
+                <div>
+                    <label for="name" class="block text-sm font-medium text-brand-gray">Nombre Completo*</label>
+                    <input type="text" name="name" id="name" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-primary focus:ring-brand-primary">
+                </div>
+                 <div>
+                    <label for="email" class="block text-sm font-medium text-brand-gray">Email de Trabajo*</label>
+                    <input type="email" name="email" id="email" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-primary focus:ring-brand-primary">
+                </div>
+                 <div>
+                    <label for="message" class="block text-sm font-medium text-brand-gray">¿Qué proceso te gustaría automatizar?*</label>
+                    <textarea name="message" id="message" rows="4" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-primary focus:ring-brand-primary"></textarea>
+                </div>
+                <div>
+                    <button type="submit" class="w-full bg-brand-primary text-white font-bold py-3 px-5 rounded-lg hover:bg-brand-secondary transition-all duration-300 focus:ring-2 focus:ring-offset-2 focus:ring-brand-primary">
+                        Agendar Mi Demo
+                    </button>
+                </div>
+            </form>
+        </div>
+      </div>
+    </div>
+ </div>
+</BaseLayout> 

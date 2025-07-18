@@ -1,0 +1,640 @@
+---
+import PortalLayoutSidebar from '../../layouts/PortalLayoutSidebar.astro';
+import PortalAuthGuard from '../../components/PortalAuthGuard.jsx';
+import { Icon } from 'astro-icon/components';
+
+// Los datos se cargarán dinámicamente desde el cliente
+// para evitar problemas con la API en tiempo de build
+---
+
+<PortalLayoutSidebar title="Órdenes - Portal AIM">
+  <PortalAuthGuard client:load>
+      <!-- Header con estadísticas -->
+  <div class="mb-8">
+    <div class="bg-gradient-to-r from-teal-600 to-emerald-600 rounded-xl p-6 text-white">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold mb-2">Gestión de Órdenes</h1>
+          <p class="text-teal-100">Administra y monitorea todas las órdenes de automatización</p>
+        </div>
+        <div class="text-right">
+          <div class="text-teal-100 text-sm">Órdenes activas</div>
+          <div class="text-3xl font-bold" id="activeOrders">0</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500 mb-1">Total Órdenes</p>
+          <p class="text-2xl font-bold text-gray-900" id="totalOrders">0</p>
+          <p class="text-sm text-green-600 flex items-center mt-2">
+            <Icon name="tabler:arrow-up" class="w-4 h-4 mr-1" />
+            <span id="totalOrdersGrowth">Cargando...</span>
+          </p>
+        </div>
+        <div class="p-3 bg-teal-50 rounded-lg">
+          <Icon name="tabler:shopping-cart" class="w-6 h-6 text-teal-600" />
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500 mb-1">En Proceso</p>
+          <p class="text-2xl font-bold text-gray-900" id="inProcessOrders">0</p>
+          <p class="text-sm text-blue-600 flex items-center mt-2">
+            <Icon name="tabler:clock" class="w-4 h-4 mr-1" />
+            <span id="inProcessInfo">Cargando...</span>
+          </p>
+        </div>
+        <div class="p-3 bg-blue-50 rounded-lg">
+          <Icon name="tabler:refresh" class="w-6 h-6 text-blue-600" />
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500 mb-1">Completadas</p>
+          <p class="text-2xl font-bold text-gray-900" id="completedOrders">0</p>
+          <p class="text-sm text-green-600 flex items-center mt-2">
+            <Icon name="tabler:check" class="w-4 h-4 mr-1" />
+            <span id="completedInfo">Cargando...</span>
+          </p>
+        </div>
+        <div class="p-3 bg-green-50 rounded-lg">
+          <Icon name="tabler:check" class="w-6 h-6 text-green-600" />
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500 mb-1">Valor Total</p>
+          <p class="text-2xl font-bold text-gray-900" id="totalValue">$0.00</p>
+          <p class="text-sm text-green-600 flex items-center mt-2">
+            <Icon name="tabler:currency-dollar" class="w-4 h-4 mr-1" />
+            <span id="totalValueGrowth">Cargando...</span>
+          </p>
+        </div>
+        <div class="p-3 bg-emerald-50 rounded-lg">
+          <Icon name="tabler:chart-line" class="w-6 h-6 text-emerald-600" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Acciones principales -->
+  <div class="flex justify-between items-center mb-6">
+    <h2 class="text-xl font-semibold text-gray-900">Resumen de Órdenes</h2>
+    <button 
+      id="newOrderBtn"
+      class="bg-gradient-to-r from-teal-600 to-emerald-600 text-white px-6 py-3 rounded-lg hover:from-teal-700 hover:to-emerald-700 transition-colors duration-200 flex items-center space-x-2 shadow-lg"
+    >
+      <Icon name="tabler:plus" class="w-5 h-5" />
+      <span>Nueva Orden</span>
+    </button>
+  </div>
+
+  <!-- Filtros -->
+  <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+      <!-- Filtro por Cliente -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Cliente</label>
+        <select id="clientFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent filter-input">
+          <option value="">Todos los clientes</option>
+          <!-- Los clientes se cargarán dinámicamente -->
+        </select>
+      </div>
+
+      <!-- Filtro por Fecha -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Período</label>
+        <select id="periodFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent filter-input">
+          <option value="">Todas las fechas</option>
+          <!-- Las opciones se cargarán dinámicamente -->
+        </select>
+      </div>
+
+      <!-- Filtro por Urgencia -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Urgencia</label>
+        <select id="priorityFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent filter-input">
+          <option value="">Todas</option>
+          <!-- Las opciones se cargarán dinámicamente -->
+        </select>
+      </div>
+
+      <!-- Filtro por Estatus -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Estatus</label>
+        <select id="statusFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent filter-input">
+          <option value="">Todos</option>
+          <!-- Las opciones se cargarán dinámicamente -->
+        </select>
+      </div>
+
+      <!-- Búsqueda -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Búsqueda</label>
+        <input 
+          type="text" 
+          id="searchInput" 
+          placeholder="Buscar por nombre, empresa, etc."
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent filter-input"
+        />
+      </div>
+      
+      <!-- Botón de filtrar -->
+      <div class="flex items-end">
+        <button id="filterBtn" class="w-full bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition-colors duration-200 flex items-center justify-center space-x-2">
+          <Icon name="tabler:filter" class="w-4 h-4" />
+          <span>Filtrar</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla de órdenes -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+      <h3 class="text-lg font-semibold text-gray-900">Lista de Órdenes</h3>
+      <div class="flex space-x-2">
+        <button class="px-3 py-1 text-sm bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors duration-200 flex items-center space-x-1">
+          <Icon name="tabler:download" class="w-4 h-4" />
+          <span>Exportar</span>
+        </button>
+      </div>
+    </div>
+    
+    <!-- Spinner de carga -->
+    <div id="loadingSpinner" class="hidden flex items-center justify-center py-8">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
+      <span class="ml-2 text-gray-600">Cargando...</span>
+    </div>
+    
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID / Cliente</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Agente</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Urgencia</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estatus</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="ordersTableBody" class="bg-white divide-y divide-gray-200">
+          <!-- Los datos se cargarán dinámicamente -->
+          <tr>
+            <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+              <div class="flex flex-col items-center">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mb-4"></div>
+                <p class="text-lg font-medium">Cargando órdenes...</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Paginación -->
+    <div class="px-6 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+      <div class="text-sm text-gray-500" id="pageInfo">
+        Cargando...
+      </div>
+      <div class="flex space-x-1">
+        <button id="prevPage" class="px-3 py-1 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">Anterior</button>
+        <button class="px-3 py-1 text-sm bg-teal-600 text-white rounded-lg">1</button>
+        <button id="nextPage" class="px-3 py-1 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">Siguiente</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para nueva orden -->
+  <div id="createOrderModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+      <div class="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-6 border-b border-gray-200 flex justify-between items-center">
+          <h3 class="text-xl font-semibold text-gray-900">Nueva Orden</h3>
+          <button class="text-gray-400 hover:text-gray-600 close-modal">
+            <Icon name="tabler:x" class="w-6 h-6" />
+          </button>
+        </div>
+        
+        <form id="createOrderForm" class="p-6 space-y-8">
+          <!-- Cliente existente selector -->
+          <div class="border-b border-gray-200 pb-8">
+            <h4 class="text-lg font-medium text-gray-900 mb-6 flex items-center">
+              <Icon name="tabler:user" class="w-5 h-5 mr-2 text-teal-600" />
+              Cliente
+            </h4>
+            <div class="mb-6">
+              <label class="block text-sm font-medium text-gray-700 mb-2">¿Cliente existente?</label>
+              <select name="existingClientId" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                <option value="">Nuevo cliente</option>
+                <!-- Se poblarán con JavaScript -->
+              </select>
+            </div>
+          </div>
+
+          <!-- Información del Cliente -->
+          <div class="border-b border-gray-200 pb-8">
+            <h4 class="text-lg font-medium text-gray-900 mb-6 flex items-center">
+              <Icon name="tabler:building" class="w-5 h-5 mr-2 text-teal-600" />
+              Información del Cliente
+            </h4>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Información básica -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Nombre del Contacto *</label>
+                <input type="text" name="clientName" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="Nombre completo" required>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Razón Social *</label>
+                <input type="text" name="clientCompany" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="Razón social de la empresa" required>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Email del Contacto *</label>
+                <input type="email" name="clientEmail" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="contacto@empresa.com" required>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">RFC</label>
+                <input type="text" name="clientRfc" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="RFC de la empresa">
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono</label>
+                <input type="tel" name="clientPhone" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="+52 (555) 123-4567">
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Sitio Web</label>
+                <input type="url" name="clientWebsite" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="https://www.empresa.com">
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Industria</label>
+                <select name="clientIndustry" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                  <option value="">Seleccionar industria</option>
+                  <option value="manufactura">Manufactura</option>
+                  <option value="retail">Retail/Comercio</option>
+                  <option value="servicios">Servicios</option>
+                  <option value="tecnologia">Tecnología</option>
+                  <option value="salud">Salud</option>
+                  <option value="educacion">Educación</option>
+                  <option value="finanzas">Finanzas</option>
+                  <option value="logistica">Logística</option>
+                  <option value="construccion">Construcción</option>
+                  <option value="agricultura">Agricultura</option>
+                  <option value="energia">Energía</option>
+                  <option value="automotriz">Automotriz</option>
+                </select>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Tamaño de la Empresa</label>
+                <select name="clientSize" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                  <option value="">Seleccionar tamaño</option>
+                  <option value="micro">Micro (1-10 empleados)</option>
+                  <option value="pequena">Pequeña (11-50 empleados)</option>
+                  <option value="mediana">Mediana (51-250 empleados)</option>
+                  <option value="grande">Grande (251-1000 empleados)</option>
+                  <option value="corporativo">Corporativo (1000+ empleados)</option>
+                </select>
+              </div>
+            </div>
+            
+            <!-- Dirección completa -->
+            <div class="mt-6">
+              <h5 class="text-md font-medium text-gray-900 mb-4">Dirección del Proyecto</h5>
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Calle y Número</label>
+                  <input type="text" name="projectStreet" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="Av. Principal 123">
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Número Interior</label>
+                  <input type="text" name="projectInterior" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="Int. 4B">
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Colonia</label>
+                  <input type="text" name="projectNeighborhood" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="Centro">
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Código Postal</label>
+                  <input type="text" name="projectPostalCode" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="12345">
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Ciudad</label>
+                  <input type="text" name="projectCity" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="Ciudad de México">
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Estado</label>
+                  <select name="projectState" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                    <option value="">Seleccionar estado</option>
+                    <option value="CDMX">Ciudad de México</option>
+                    <option value="AGS">Aguascalientes</option>
+                    <option value="BC">Baja California</option>
+                    <option value="BCS">Baja California Sur</option>
+                    <option value="CAMP">Campeche</option>
+                    <option value="CHIS">Chiapas</option>
+                    <option value="CHIH">Chihuahua</option>
+                    <option value="COAH">Coahuila</option>
+                    <option value="COL">Colima</option>
+                    <option value="DGO">Durango</option>
+                    <option value="GTO">Guanajuato</option>
+                    <option value="GRO">Guerrero</option>
+                    <option value="HGO">Hidalgo</option>
+                    <option value="JAL">Jalisco</option>
+                    <option value="MEX">México</option>
+                    <option value="MICH">Michoacán</option>
+                    <option value="MOR">Morelos</option>
+                    <option value="NAY">Nayarit</option>
+                    <option value="NL">Nuevo León</option>
+                    <option value="OAX">Oaxaca</option>
+                    <option value="PUE">Puebla</option>
+                    <option value="QRO">Querétaro</option>
+                    <option value="QROO">Quintana Roo</option>
+                    <option value="SLP">San Luis Potosí</option>
+                    <option value="SIN">Sinaloa</option>
+                    <option value="SON">Sonora</option>
+                    <option value="TAB">Tabasco</option>
+                    <option value="TAMPS">Tamaulipas</option>
+                    <option value="TLAX">Tlaxcala</option>
+                    <option value="VER">Veracruz</option>
+                    <option value="YUC">Yucatán</option>
+                    <option value="ZAC">Zacatecas</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">País</label>
+                  <select name="projectCountry" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                    <option value="MX">México</option>
+                    <option value="US">Estados Unidos</option>
+                    <option value="CA">Canadá</option>
+                    <option value="ES">España</option>
+                    <option value="CO">Colombia</option>
+                    <option value="AR">Argentina</option>
+                    <option value="CL">Chile</option>
+                    <option value="PE">Perú</option>
+                  </select>
+                </div>
+                
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Referencias</label>
+                  <textarea name="projectReferences" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent" rows="2" placeholder="Referencias adicionales para localizar la dirección"></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Detalles de la Orden -->
+          <div class="border-b border-gray-200 pb-8">
+            <h4 class="text-lg font-medium text-gray-900 mb-6 flex items-center">
+              <Icon name="tabler:shopping-cart" class="w-5 h-5 mr-2 text-teal-600" />
+              Detalles de la Orden
+            </h4>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Título de la Orden</label>
+                <input type="text" name="orderTitle" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="Título descriptivo de la orden">
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Agente Solicitado</label>
+                <select name="agentId" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                  <option value="">Seleccionar agente</option>
+                  <!-- Se poblarán con JavaScript -->
+                </select>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Nivel de Urgencia</label>
+                <select name="priority" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                  <option value="">Seleccionar urgencia</option>
+                  <!-- Se poblarán con JavaScript -->
+                </select>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Orden</label>
+                <select name="type" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                  <option value="">Seleccionar tipo</option>
+                  <!-- Se poblarán con JavaScript -->
+                </select>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Fecha de Entrega Deseada</label>
+                <input type="date" name="deliveryDate" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Presupuesto Estimado</label>
+                <div class="relative">
+                  <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                  <input type="number" name="budget" class="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="0.00" step="0.01">
+                </div>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Departamento Solicitante</label>
+                <select name="departmentRequesting" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                  <option value="">Seleccionar departamento</option>
+                  <option value="finanzas">Finanzas</option>
+                  <option value="ventas">Ventas</option>
+                  <option value="operaciones">Operaciones</option>
+                  <option value="rrhh">Recursos Humanos</option>
+                  <option value="it">Tecnología</option>
+                  <option value="direccion">Dirección General</option>
+                </select>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Asignar a Usuario</label>
+                <select name="assignedToId" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                  <option value="">Sin asignar</option>
+                  <!-- Se poblarán con JavaScript -->
+                </select>
+              </div>
+            </div>
+            
+            <div class="mt-6">
+              <label class="block text-sm font-medium text-gray-700 mb-2">Descripción del Proyecto *</label>
+              <textarea name="description" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent" rows="4" placeholder="Describe detalladamente los requerimientos, objetivos y alcance del proyecto de automatización..." required></textarea>
+            </div>
+            
+            <div class="mt-6">
+              <label class="block text-sm font-medium text-gray-700 mb-2">Requerimientos Especiales</label>
+              <textarea name="requirements" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent" rows="3" placeholder="Menciona cualquier requerimiento especial, integraciones necesarias, restricciones técnicas, etc."></textarea>
+            </div>
+          </div>
+
+          <!-- Información Adicional -->
+          <div>
+            <h4 class="text-lg font-medium text-gray-900 mb-6 flex items-center">
+              <Icon name="tabler:alert-circle" class="w-5 h-5 mr-2 text-teal-600" />
+              Información Adicional
+            </h4>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">¿Cómo nos conoció?</label>
+                <select name="referenceSource" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                  <option value="">Seleccionar fuente</option>
+                  <option value="web">Sitio Web</option>
+                  <option value="redes">Redes Sociales</option>
+                  <option value="referido">Referido por cliente</option>
+                  <option value="evento">Evento/Conferencia</option>
+                  <option value="publicidad">Publicidad</option>
+                  <option value="cold-calling">Llamada en frío</option>
+                  <option value="partnership">Partner/Alianza</option>
+                  <option value="otro">Otro</option>
+                </select>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Departamento de Contacto</label>
+                <input type="text" name="contactDepartment" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="Departamento del contacto">
+              </div>
+            </div>
+            
+            <div class="mt-6">
+              <label class="block text-sm font-medium text-gray-700 mb-2">Notas Internas</label>
+              <textarea name="internalNotes" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent" rows="3" placeholder="Notas internas para el equipo (no visibles para el cliente)"></textarea>
+            </div>
+          </div>
+
+          <!-- Botones de acción -->
+          <div class="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+            <button type="button" onclick="closeNewOrderModal()" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+              Cancelar
+            </button>
+            <button type="submit" class="px-6 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-lg hover:from-teal-700 hover:to-emerald-700 transition-colors duration-200">
+              Crear Orden
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  </PortalAuthGuard>
+
+  <!-- Cargar API Client primero -->
+  <script is:inline src="/scripts/ordersApiClient.js"></script>
+  
+  <!-- Luego cargar Orders Manager -->
+  <script is:inline src="/scripts/orders.js"></script>
+  
+  <!-- Finalmente inicializar -->
+  <script>
+    // Inicializar el manager de órdenes cuando la página esté lista
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        console.log('🚀 Inicializando OrdersManager...');
+        
+        // Esperar un poco para asegurar que todos los scripts se carguen
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Verificar que las dependencias estén disponibles
+        if (!window.ordersApiClient) {
+          throw new Error('ordersApiClient no está disponible');
+        }
+        
+        if (!window.OrdersManager) {
+          throw new Error('OrdersManager no está disponible');
+        }
+        
+        // Crear instancia del manager
+        window.ordersManager = new window.OrdersManager();
+        await window.ordersManager.init();
+        
+        console.log('✅ OrdersManager inicializado correctamente');
+      } catch (error) {
+        console.error('❌ Error inicializando OrdersManager:', error);
+        // Mostrar error en la interfaz
+        const tableBody = document.getElementById('ordersTableBody');
+        if (tableBody) {
+          tableBody.innerHTML = `
+            <tr>
+              <td colspan="7" class="px-6 py-8 text-center text-red-500">
+                <div class="flex flex-col items-center">
+                  <svg class="w-12 h-12 text-red-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                  </svg>
+                  <p class="text-lg font-medium">Error inicializando el sistema</p>
+                  <p class="text-sm">${error.message}</p>
+                  <button onclick="location.reload()" class="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                    Reintentar
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }
+      }
+    });
+  </script>
+
+  <script>
+    // Función para cerrar el modal (compatible con el OrdersManager)
+    function closeNewOrderModal() {
+      // Usar el método del OrdersManager si está disponible
+      if (window.ordersManager && window.ordersManager.hideCreateOrderModal) {
+        window.ordersManager.hideCreateOrderModal();
+      } else {
+        // Fallback si el OrdersManager no está disponible
+        const modal = document.getElementById('createOrderModal');
+        if (modal) {
+          modal.classList.add('hidden');
+          document.body.classList.remove('overflow-hidden');
+        }
+      }
+    }
+    
+    // Hacer la función global para compatibilidad
+    window.closeNewOrderModal = closeNewOrderModal;
+    
+    // Configurar eventos una vez que el DOM esté listo
+    document.addEventListener('DOMContentLoaded', function() {
+      // Cerrar modal al hacer clic fuera
+      const modal = document.getElementById('createOrderModal');
+      if (modal) {
+        modal.addEventListener('click', function(e) {
+          if (e.target === this) {
+            closeNewOrderModal();
+          }
+        });
+      }
+      
+      // Cerrar modal con botones close
+      const closeButtons = document.querySelectorAll('.close-modal');
+      closeButtons.forEach(button => {
+        button.addEventListener('click', closeNewOrderModal);
+      });
+    });
+  </script>
+</PortalLayoutSidebar> 

@@ -1,0 +1,45 @@
+---
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import HeaderSpacer from '../components/HeaderSpacer.astro';
+import BeamsBackground from '../components/homepage-v2/BeamsBackground.jsx';
+import '../assets/css/main.css';
+
+interface Props {
+	title: string;
+	description: string;
+  hideHeaderSpacer?: boolean;
+  hideHeader?: boolean;
+}
+
+const { title, description, hideHeaderSpacer = false, hideHeader = false } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="es">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="description" content={description} />
+		<meta name="viewport" content="width=device-width" />
+		
+		<!-- Favicon para diferentes navegadores y dispositivos -->
+		<link rel="icon" type="image/x-icon" href="/favicon.ico" />
+		<link rel="icon" type="image/png" sizes="32x32" href="/AIM.png" />
+		<link rel="icon" type="image/png" sizes="16x16" href="/AIM.png" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="apple-touch-icon" sizes="180x180" href="/AIM.png" />
+		<link rel="manifest" href="/site.webmanifest" />
+		
+		<meta name="generator" content={Astro.generator} />
+		<title>{title} | Automatización Industrial Mireles</title>
+	</head>
+	<body class="relative">
+    <BeamsBackground client:load />
+    {!hideHeader && <Header />}
+		<main>
+      {!hideHeaderSpacer && !hideHeader && <HeaderSpacer />}
+      <slot />
+    </main>
+    <Footer />
+	</body>
+</html>

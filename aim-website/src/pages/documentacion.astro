@@ -1,0 +1,169 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { Icon } from 'astro-icon/components';
+
+const docSections = [
+    {
+        title: "Guía de Inicio Rápido",
+        description: "El recorrido completo, desde el descubrimiento hasta el despliegue de tu primer agente.",
+        href: "#quick-start", // Link a una sección futura en esta misma página
+        icon: "tabler:rocket"
+    },
+    {
+        title: "Principios de Seguridad",
+        description: "Cómo gestionamos y protegemos tus credenciales, datos y sistemas.",
+        href: "#security",
+        icon: "tabler:shield-lock"
+    },
+    {
+        title: "Guías de Agentes",
+        description: "Tutoriales detallados para configurar y monitorear agentes específicos.",
+        href: "#agent-guides",
+        icon: "tabler:file-description"
+    },
+    {
+        title: "Referencia de API",
+        description: "Interactúa programáticamente con nuestros servicios (para usuarios avanzados).",
+        href: "/api", // Link a la nueva página de API
+        icon: "tabler:code"
+    }
+];
+---
+<BaseLayout
+  title="Centro de Documentación"
+  description="Guías, tutoriales y referencias técnicas para integrar y utilizar los servicios de AIM."
+>
+  <!-- Hero Section -->
+  <div class="py-20 text-center bg-teal-50">
+    <h1 class="text-4xl font-black text-teal-800">Centro de Documentación</h1>
+    <p class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">Todo lo que necesitas para una integración exitosa y segura con nuestros Agentes Inteligentes.</p>
+  </div>
+  
+  <!-- Hub de Documentación con Tarjetas -->
+  <div class="container mx-auto px-4 py-20">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        {docSections.map(section => (
+            <a href={section.href} class="block bg-white p-8 rounded-lg border border-slate-200 hover:border-teal-600 hover:shadow-xl transition-all group">
+                <Icon name={section.icon} class="w-10 h-10 text-teal-600 mb-4" />
+                <h2 class="text-2xl font-bold text-teal-800 group-hover:text-teal-600">{section.title}</h2>
+                <p class="mt-2 text-gray-600">{section.description}</p>
+            </a>
+        ))}
+    </div>
+  </div>
+
+  <!-- Contenido Detallado del Proceso de Integración con Flujo Visual -->
+  <div class="py-20 bg-white" id="quick-start">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-16">
+            <h2 class="text-3xl font-bold">Nuestro Proceso de Integración</h2>
+            <p class="mt-2 text-gray-600">Un viaje transparente y colaborativo en 5 pasos.</p>
+        </div>
+        
+        <!-- Línea de tiempo visual del proceso -->
+        <div class="relative wrap overflow-hidden p-10 h-full">
+            <div class="absolute border-2-2 border-opacity-20 border-teal-600 h-full border" style="left: 50%"></div>
+            
+            <!-- Item 1: Descubrimiento -->
+            <div class="mb-8 flex justify-between items-center w-full right-timeline">
+              <div class="order-1 w-5/12"></div>
+              <div class="z-20 flex items-center order-1 bg-teal-600 shadow-xl w-8 h-8 rounded-full"><h1 class="mx-auto font-semibold text-lg text-white">1</h1></div>
+              <div class="order-1 bg-teal-600 rounded-lg shadow-xl w-5/12 px-6 py-4 text-white">
+                <h3 class="font-bold text-lg">Descubrimiento</h3>
+                <p class="text-sm leading-snug tracking-wide">Analizamos tus procesos actuales para identificar los mejores candidatos para la automatización.</p>
+              </div>
+            </div>
+
+            <!-- Item 2: Propuesta y ROI -->
+            <div class="mb-8 flex justify-between flex-row-reverse items-center w-full left-timeline">
+              <div class="order-1 w-5/12"></div>
+              <div class="z-20 flex items-center order-1 bg-teal-600 shadow-xl w-8 h-8 rounded-full"><h1 class="mx-auto text-white font-semibold text-lg">2</h1></div>
+              <div class="order-1 bg-white rounded-lg shadow-xl w-5/12 px-6 py-4">
+                <h3 class="font-bold text-teal-800 text-lg">Propuesta y ROI</h3>
+                <p class="text-sm font-medium text-gray-600 leading-snug tracking-wide">Te presentamos una solución detallada, con alcance definido y una proyección clara del Retorno de Inversión.</p>
+              </div>
+            </div>
+
+            <!-- Item 3: Desarrollo y Pruebas -->
+             <div class="mb-8 flex justify-between items-center w-full right-timeline">
+              <div class="order-1 w-5/12"></div>
+              <div class="z-20 flex items-center order-1 bg-teal-600 shadow-xl w-8 h-8 rounded-full"><h1 class="mx-auto font-semibold text-lg text-white">3</h1></div>
+              <div class="order-1 bg-teal-600 rounded-lg shadow-xl w-5/12 px-6 py-4 text-white">
+                <h3 class="font-bold text-lg">Desarrollo y Pruebas</h3>
+                <p class="text-sm leading-snug tracking-wide">Construimos y probamos rigurosamente tu Agente en un entorno seguro (staging).</p>
+              </div>
+            </div>
+
+             <!-- Item 4: Despliegue -->
+            <div class="mb-8 flex justify-between flex-row-reverse items-center w-full left-timeline">
+              <div class="order-1 w-5/12"></div>
+              <div class="z-20 flex items-center order-1 bg-teal-600 shadow-xl w-8 h-8 rounded-full"><h1 class="mx-auto text-white font-semibold text-lg">4</h1></div>
+              <div class="order-1 bg-white rounded-lg shadow-xl w-5/12 px-6 py-4">
+                <h3 class="font-bold text-teal-800 text-lg">Despliegue y Soporte</h3>
+                <p class="text-sm font-medium text-gray-600 leading-snug tracking-wide">Ponemos en marcha el Agente en tu entorno de producción y comenzamos el monitoreo proactivo.</p>
+              </div>
+            </div>
+
+        </div>
+    </div>
+  </div>
+
+  <!-- Sección de Seguridad -->
+  <div class="py-20 bg-teal-50" id="security">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-16">
+            <h2 class="text-3xl font-bold text-teal-800">Principios de Seguridad</h2>
+            <p class="mt-2 text-gray-600">Protección empresarial para tus datos más críticos.</p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <Icon name="tabler:shield-check" class="w-12 h-12 text-teal-600 mb-4" />
+                <h3 class="text-xl font-bold text-teal-800 mb-2">Zero Trust</h3>
+                <p class="text-gray-600">Verificación continua de identidad y autorización para cada acceso.</p>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <Icon name="tabler:certificate" class="w-12 h-12 text-teal-600 mb-4" />
+                <h3 class="text-xl font-bold text-teal-800 mb-2">ISO 27001</h3>
+                <p class="text-gray-600">Certificación internacional en gestión de seguridad de la información.</p>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <Icon name="tabler:lock" class="w-12 h-12 text-teal-600 mb-4" />
+                <h3 class="text-xl font-bold text-teal-800 mb-2">SOC 2 Type II</h3>
+                <p class="text-gray-600">Auditoría independiente de controles de seguridad y disponibilidad.</p>
+            </div>
+        </div>
+    </div>
+  </div>
+
+  <!-- Sección de Guías de Agentes -->
+  <div class="py-20 bg-white" id="agent-guides">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-16">
+            <h2 class="text-3xl font-bold text-teal-800">Guías de Agentes</h2>
+            <p class="mt-2 text-gray-600">Tutoriales paso a paso para cada tipo de agente.</p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <div class="bg-white p-6 rounded-lg border border-gray-200 hover:border-teal-600 transition-colors">
+                <h3 class="text-xl font-bold text-teal-800 mb-2">AP-301: Cuentas por Pagar</h3>
+                <p class="text-gray-600 mb-4">Automatiza el procesamiento de facturas, desde recepción hasta aprobación.</p>
+                <ul class="text-sm text-gray-600 space-y-1">
+                    <li>• ROI típico: 300-450% primer año</li>
+                    <li>• Tiempo de implementación: 2-3 semanas</li>
+                    <li>• Reducción de errores: 95%+</li>
+                </ul>
+            </div>
+            <div class="bg-white p-6 rounded-lg border border-gray-200 hover:border-teal-600 transition-colors">
+                <h3 class="text-xl font-bold text-teal-800 mb-2">LT-402: Logística y Tracking</h3>
+                <p class="text-gray-600 mb-4">Monitoreo automático de envíos y comunicación proactiva con clientes.</p>
+                <ul class="text-sm text-gray-600 space-y-1">
+                    <li>• ROI típico: 200-350% primer año</li>
+                    <li>• Tiempo de implementación: 3-4 semanas</li>
+                    <li>• Mejora en satisfacción: 40%+</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+  </div>
+</BaseLayout> 

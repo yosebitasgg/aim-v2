@@ -1,0 +1,26 @@
+{
+  "name": "AIM - Automatización Industrial Mireles",
+  "short_name": "AIM",
+  "description": "Automatización Industrial Mireles - Soluciones de automatización industrial",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1f2937",
+  "icons": [
+    {
+      "src": "/AIM.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/AIM.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon.ico",
+      "sizes": "16x16 32x32",
+      "type": "image/x-icon"
+    }
+  ]
+} 

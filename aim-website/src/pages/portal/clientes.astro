@@ -1,0 +1,2475 @@
+---
+import PortalLayoutSidebar from '../../layouts/PortalLayoutSidebar.astro';
+import { Icon } from 'astro-icon/components';
+
+// Los datos se cargarán dinámicamente desde el cliente
+// para evitar problemas con la API en tiempo de build
+---
+
+<PortalLayoutSidebar title="Clientes - Portal AIM | Automatización Industrial Mireles">
+  <!-- Auth Guard Container -->
+  <div id="auth-container">
+    <!-- Loading state -->
+    <div id="auth-loading" class="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div class="text-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
+        <p class="text-gray-600">Verificando autenticación...</p>
+      </div>
+    </div>
+
+    <!-- Main content -->
+    <div id="main-content" class="hidden">
+      <!-- Header con estadísticas -->
+      <div class="mb-8">
+        <div class="bg-gradient-to-r from-teal-600 to-emerald-600 rounded-xl p-6 text-white">
+          <div class="flex items-center justify-between">
+            <div>
+              <h1 class="text-2xl font-bold mb-2">Gestión de Clientes</h1>
+              <p class="text-teal-100">Administra y monitorea todos los clientes y sus órdenes</p>
+            </div>
+            <div class="text-right">
+              <div class="text-teal-100 text-sm">Clientes activos</div>
+              <div class="text-3xl font-bold" id="headerActiveClients">0</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+  <!-- Stats Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500 mb-1">Total Clientes</p>
+          <p class="text-2xl font-bold text-gray-900" id="totalClients">0</p>
+          <p class="text-sm text-green-600 flex items-center mt-2">
+            <Icon name="tabler:arrow-up" class="w-4 h-4 mr-1" />
+            <span id="clientsGrowth">Cargando...</span>
+          </p>
+        </div>
+        <div class="p-3 bg-teal-50 rounded-lg">
+          <Icon name="tabler:users" class="w-6 h-6 text-teal-600" />
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500 mb-1">Clientes Activos</p>
+          <p class="text-2xl font-bold text-gray-900" id="activeClients">0</p>
+          <p class="text-sm text-blue-600 flex items-center mt-2">
+            <Icon name="tabler:clock" class="w-4 h-4 mr-1" />
+            Con órdenes en proceso
+          </p>
+        </div>
+        <div class="p-3 bg-blue-50 rounded-lg">
+          <Icon name="tabler:user-check" class="w-6 h-6 text-blue-600" />
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500 mb-1">Nuevos Este Mes</p>
+          <p class="text-2xl font-bold text-gray-900" id="newThisMonth">0</p>
+          <p class="text-sm text-green-600 flex items-center mt-2">
+            <Icon name="tabler:user-plus" class="w-4 h-4 mr-1" />
+            <span id="monthlyGrowth">Cargando...</span>
+          </p>
+        </div>
+        <div class="p-3 bg-green-50 rounded-lg">
+          <Icon name="tabler:user-plus" class="w-6 h-6 text-green-600" />
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500 mb-1">Valor Promedio</p>
+          <p class="text-2xl font-bold text-gray-900" id="averageValue">$0.00</p>
+          <p class="text-sm text-green-600 flex items-center mt-2">
+            <Icon name="tabler:currency-dollar" class="w-4 h-4 mr-1" />
+            <span id="valueGrowth">Cargando...</span>
+          </p>
+        </div>
+        <div class="p-3 bg-emerald-50 rounded-lg">
+          <Icon name="tabler:chart-line" class="w-6 h-6 text-emerald-600" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Acciones principales -->
+  <div class="flex justify-between items-center mb-6">
+    <h2 class="text-xl font-semibold text-gray-900">Lista de Clientes</h2>
+    <button 
+      onclick="openNewClientModal()"
+      class="bg-gradient-to-r from-teal-600 to-emerald-600 text-white px-6 py-3 rounded-lg hover:from-teal-700 hover:to-emerald-700 transition-colors duration-200 flex items-center space-x-2 shadow-lg"
+    >
+      <Icon name="tabler:user-plus" class="w-5 h-5" />
+      <span>Nuevo Cliente</span>
+    </button>
+  </div>
+
+  <!-- Filtros -->
+  <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <!-- Filtro por Nombre -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Buscar Cliente</label>
+        <input 
+          type="text" 
+          id="searchInput"
+          placeholder="Nombre o empresa..." 
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+          oninput="handleFilterChange()"
+        >
+      </div>
+
+      <!-- Filtro por Industria -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Industria</label>
+        <select 
+          id="industryFilter"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+          onchange="handleFilterChange()"
+        >
+          <option value="">Todas las industrias</option>
+          <option value="manufactura">Manufactura</option>
+          <option value="retail">Retail/Comercio</option>
+          <option value="servicios">Servicios</option>
+          <option value="tecnologia">Tecnología</option>
+          <option value="salud">Salud</option>
+          <option value="logistica">Logística</option>
+          <option value="construccion">Construcción</option>
+          <option value="automotriz">Automotriz</option>
+          <option value="agricultura">Agricultura</option>
+          <option value="energia">Energía</option>
+          <option value="educacion">Educación</option>
+          <option value="finanzas">Finanzas</option>
+        </select>
+      </div>
+
+      <!-- Filtro por Estado -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Estado</label>
+        <select 
+          id="statusFilter"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+          onchange="handleFilterChange()"
+        >
+          <option value="">Todos</option>
+          <option value="activo">Activo</option>
+          <option value="inactivo">Inactivo</option>
+          <option value="prospecto">Prospecto</option>
+        </select>
+      </div>
+
+      <!-- Botón de filtrar -->
+      <div class="flex items-end">
+        <button 
+          onclick="applyFilters()"
+          class="w-full bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition-colors duration-200 flex items-center justify-center space-x-2"
+        >
+          <Icon name="tabler:search" class="w-4 h-4" />
+          <span>Buscar</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla de clientes -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+      <h3 class="text-lg font-semibold text-gray-900">Directorio de Clientes</h3>
+      <div class="flex space-x-2">
+        <button id="exportBtn" onclick="exportClients()" disabled class="px-3 py-1 text-sm bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors duration-200 flex items-center space-x-1 disabled:opacity-50 disabled:cursor-not-allowed opacity-50 cursor-not-allowed">
+          <Icon name="tabler:download" class="w-4 h-4" id="exportIcon" />
+          <div id="exportSpinner" class="hidden animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
+          <span id="exportText">Exportar</span>
+        </button>
+        <button id="exportAllBtn" onclick="exportAllClients()" disabled class="px-3 py-1 text-sm bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors duration-200 flex items-center space-x-1 disabled:opacity-50 disabled:cursor-not-allowed opacity-50 cursor-not-allowed">
+          <Icon name="tabler:database-export" class="w-4 h-4" id="exportAllIcon" />
+          <div id="exportAllSpinner" class="hidden animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+          <span id="exportAllText">Exportar Todo</span>
+        </button>
+      </div>
+    </div>
+    
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contacto</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Industria</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Órdenes</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor Total</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200" id="clientsTableBody">
+          <!-- Loading state -->
+          <tr id="loadingRow">
+            <td colspan="7" class="px-6 py-8 text-center">
+              <div class="flex justify-center items-center space-x-2">
+                <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-teal-600"></div>
+                <span class="text-gray-500">Cargando clientes...</span>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Empty state -->
+          <tr id="emptyRow" class="hidden">
+            <td colspan="7" class="px-6 py-8 text-center">
+              <div class="text-gray-500">
+                <Icon name="tabler:users" class="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                <p class="text-lg font-medium">No se encontraron clientes</p>
+                <p class="text-sm">Intenta ajustar los filtros o crear un nuevo cliente</p>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Dynamic content will be inserted here by JavaScript -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Paginación -->
+    <div class="px-6 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-between" id="paginationContainer">
+      <div class="text-sm text-gray-500" id="paginationInfo">
+        Cargando información...
+      </div>
+      <div class="flex space-x-1" id="paginationControls">
+        <!-- Los controles de paginación se generarán dinámicamente -->
+      </div>
+    </div>
+  </div>
+    </div>  <!-- End main-content -->
+
+  <!-- Modal para nuevo cliente -->
+  <div id="newClientModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+      <div class="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-6 border-b border-gray-200 flex justify-between items-center">
+          <h3 class="text-xl font-semibold text-gray-900">Nuevo Cliente</h3>
+          <button onclick="closeNewClientModal()" class="text-gray-400 hover:text-gray-600">
+            <Icon name="tabler:x" class="w-6 h-6" />
+          </button>
+        </div>
+        
+        <form id="newClientForm" class="p-6 space-y-8">
+          <!-- Información básica -->
+          <div class="border-b border-gray-200 pb-8">
+            <h4 class="text-lg font-medium text-gray-900 mb-6 flex items-center">
+              <Icon name="tabler:building" class="w-5 h-5 mr-2 text-teal-600" />
+              Información de la Empresa
+            </h4>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Nombre de la Empresa *</label>
+                <input type="text" name="companyName" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="Nombre completo de la empresa" required>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">RFC</label>
+                <input type="text" name="rfc" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="RFC de la empresa">
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Industria *</label>
+                <select name="industry" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent" required>
+                  <option value="">Seleccionar industria</option>
+                  <option value="manufactura">Manufactura</option>
+                  <option value="retail">Retail/Comercio</option>
+                  <option value="servicios">Servicios</option>
+                  <option value="tecnologia">Tecnología</option>
+                  <option value="salud">Salud</option>
+                  <option value="educacion">Educación</option>
+                  <option value="finanzas">Finanzas</option>
+                  <option value="logistica">Logística</option>
+                  <option value="construccion">Construcción</option>
+                  <option value="agricultura">Agricultura</option>
+                  <option value="energia">Energía</option>
+                  <option value="automotriz">Automotriz</option>
+                </select>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Tamaño de la Empresa</label>
+                <select name="companySize" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                  <option value="">Seleccionar tamaño</option>
+                  <option value="micro">Micro (1-10 empleados)</option>
+                  <option value="pequena">Pequeña (11-50 empleados)</option>
+                  <option value="mediana">Mediana (51-250 empleados)</option>
+                  <option value="grande">Grande (251-1000 empleados)</option>
+                  <option value="corporativo">Corporativo (1000+ empleados)</option>
+                </select>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Sitio Web</label>
+                <input type="url" name="website" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="https://www.empresa.com">
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Estado del Cliente</label>
+                <select name="status" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                  <option value="prospecto">Prospecto</option>
+                  <option value="activo">Cliente Activo</option>
+                  <option value="inactivo">Inactivo</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Contacto principal -->
+          <div class="border-b border-gray-200 pb-8">
+            <h4 class="text-lg font-medium text-gray-900 mb-6 flex items-center">
+              <Icon name="tabler:user" class="w-5 h-5 mr-2 text-teal-600" />
+              Contacto Principal
+            </h4>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Nombre Completo *</label>
+                <input type="text" name="contactFullName" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="Nombre del contacto principal" required>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Cargo</label>
+                <input type="text" name="contactPosition" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="Director, Gerente, etc.">
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                <input type="email" name="contactEmail" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="contacto@empresa.com" required>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono *</label>
+                <input type="tel" name="contactPhone" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="+52 (555) 123-4567" required>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono Alternativo</label>
+                <input type="tel" name="contactAlternativePhone" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="+52 (555) 987-6543">
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Departamento</label>
+                <select name="contactDepartment" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                  <option value="">Seleccionar departamento</option>
+                  <option value="direccion">Dirección General</option>
+                  <option value="finanzas">Finanzas</option>
+                  <option value="ventas">Ventas</option>
+                  <option value="operaciones">Operaciones</option>
+                  <option value="rrhh">Recursos Humanos</option>
+                  <option value="it">Tecnología</option>
+                  <option value="marketing">Marketing</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dirección -->
+          <div class="border-b border-gray-200 pb-8">
+            <h4 class="text-lg font-medium text-gray-900 mb-6 flex items-center">
+              <Icon name="tabler:map-pin" class="w-5 h-5 mr-2 text-teal-600" />
+              Dirección de la Empresa
+            </h4>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Calle y Número *</label>
+                <input type="text" name="addressStreet" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="Av. Principal 123" required>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Número Interior</label>
+                <input type="text" name="addressInteriorNumber" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="Int. 4B">
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Colonia *</label>
+                <input type="text" name="addressNeighborhood" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="Centro" required>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Código Postal *</label>
+                <input type="text" name="addressPostalCode" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="12345" required>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Ciudad *</label>
+                <input type="text" name="addressCity" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent" placeholder="Ciudad de México" required>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Estado *</label>
+                <select name="addressState" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent" required>
+                  <option value="">Seleccionar estado</option>
+                  <option value="CDMX">Ciudad de México</option>
+                  <option value="AGS">Aguascalientes</option>
+                  <option value="BC">Baja California</option>
+                  <option value="BCS">Baja California Sur</option>
+                  <option value="CAMP">Campeche</option>
+                  <option value="CHIS">Chiapas</option>
+                  <option value="CHIH">Chihuahua</option>
+                  <option value="COAH">Coahuila</option>
+                  <option value="COL">Colima</option>
+                  <option value="DGO">Durango</option>
+                  <option value="GTO">Guanajuato</option>
+                  <option value="GRO">Guerrero</option>
+                  <option value="HGO">Hidalgo</option>
+                  <option value="JAL">Jalisco</option>
+                  <option value="MEX">México</option>
+                  <option value="MICH">Michoacán</option>
+                  <option value="MOR">Morelos</option>
+                  <option value="NAY">Nayarit</option>
+                  <option value="NL">Nuevo León</option>
+                  <option value="OAX">Oaxaca</option>
+                  <option value="PUE">Puebla</option>
+                  <option value="QRO">Querétaro</option>
+                  <option value="QROO">Quintana Roo</option>
+                  <option value="SLP">San Luis Potosí</option>
+                  <option value="SIN">Sinaloa</option>
+                  <option value="SON">Sonora</option>
+                  <option value="TAB">Tabasco</option>
+                  <option value="TAMPS">Tamaulipas</option>
+                  <option value="TLAX">Tlaxcala</option>
+                  <option value="VER">Veracruz</option>
+                  <option value="YUC">Yucatán</option>
+                  <option value="ZAC">Zacatecas</option>
+                </select>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">País</label>
+                <select name="addressCountry" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                  <option value="MX">México</option>
+                  <option value="US">Estados Unidos</option>
+                  <option value="CA">Canadá</option>
+                  <option value="ES">España</option>
+                  <option value="CO">Colombia</option>
+                  <option value="AR">Argentina</option>
+                  <option value="CL">Chile</option>
+                  <option value="PE">Perú</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Información adicional -->
+          <div>
+            <h4 class="text-lg font-medium text-gray-900 mb-6 flex items-center">
+              <Icon name="tabler:notes" class="w-5 h-5 mr-2 text-teal-600" />
+              Información Adicional
+            </h4>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Fuente de Referencia</label>
+                <select name="referenceSource" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                  <option value="">¿Cómo nos conoció?</option>
+                  <option value="web">Sitio Web</option>
+                  <option value="redes">Redes Sociales</option>
+                  <option value="referido">Referido por cliente</option>
+                  <option value="evento">Evento/Conferencia</option>
+                  <option value="publicidad">Publicidad</option>
+                  <option value="cold-calling">Llamada en frío</option>
+                  <option value="partnership">Partner/Alianza</option>
+                  <option value="otro">Otro</option>
+                </select>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Potencial de Negocio</label>
+                <select name="businessPotential" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                  <option value="">Evaluar potencial</option>
+                  <option value="bajo">Bajo (< $10K)</option>
+                  <option value="medio">Medio ($10K - $50K)</option>
+                  <option value="alto">Alto ($50K - $200K)</option>
+                  <option value="premium">Premium (> $200K)</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="mt-6">
+              <label class="block text-sm font-medium text-gray-700 mb-2">Notas del Cliente</label>
+              <textarea name="notes" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent" rows="4" placeholder="Notas importantes sobre el cliente, necesidades específicas, historial de interacciones, etc."></textarea>
+            </div>
+          </div>
+
+          <!-- Botones de acción -->
+          <div class="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+            <button type="button" onclick="closeNewClientModal()" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+              Cancelar
+            </button>
+            <button type="button" class="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200">
+              Guardar Borrador
+            </button>
+            <button type="submit" id="createClientBtn" class="px-6 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-lg hover:from-teal-700 hover:to-emerald-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+              <span id="createClientBtnText">Crear Cliente</span>
+              <div id="createClientBtnSpinner" class="hidden inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white ml-2"></div>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para ver órdenes del cliente -->
+  <div id="clientOrdersModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+      <div class="bg-white rounded-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-6 border-b border-gray-200 flex justify-between items-center">
+          <h3 class="text-xl font-semibold text-gray-900">Órdenes del Cliente</h3>
+          <button onclick="closeClientOrdersModal()" class="text-gray-400 hover:text-gray-600">
+            <Icon name="tabler:x" class="w-6 h-6" />
+          </button>
+        </div>
+        
+        <div class="p-6">
+          <!-- Información del cliente -->
+          <div class="bg-teal-50 rounded-lg p-4 mb-6">
+            <div class="flex items-center">
+              <div class="flex-shrink-0 h-12 w-12">
+                <div class="h-12 w-12 rounded-full bg-teal-100 flex items-center justify-center">
+                  <span class="text-lg font-medium text-teal-600" id="clientInitials">EE</span>
+                </div>
+              </div>
+              <div class="ml-4">
+                <h4 class="text-lg font-semibold text-gray-900" id="clientName">Empresa Ejemplo S.A.</h4>
+                <p class="text-sm text-gray-600" id="clientContact">Juan Pérez - juan@empresa.com</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Estadísticas de órdenes -->
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white border border-gray-200 rounded-lg p-4">
+              <div class="text-sm text-gray-500">Total Órdenes</div>
+              <div class="text-2xl font-bold text-gray-900" id="totalOrders">5</div>
+            </div>
+            <div class="bg-white border border-gray-200 rounded-lg p-4">
+              <div class="text-sm text-gray-500">En Proceso</div>
+              <div class="text-2xl font-bold text-blue-600" id="ordersInProcess">2</div>
+            </div>
+            <div class="bg-white border border-gray-200 rounded-lg p-4">
+              <div class="text-sm text-gray-500">Completadas</div>
+              <div class="text-2xl font-bold text-green-600" id="ordersCompleted">3</div>
+            </div>
+            <div class="bg-white border border-gray-200 rounded-lg p-4">
+              <div class="text-sm text-gray-500">Valor Total</div>
+              <div class="text-2xl font-bold text-teal-600" id="totalValue">$125,000</div>
+            </div>
+          </div>
+
+          <!-- Lista de órdenes -->
+          <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+            <div class="p-4 border-b border-gray-200">
+              <h5 class="text-lg font-medium text-gray-900">Historial de Órdenes</h5>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID Orden</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Agente</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Valor</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200" id="clientOrdersList">
+                  <!-- Las órdenes se cargan dinámicamente aquí -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para ver detalles del cliente -->
+  <div id="viewClientModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+      <div class="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-6 border-b border-gray-200 flex justify-between items-center">
+          <h3 class="text-xl font-semibold text-gray-900">Detalles del Cliente</h3>
+          <button onclick="closeViewClientModal()" class="text-gray-400 hover:text-gray-600">
+            <Icon name="tabler:x" class="w-6 h-6" />
+          </button>
+        </div>
+        
+        <div class="p-6">
+          <!-- Información de la empresa -->
+          <div class="mb-8">
+            <div class="flex items-center mb-6">
+              <div class="flex-shrink-0 h-16 w-16">
+                <div class="h-16 w-16 rounded-full bg-teal-100 flex items-center justify-center">
+                  <span class="text-xl font-medium text-teal-600" id="viewClientInitials">EE</span>
+                </div>
+              </div>
+              <div class="ml-6">
+                <h4 class="text-2xl font-bold text-gray-900" id="viewClientCompanyName">Empresa Ejemplo S.A.</h4>
+                <p class="text-sm text-gray-600" id="viewClientIndustry">Manufactura</p>
+                <div class="flex items-center mt-2">
+                  <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full" id="viewClientStatusBadge">
+                    Activo
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Información básica -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="bg-gray-50 rounded-lg p-4">
+                <h5 class="text-lg font-medium text-gray-900 mb-4">Información Básica</h5>
+                <div class="space-y-3">
+                  <div>
+                    <span class="text-sm text-gray-500">RFC:</span>
+                    <span class="text-sm font-medium text-gray-900 ml-2" id="viewClientRFC">N/A</span>
+                  </div>
+                  <div>
+                    <span class="text-sm text-gray-500">Tamaño:</span>
+                    <span class="text-sm font-medium text-gray-900 ml-2" id="viewClientSize">N/A</span>
+                  </div>
+                  <div>
+                    <span class="text-sm text-gray-500">Sitio Web:</span>
+                    <a href="#" class="text-sm font-medium text-teal-600 hover:text-teal-800 ml-2" id="viewClientWebsite" target="_blank">N/A</a>
+                  </div>
+                  <div>
+                    <span class="text-sm text-gray-500">Cliente desde:</span>
+                    <span class="text-sm font-medium text-gray-900 ml-2" id="viewClientSince">N/A</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-gray-50 rounded-lg p-4">
+                <h5 class="text-lg font-medium text-gray-900 mb-4">Información de Negocio</h5>
+                <div class="space-y-3">
+                  <div>
+                    <span class="text-sm text-gray-500">Potencial:</span>
+                    <span class="text-sm font-medium text-gray-900 ml-2" id="viewClientPotential">N/A</span>
+                  </div>
+                  <div>
+                    <span class="text-sm text-gray-500">Fuente:</span>
+                    <span class="text-sm font-medium text-gray-900 ml-2" id="viewClientSource">N/A</span>
+                  </div>
+                  <div>
+                    <span class="text-sm text-gray-500">Valor Total:</span>
+                    <span class="text-sm font-medium text-gray-900 ml-2" id="viewClientTotalValue">$0</span>
+                  </div>
+                  <div>
+                    <span class="text-sm text-gray-500">Total Órdenes:</span>
+                    <span class="text-sm font-medium text-gray-900 ml-2" id="viewClientOrdersCount">0</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Contactos -->
+          <div class="mb-8">
+            <h5 class="text-lg font-medium text-gray-900 mb-4">Contactos</h5>
+            <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+              <div class="overflow-x-auto">
+                <table class="w-full">
+                  <thead class="bg-gray-50">
+                    <tr>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cargo</th>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Teléfono</th>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Departamento</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-200" id="viewClientContactsList">
+                    <!-- Los contactos se cargan dinámicamente aquí -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Direcciones -->
+          <div class="mb-8">
+            <h5 class="text-lg font-medium text-gray-900 mb-4">Direcciones</h5>
+            <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+              <div class="overflow-x-auto">
+                <table class="w-full">
+                  <thead class="bg-gray-50">
+                    <tr>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dirección</th>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ciudad</th>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
+                      <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">CP</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-200" id="viewClientAddressesList">
+                    <!-- Las direcciones se cargan dinámicamente aquí -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Notas -->
+          <div class="mb-6">
+            <h5 class="text-lg font-medium text-gray-900 mb-4">Notas</h5>
+            <div class="bg-gray-50 rounded-lg p-4">
+              <p class="text-sm text-gray-700" id="viewClientNotes">Sin notas disponibles</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="p-6 border-t border-gray-200 flex justify-end space-x-4">
+          <button onclick="closeViewClientModal()" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+            Cerrar
+          </button>
+          <button onclick="editClientFromView()" class="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors duration-200">
+            Editar Cliente
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para editar cliente -->
+  <div id="editClientModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+      <div class="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-6 border-b border-gray-200 flex justify-between items-center">
+          <h3 class="text-xl font-semibold text-gray-900">Editar Cliente</h3>
+          <button onclick="closeEditClientModal()" class="text-gray-400 hover:text-gray-600">
+            <Icon name="tabler:x" class="w-6 h-6" />
+          </button>
+        </div>
+        
+        <form id="editClientForm" class="p-6 space-y-8">
+          <input type="hidden" id="editClientId" name="clientId">
+          
+          <!-- Información básica -->
+          <div class="border-b border-gray-200 pb-8">
+            <h4 class="text-lg font-medium text-gray-900 mb-6 flex items-center">
+              <Icon name="tabler:building" class="w-5 h-5 mr-2 text-teal-600" />
+              Información de la Empresa
+            </h4>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Nombre de la Empresa *</label>
+                <input type="text" id="editCompanyName" name="companyName" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent" required>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">RFC</label>
+                <input type="text" id="editRFC" name="rfc" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Industria *</label>
+                <select id="editIndustry" name="industry" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent" required>
+                  <option value="">Seleccionar industria</option>
+                  <option value="manufactura">Manufactura</option>
+                  <option value="retail">Retail/Comercio</option>
+                  <option value="servicios">Servicios</option>
+                  <option value="tecnologia">Tecnología</option>
+                  <option value="salud">Salud</option>
+                  <option value="educacion">Educación</option>
+                  <option value="finanzas">Finanzas</option>
+                  <option value="logistica">Logística</option>
+                  <option value="construccion">Construcción</option>
+                  <option value="agricultura">Agricultura</option>
+                  <option value="energia">Energía</option>
+                  <option value="automotriz">Automotriz</option>
+                </select>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Tamaño de la Empresa</label>
+                <select id="editCompanySize" name="companySize" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                  <option value="">Seleccionar tamaño</option>
+                  <option value="micro">Micro (1-10 empleados)</option>
+                  <option value="pequena">Pequeña (11-50 empleados)</option>
+                  <option value="mediana">Mediana (51-250 empleados)</option>
+                  <option value="grande">Grande (251-1000 empleados)</option>
+                  <option value="corporativo">Corporativo (1000+ empleados)</option>
+                </select>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Sitio Web</label>
+                <input type="url" id="editWebsite" name="website" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Estado del Cliente</label>
+                <select id="editStatus" name="status" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                  <option value="prospecto">Prospecto</option>
+                  <option value="activo">Cliente Activo</option>
+                  <option value="inactivo">Inactivo</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Información adicional -->
+          <div>
+            <h4 class="text-lg font-medium text-gray-900 mb-6 flex items-center">
+              <Icon name="tabler:notes" class="w-5 h-5 mr-2 text-teal-600" />
+              Información Adicional
+            </h4>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Fuente de Referencia</label>
+                <select id="editReferenceSource" name="referenceSource" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                  <option value="">¿Cómo nos conoció?</option>
+                  <option value="web">Sitio Web</option>
+                  <option value="redes">Redes Sociales</option>
+                  <option value="referido">Referido por cliente</option>
+                  <option value="evento">Evento/Conferencia</option>
+                  <option value="publicidad">Publicidad</option>
+                  <option value="cold-calling">Llamada en frío</option>
+                  <option value="partnership">Partner/Alianza</option>
+                  <option value="otro">Otro</option>
+                </select>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Potencial de Negocio</label>
+                <select id="editBusinessPotential" name="businessPotential" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                  <option value="">Evaluar potencial</option>
+                  <option value="bajo">Bajo (< $10K)</option>
+                  <option value="medio">Medio ($10K - $50K)</option>
+                  <option value="alto">Alto ($50K - $200K)</option>
+                  <option value="premium">Premium (> $200K)</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="mt-6">
+              <label class="block text-sm font-medium text-gray-700 mb-2">Notas del Cliente</label>
+              <textarea id="editNotes" name="notes" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent" rows="4"></textarea>
+            </div>
+          </div>
+
+          <!-- Botones de acción -->
+          <div class="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+            <button type="button" onclick="closeEditClientModal()" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+              Cancelar
+            </button>
+            <button type="submit" id="updateClientBtn" class="px-6 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 text-white rounded-lg hover:from-teal-700 hover:to-emerald-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+              <span id="updateClientBtnText">Actualizar Cliente</span>
+              <div id="updateClientBtnSpinner" class="hidden inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white ml-2"></div>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    import { initializePortalAuth } from '../../lib/portalAuthScript.js';
+
+    // Variables globales
+    let apiClient;
+    let clientsData = [];
+    let currentPage = 1;
+    let totalPages = 1;
+    let currentFilters = {};
+    
+    // Configuración de paginación
+    const ITEMS_PER_PAGE = 10;
+    
+    // Función para mostrar el contenido principal
+    function showMainContent() {
+      const authLoading = document.getElementById('auth-loading');
+      const mainContent = document.getElementById('main-content');
+      
+      if (authLoading) authLoading.classList.add('hidden');
+      if (mainContent) mainContent.classList.remove('hidden');
+      
+      // Cargar datos iniciales
+      loadInitialData();
+    }
+
+    // Función para habilitar botones de exportación cuando el sistema esté listo
+    function enableExportButtons() {
+      const exportBtn = document.getElementById('exportBtn');
+      const exportAllBtn = document.getElementById('exportAllBtn');
+      
+      if (exportBtn) {
+        exportBtn.disabled = false;
+        exportBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+      }
+      
+      if (exportAllBtn) {
+        exportAllBtn.disabled = false;
+        exportAllBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+      }
+    }
+
+    // Función para deshabilitar botones de exportación
+    function disableExportButtons() {
+      const exportBtn = document.getElementById('exportBtn');
+      const exportAllBtn = document.getElementById('exportAllBtn');
+      
+      if (exportBtn) {
+        exportBtn.disabled = true;
+        exportBtn.classList.add('opacity-50', 'cursor-not-allowed');
+      }
+      
+      if (exportAllBtn) {
+        exportAllBtn.disabled = true;
+        exportAllBtn.classList.add('opacity-50', 'cursor-not-allowed');
+      }
+    }
+
+    // Función para mostrar error de autenticación
+    function showAuthError(message) {
+      const authLoading = document.getElementById('auth-loading');
+      const mainContent = document.getElementById('main-content');
+      
+      if (authLoading) {
+        authLoading.innerHTML = `
+          <div class="text-center">
+            <div class="text-red-600 mb-4">
+              <svg class="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+              </svg>
+            </div>
+            <p class="text-gray-600 mb-4">${message}</p>
+            <a href="/login" class="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition-colors">
+              Ir a Login
+            </a>
+          </div>
+        `;
+      }
+      if (mainContent) mainContent.classList.add('hidden');
+    }
+
+    // Verificar permisos específicos para clientes
+    async function checkClientPermissions() {
+      try {
+        apiClient = (await import('../../lib/apiClient.js')).default;
+        
+        // Verificar autenticación básica
+        const user = await apiClient.getMe();
+        
+        // Usuarios master y admin tienen acceso automático
+        if (['master', 'admin'].includes(user.data.role)) {
+          return true;
+        }
+        
+        // Para otros roles, verificar permisos específicos
+        try {
+          const response = await apiClient.checkPermission('clients', 'read');
+          return response.data?.hasPermission;
+        } catch (permError) {
+          console.warn('Error verificando permisos específicos:', permError);
+          return false;
+        }
+      } catch (error) {
+        console.error('Error verificando permisos:', error);
+        return false;
+      }
+    }
+
+    // Cargar datos iniciales
+    async function loadInitialData() {
+      try {
+        console.log('Iniciando carga de datos iniciales...');
+        
+        // Verificar conectividad del backend primero
+        await verifyBackendConnectivity();
+        
+        await Promise.all([
+          loadClientStats(),
+          loadClients()
+        ]);
+        
+        // Habilitar botones de exportación ahora que el sistema está listo
+        enableExportButtons();
+        
+        console.log('Datos iniciales cargados exitosamente');
+      } catch (error) {
+        console.error('Error cargando datos iniciales:', error);
+        showErrorNotification('Error al cargar los datos iniciales: ' + (error.message || 'Error desconocido'));
+      }
+    }
+    
+    // Verificar conectividad del backend
+    async function verifyBackendConnectivity() {
+      try {
+        console.log('Verificando conectividad del backend...');
+        const response = await fetch('http://localhost:3001/health');
+        if (!response.ok) {
+          throw new Error(`Backend no disponible: ${response.status}`);
+        }
+        const data = await response.json();
+        console.log('Backend conectado:', data);
+        return true;
+      } catch (error) {
+        console.error('Error de conectividad del backend:', error);
+        throw new Error('No se puede conectar con el servidor. Verifica que el backend esté funcionando.');
+      }
+    }
+
+    // Inicializar aplicación
+    async function initializeApp() {
+      try {
+        // Deshabilitar botones de exportación hasta que el sistema esté listo
+        disableExportButtons();
+        
+        await initializePortalAuth(
+          async () => {
+            // Verificar permisos específicos
+            const hasPermission = await checkClientPermissions();
+            if (hasPermission) {
+              showMainContent();
+            } else {
+              showAuthError('No tienes permisos para gestionar clientes');
+            }
+          },
+          (error) => {
+            showAuthError(error || 'Error de autenticación');
+          }
+        );
+      } catch (error) {
+        console.error('Error inicializando app:', error);
+        showAuthError('Error al cargar la aplicación');
+      }
+    }
+    
+    // Cargar estadísticas de clientes
+    async function loadClientStats() {
+      try {
+        const response = await apiClient.getClientStats();
+        const stats = response.data;
+        
+        // Actualizar estadísticas en el DOM
+        document.getElementById('totalClients').textContent = stats.totalClients;
+        document.getElementById('activeClients').textContent = stats.activeClients;
+        document.getElementById('newThisMonth').textContent = stats.newThisMonth;
+        document.getElementById('averageValue').textContent = formatCurrency(stats.averageValue);
+        
+        // Actualizar indicadores de crecimiento
+        document.getElementById('clientsGrowth').textContent = `${stats.growthMetrics.clientGrowth.toFixed(1)}% este mes`;
+        document.getElementById('monthlyGrowth').textContent = `+${stats.growthMetrics.monthlyNewClients} vs mes anterior`;
+        document.getElementById('valueGrowth').textContent = `${stats.growthMetrics.valueGrowth.toFixed(1)}% vs mes anterior`;
+        
+        // Actualizar título de la página si es necesario
+        updatePageTitle(stats.totalClients);
+        
+      } catch (error) {
+        console.error('Error cargando estadísticas:', error);
+        // Mostrar valores por defecto en caso de error
+        document.getElementById('totalClients').textContent = '0';
+        document.getElementById('activeClients').textContent = '0';
+        document.getElementById('newThisMonth').textContent = '0';
+        document.getElementById('averageValue').textContent = '$0';
+        document.getElementById('clientsGrowth').textContent = 'Error al cargar';
+        document.getElementById('monthlyGrowth').textContent = 'Error al cargar';
+        document.getElementById('valueGrowth').textContent = 'Error al cargar';
+      }
+    }
+    
+    // Cargar clientes con filtros y paginación
+    async function loadClients(filters = {}) {
+      try {
+        console.log('Cargando clientes con filtros:', filters);
+        console.log('Página actual:', currentPage);
+        
+        const queryParams = {
+          page: currentPage,
+          limit: ITEMS_PER_PAGE,
+          ...filters
+        };
+        
+        console.log('Parámetros de consulta:', queryParams);
+        
+        // Mostrar estado de carga
+        showLoadingState();
+        
+        const response = await apiClient.getClients(queryParams);
+        console.log('Respuesta del servidor:', response);
+        
+        if (!response.success) {
+          console.error('Error en respuesta del servidor:', response);
+          const errorMessage = response.errors ? 
+            `Errores de validación: ${response.errors.join(', ')}` : 
+            (response.message || 'Error en la respuesta del servidor');
+          throw new Error(errorMessage);
+        }
+        
+        const { clients, pagination } = response.data;
+        console.log('Clientes recibidos:', clients?.length || 0);
+        console.log('Información de paginación:', pagination);
+        
+        clientsData = clients || [];
+        totalPages = pagination?.pages || 1;
+        
+        renderClientsTable(clientsData);
+        renderPagination(pagination);
+        
+      } catch (error) {
+        console.error('Error cargando clientes:', error);
+        showErrorNotification('Error al cargar los clientes: ' + (error.message || 'Error desconocido'));
+        showEmptyState();
+      }
+    }
+    
+    // Renderizar tabla de clientes
+    function renderClientsTable(clients) {
+      console.log('Renderizando tabla con clientes:', clients?.length || 0);
+      
+      const tableBody = document.getElementById('clientsTableBody');
+      const loadingRow = document.getElementById('loadingRow');
+      const emptyRow = document.getElementById('emptyRow');
+      
+      if (!tableBody) {
+        console.error('No se encontró el elemento clientsTableBody');
+        return;
+      }
+      
+      // Ocultar estados de carga
+      loadingRow.style.display = 'none';
+      emptyRow.style.display = 'none';
+      
+      // Limpiar contenido previo
+      Array.from(tableBody.children).forEach(child => {
+        if (child.id !== 'loadingRow' && child.id !== 'emptyRow') {
+          child.remove();
+        }
+      });
+      
+      if (!clients || clients.length === 0) {
+        console.log('No hay clientes para mostrar');
+        emptyRow.style.display = 'table-row';
+        return;
+      }
+      
+      // Renderizar cada cliente
+      try {
+        clients.forEach((client, index) => {
+          console.log(`Renderizando cliente ${index + 1}:`, client.companyName);
+          const row = createClientRow(client);
+          tableBody.appendChild(row);
+        });
+        console.log('Tabla renderizada exitosamente');
+      } catch (error) {
+        console.error('Error renderizando tabla:', error);
+        showErrorNotification('Error mostrando los clientes en la tabla');
+      }
+    }
+    
+    // Crear fila de cliente
+    function createClientRow(client) {
+      const row = document.createElement('tr');
+      row.className = 'hover:bg-gray-50';
+    
+      const primaryContact = client.primaryContact || {};
+      const companyInitials = getCompanyInitials(client.companyName);
+      const clientSince = client.clientSince ? new Date(client.clientSince).getFullYear() : 'N/A';
+      
+      row.innerHTML = `
+        <td class="px-6 py-4 whitespace-nowrap">
+          <div class="flex items-center">
+            <div class="flex-shrink-0 h-10 w-10">
+              <div class="h-10 w-10 rounded-full bg-teal-100 flex items-center justify-center">
+                <span class="text-sm font-medium text-teal-600">${companyInitials}</span>
+              </div>
+            </div>
+            <div class="ml-4">
+              <div class="text-sm font-medium text-gray-900">${client.companyName}</div>
+              <div class="text-sm text-gray-500">Cliente desde ${clientSince}</div>
+            </div>
+          </div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <div class="text-sm text-gray-900">${primaryContact.fullName || 'N/A'}</div>
+          <div class="text-sm text-gray-500">${primaryContact.email || 'N/A'}</div>
+          <div class="text-sm text-gray-500">${primaryContact.phone || 'N/A'}</div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getIndustryColor(client.industry)}">
+            ${formatIndustry(client.industry)}
+          </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <div class="flex items-center">
+            <span class="text-sm font-medium text-gray-900">${client.ordersCount || 0}</span>
+            <button onclick="showClientOrders('${client.id}')" class="ml-2 text-teal-600 hover:text-teal-900">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+              </svg>
+            </button>
+          </div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+          ${client.totalValue ? formatCurrency(client.totalValue) : '$0'}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(client.status)}">
+            ${formatStatus(client.status)}
+          </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+          <button onclick="viewClient('${client.id}')" class="text-teal-600 hover:text-teal-900">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+            </svg>
+          </button>
+          <button onclick="editClient('${client.id}')" class="text-blue-600 hover:text-blue-900">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+            </svg>
+          </button>
+          <button onclick="showClientOrders('${client.id}')" class="text-purple-600 hover:text-purple-900">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17M17 13v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6"></path>
+              </svg>
+            </button>
+          </td>
+        `;
+      
+      return row;
+    }
+    
+    // Renderizar paginación
+    function renderPagination(pagination) {
+      const paginationInfo = document.getElementById('paginationInfo');
+      const paginationControls = document.getElementById('paginationControls');
+      
+      // Información de paginación
+      const start = (pagination.page - 1) * pagination.limit + 1;
+      const end = Math.min(pagination.page * pagination.limit, pagination.total);
+      paginationInfo.textContent = `Mostrando ${start}-${end} de ${pagination.total} clientes`;
+      
+      // Controles de paginación
+      paginationControls.innerHTML = '';
+      
+      // Botón anterior
+      const prevButton = document.createElement('button');
+      prevButton.className = `px-3 py-1 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 ${pagination.page === 1 ? 'opacity-50 cursor-not-allowed' : ''}`;
+      prevButton.textContent = 'Anterior';
+      prevButton.disabled = pagination.page === 1;
+      prevButton.onclick = () => changePage(pagination.page - 1);
+      paginationControls.appendChild(prevButton);
+      
+      // Números de página
+      const startPage = Math.max(1, pagination.page - 2);
+      const endPage = Math.min(pagination.pages, pagination.page + 2);
+      
+      for (let i = startPage; i <= endPage; i++) {
+        const pageButton = document.createElement('button');
+        pageButton.className = `px-3 py-1 text-sm rounded-lg ${i === pagination.page ? 'bg-teal-600 text-white' : 'bg-white border border-gray-300 hover:bg-gray-50'}`;
+        pageButton.textContent = i;
+        pageButton.onclick = () => changePage(i);
+        paginationControls.appendChild(pageButton);
+      }
+      
+      // Botón siguiente
+      const nextButton = document.createElement('button');
+      nextButton.className = `px-3 py-1 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50 ${pagination.page === pagination.pages ? 'opacity-50 cursor-not-allowed' : ''}`;
+      nextButton.textContent = 'Siguiente';
+      nextButton.disabled = pagination.page === pagination.pages;
+      nextButton.onclick = () => changePage(pagination.page + 1);
+      paginationControls.appendChild(nextButton);
+    }
+    
+    // Cambiar página
+    function changePage(page) {
+      if (page < 1 || page > totalPages) return;
+      currentPage = page;
+      loadClients(currentFilters);
+    }
+    
+    // Manejar cambios en filtros
+    window.handleFilterChange = function() {
+      // Implementar debounce para evitar demasiadas llamadas API
+      clearTimeout(window.filterTimeout);
+      window.filterTimeout = setTimeout(() => {
+        applyFilters();
+      }, 300);
+    };
+    
+    // Aplicar filtros
+    window.applyFilters = async function() {
+      const search = document.getElementById('searchInput').value.trim();
+      const industry = document.getElementById('industryFilter').value;
+      const status = document.getElementById('statusFilter').value;
+      
+      currentFilters = {};
+      if (search) currentFilters.search = search;
+      if (industry) currentFilters.industry = industry.toLowerCase(); // Asegurar minúsculas
+      if (status) currentFilters.status = status.toLowerCase(); // Asegurar minúsculas
+      
+      console.log('Filtros aplicados:', currentFilters);
+      
+      currentPage = 1; // Resetear a primera página
+      await loadClients(currentFilters);
+    };
+    
+    // Funciones para modales
+    window.openNewClientModal = function() {
+      document.getElementById('newClientModal').classList.remove('hidden');
+      // Reset form when opening
+      document.getElementById('newClientForm').reset();
+    };
+    
+    window.closeNewClientModal = function() {
+      document.getElementById('newClientModal').classList.add('hidden');
+      // Reset form when closing
+      document.getElementById('newClientForm').reset();
+      // Reset button state
+      resetCreateButton();
+    };
+
+    // Función para crear cliente
+    window.createClient = async function(formData) {
+      try {
+        setCreateButtonLoading(true);
+        
+        // Preparar datos según el schema del backend
+        const clientData = {
+          companyName: formData.get('companyName'),
+          rfc: formData.get('rfc') || undefined,
+          industry: formData.get('industry'),
+          companySize: formData.get('companySize') || undefined,
+          website: formData.get('website') || undefined,
+          status: formData.get('status') || 'prospecto',
+          referenceSource: formData.get('referenceSource') || undefined,
+          businessPotential: formData.get('businessPotential') || undefined,
+          notes: formData.get('notes') || undefined,
+          
+          // Contacto principal
+          contact: {
+            fullName: formData.get('contactFullName'),
+            position: formData.get('contactPosition') || undefined,
+            email: formData.get('contactEmail'),
+            phone: formData.get('contactPhone'),
+            alternativePhone: formData.get('contactAlternativePhone') || undefined,
+            department: formData.get('contactDepartment') || undefined,
+            isPrimary: true
+          },
+          
+          // Dirección principal
+          address: {
+            type: 'fisica',
+            street: formData.get('addressStreet'),
+            interiorNumber: formData.get('addressInteriorNumber') || undefined,
+            neighborhood: formData.get('addressNeighborhood'),
+            postalCode: formData.get('addressPostalCode'),
+            city: formData.get('addressCity'),
+            state: formData.get('addressState'),
+            country: formData.get('addressCountry') || 'MX',
+            isPrimary: true
+          }
+        };
+
+        console.log('Enviando datos del cliente:', clientData);
+        
+        const response = await apiClient.createClient(clientData);
+        
+        if (response.success) {
+          console.log('Cliente creado exitosamente:', response.data);
+          
+          // Mostrar notificación de éxito
+          showSuccessNotification('Cliente creado exitosamente');
+          
+          // Cerrar modal
+          closeNewClientModal();
+          
+          // Resetear a la primera página para ver el nuevo cliente
+          currentPage = 1;
+          
+          try {
+            // Recargar estadísticas primero
+            console.log('Recargando estadísticas...');
+            await loadClientStats();
+            
+            // Luego recargar lista de clientes
+            console.log('Recargando lista de clientes...');
+            await loadClients(currentFilters);
+            
+            console.log('Datos recargados exitosamente');
+          } catch (reloadError) {
+            console.error('Error recargando datos:', reloadError);
+            showErrorNotification('Cliente creado pero error al actualizar la vista. Refresca la página.');
+          }
+        } else {
+          throw new Error(response.message || 'Error al crear el cliente');
+        }
+        
+      } catch (error) {
+        console.error('Error creando cliente:', error);
+        showErrorNotification(error.message || 'Error al crear el cliente');
+      } finally {
+        setCreateButtonLoading(false);
+      }
+    };
+
+    // Funciones auxiliares para el botón de crear
+    function setCreateButtonLoading(loading) {
+      const btn = document.getElementById('createClientBtn');
+      const text = document.getElementById('createClientBtnText');
+      const spinner = document.getElementById('createClientBtnSpinner');
+      
+      if (loading) {
+        btn.disabled = true;
+        text.textContent = 'Creando...';
+        spinner.classList.remove('hidden');
+      } else {
+        resetCreateButton();
+      }
+    }
+
+    function resetCreateButton() {
+      const btn = document.getElementById('createClientBtn');
+      const text = document.getElementById('createClientBtnText');
+      const spinner = document.getElementById('createClientBtnSpinner');
+      
+      btn.disabled = false;
+      text.textContent = 'Crear Cliente';
+      spinner.classList.add('hidden');
+    }
+
+    // Funciones para notificaciones
+    function showSuccessNotification(message) {
+      // Crear notificación temporal
+      const notification = document.createElement('div');
+      notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300';
+      notification.textContent = message;
+      document.body.appendChild(notification);
+      
+      // Mostrar notificación
+      setTimeout(() => {
+        notification.classList.remove('translate-x-full');
+      }, 100);
+      
+      // Ocultar después de 3 segundos
+      setTimeout(() => {
+        notification.classList.add('translate-x-full');
+        setTimeout(() => {
+          document.body.removeChild(notification);
+        }, 300);
+      }, 3000);
+    }
+
+    function showErrorNotification(message) {
+      const notification = document.createElement('div');
+      notification.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300';
+      notification.textContent = message;
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.classList.remove('translate-x-full');
+      }, 100);
+      
+      setTimeout(() => {
+        notification.classList.add('translate-x-full');
+        setTimeout(() => {
+          document.body.removeChild(notification);
+        }, 300);
+      }, 3000);
+    }
+    
+    // Función para mostrar órdenes del cliente
+    window.showClientOrders = async function(clientId) {
+      try {
+        // Obtener datos del cliente
+        const clientResponse = await apiClient.getClientById(clientId);
+        if (!clientResponse.success) {
+          throw new Error(clientResponse.message || 'Error al obtener cliente');
+        }
+        
+        const client = clientResponse.data;
+        
+        // Actualizar información del cliente en el modal
+        document.getElementById('clientInitials').textContent = getCompanyInitials(client.companyName);
+        document.getElementById('clientName').textContent = client.companyName;
+        document.getElementById('clientContact').textContent = client.primaryContact ? 
+          `${client.primaryContact.fullName} - ${client.primaryContact.email}` : 
+          'Sin contacto principal';
+        
+        // Generar órdenes simuladas (ya que no existe el módulo de órdenes aún)
+        const simulatedOrders = generateSimulatedOrders(client);
+        
+        // Actualizar estadísticas
+        const totalOrders = simulatedOrders.length;
+        const inProcess = simulatedOrders.filter(order => order.status === 'En Proceso').length;
+        const completed = simulatedOrders.filter(order => order.status === 'Completada').length;
+        const totalValue = simulatedOrders.reduce((sum, order) => sum + order.value, 0);
+        
+        document.getElementById('totalOrders').textContent = totalOrders;
+        document.getElementById('ordersInProcess').textContent = inProcess;
+        document.getElementById('ordersCompleted').textContent = completed;
+        document.getElementById('totalValue').textContent = formatCurrency(totalValue);
+        
+        // Renderizar lista de órdenes
+        renderOrdersList(simulatedOrders);
+        
+        // Mostrar modal
+        document.getElementById('clientOrdersModal').classList.remove('hidden');
+        
+      } catch (error) {
+        console.error('Error mostrando órdenes:', error);
+        showErrorNotification('Error al cargar las órdenes del cliente');
+      }
+    };
+    
+    // Función para ver detalles del cliente
+    window.viewClient = async function(clientId) {
+      try {
+        const response = await apiClient.getClientById(clientId);
+        if (!response.success) {
+          throw new Error(response.message || 'Error al obtener cliente');
+        }
+        
+        const client = response.data;
+        
+        // Actualizar información básica
+        document.getElementById('viewClientInitials').textContent = getCompanyInitials(client.companyName);
+        document.getElementById('viewClientCompanyName').textContent = client.companyName;
+        document.getElementById('viewClientIndustry').textContent = formatIndustry(client.industry);
+        
+        // Actualizar badge de estado
+        const statusBadge = document.getElementById('viewClientStatusBadge');
+        statusBadge.textContent = formatStatus(client.status);
+        statusBadge.className = `inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(client.status)}`;
+        
+        // Actualizar información básica
+        document.getElementById('viewClientRFC').textContent = client.rfc || 'N/A';
+        document.getElementById('viewClientSize').textContent = formatCompanySize(client.companySize) || 'N/A';
+        
+        const websiteElement = document.getElementById('viewClientWebsite');
+        if (client.website) {
+          websiteElement.textContent = client.website;
+          websiteElement.href = client.website;
+          websiteElement.style.display = 'inline';
+        } else {
+          websiteElement.textContent = 'N/A';
+          websiteElement.href = '#';
+          websiteElement.style.display = 'inline';
+        }
+        
+        document.getElementById('viewClientSince').textContent = client.clientSince ? 
+          formatDate(client.clientSince) : 'N/A';
+        
+        // Actualizar información de negocio
+        document.getElementById('viewClientPotential').textContent = formatBusinessPotential(client.businessPotential) || 'N/A';
+        document.getElementById('viewClientSource').textContent = formatReferenceSource(client.referenceSource) || 'N/A';
+        document.getElementById('viewClientTotalValue').textContent = client.totalValue ? 
+          formatCurrency(client.totalValue) : '$0';
+        document.getElementById('viewClientOrdersCount').textContent = client.ordersCount || '0';
+        
+        // Actualizar notas
+        document.getElementById('viewClientNotes').textContent = client.notes || 'Sin notas disponibles';
+        
+        // Renderizar contactos
+        renderContactsList(client.contacts);
+        
+        // Renderizar direcciones
+        renderAddressesList(client.addresses);
+        
+        // Guardar ID del cliente actual para la función de editar
+        window.currentViewClientId = clientId;
+        
+        // Mostrar modal
+        document.getElementById('viewClientModal').classList.remove('hidden');
+        
+      } catch (error) {
+        console.error('Error viendo cliente:', error);
+        showErrorNotification('Error al cargar los detalles del cliente');
+      }
+    };
+    
+    // Función para editar cliente
+    window.editClient = async function(clientId) {
+      try {
+        const response = await apiClient.getClientById(clientId);
+        if (!response.success) {
+          throw new Error(response.message || 'Error al obtener cliente');
+        }
+        
+        const client = response.data;
+        
+        // Rellenar formulario con datos actuales
+        document.getElementById('editClientId').value = clientId;
+        document.getElementById('editCompanyName').value = client.companyName;
+        document.getElementById('editRFC').value = client.rfc || '';
+        document.getElementById('editIndustry').value = client.industry;
+        document.getElementById('editCompanySize').value = client.companySize || '';
+        document.getElementById('editWebsite').value = client.website || '';
+        document.getElementById('editStatus').value = client.status;
+        document.getElementById('editReferenceSource').value = client.referenceSource || '';
+        document.getElementById('editBusinessPotential').value = client.businessPotential || '';
+        document.getElementById('editNotes').value = client.notes || '';
+        
+        // Mostrar modal
+        document.getElementById('editClientModal').classList.remove('hidden');
+        
+      } catch (error) {
+        console.error('Error cargando cliente para editar:', error);
+        showErrorNotification('Error al cargar los datos del cliente');
+      }
+    };
+    
+    // Funciones para manejar modales
+    window.closeClientOrdersModal = function() {
+      document.getElementById('clientOrdersModal').classList.add('hidden');
+    };
+    
+    window.closeViewClientModal = function() {
+      document.getElementById('viewClientModal').classList.add('hidden');
+    };
+    
+    window.closeEditClientModal = function() {
+      document.getElementById('editClientModal').classList.add('hidden');
+      // Reset form
+      document.getElementById('editClientForm').reset();
+      resetUpdateButton();
+    };
+    
+    // Función para editar desde la vista de detalles
+    window.editClientFromView = function() {
+      const clientId = window.currentViewClientId;
+      closeViewClientModal();
+      if (clientId) {
+        editClient(clientId);
+      }
+    };
+    
+    // Función para actualizar cliente
+    window.updateClient = async function(formData) {
+      try {
+        setUpdateButtonLoading(true);
+        
+        const clientId = formData.get('clientId');
+        const clientData = {
+          companyName: formData.get('companyName'),
+          rfc: formData.get('rfc') || undefined,
+          industry: formData.get('industry'),
+          companySize: formData.get('companySize') || undefined,
+          website: formData.get('website') || undefined,
+          status: formData.get('status'),
+          referenceSource: formData.get('referenceSource') || undefined,
+          businessPotential: formData.get('businessPotential') || undefined,
+          notes: formData.get('notes') || undefined
+        };
+        
+        console.log('Actualizando cliente:', clientId, clientData);
+        
+        const response = await apiClient.updateClient(clientId, clientData);
+        
+        if (response.success) {
+          console.log('Cliente actualizado exitosamente:', response.data);
+          
+          showSuccessNotification('Cliente actualizado exitosamente');
+          closeEditClientModal();
+          
+          // Recargar datos
+          await loadClientStats();
+          await loadClients(currentFilters);
+          
+        } else {
+          throw new Error(response.message || 'Error al actualizar el cliente');
+        }
+        
+      } catch (error) {
+        console.error('Error actualizando cliente:', error);
+        showErrorNotification(error.message || 'Error al actualizar el cliente');
+      } finally {
+        setUpdateButtonLoading(false);
+      }
+    };
+
+    // Función para exportar clientes
+    window.exportClients = async function() {
+      try {
+        console.log('Iniciando exportación de clientes...');
+        
+        // Verificar que apiClient esté inicializado
+        if (!apiClient) {
+          setExportButtonLoading(false);
+          showErrorNotification('Error: Sistema no inicializado. Intenta recargar la página.');
+          return;
+        }
+        
+        console.log('Filtros actuales antes de limpiar:', currentFilters);
+        setExportButtonLoading(true);
+        
+        // Limpiar y validar filtros para exportación
+        const exportFilters = cleanFiltersForExport(currentFilters);
+        console.log('Filtros limpiados para exportación:', exportFilters);
+        
+        // Debug: probar primero con filtros vacíos
+        const testFilters = Object.keys(exportFilters).length > 0 ? exportFilters : {};
+        console.log('Filtros finales a enviar:', testFilters);
+        
+        let response;
+        
+        try {
+          // Intentar primero con filtros
+          response = await apiClient.getClients({
+            ...testFilters,
+            limit: 1000,
+            page: 1
+          });
+        } catch (filterError) {
+          console.warn('Error con filtros, intentando sin filtros:', filterError);
+          // Fallback: exportar todos los clientes sin filtros
+          response = await apiClient.getClients({
+            limit: 1000,
+            page: 1
+          });
+          showErrorNotification('Se exportaron todos los clientes (filtros ignorados por error de validación)');
+        }
+        
+        if (!response.success) {
+          console.error('Error en respuesta del servidor:', response);
+          const errorMessage = response.errors ? 
+            `Errores de validación: ${response.errors.join(', ')}` : 
+            (response.message || 'Error al obtener datos para exportar');
+          throw new Error(errorMessage);
+        }
+        
+        const clients = response.data.clients || [];
+        console.log(`Exportando ${clients.length} clientes...`);
+        
+        if (clients.length === 0) {
+          showErrorNotification('No hay clientes para exportar');
+          return;
+        }
+        
+        // Generar CSV
+        const csvContent = generateClientsCSV(clients);
+        
+        // Descargar archivo
+        downloadCSV(csvContent, 'clientes-aim.csv');
+        
+        showSuccessNotification(`${clients.length} clientes exportados exitosamente`);
+        
+      } catch (error) {
+        console.error('Error exportando clientes:', error);
+        showErrorNotification('Error al exportar clientes: ' + (error.message || 'Error desconocido'));
+      } finally {
+        setExportButtonLoading(false);
+      }
+    };
+    
+    // Función para limpiar filtros antes de la exportación
+    function cleanFiltersForExport(filters) {
+      const cleanedFilters = {};
+      
+      // Solo incluir filtros válidos y no vacíos
+      if (filters.search && filters.search.trim()) {
+        cleanedFilters.search = filters.search.trim();
+      }
+      
+      if (filters.industry && filters.industry.trim()) {
+        // Asegurar que la industria esté en minúsculas
+        cleanedFilters.industry = filters.industry.toLowerCase().trim();
+      }
+      
+      if (filters.status && filters.status.trim()) {
+        // Asegurar que el status esté en minúsculas
+        cleanedFilters.status = filters.status.toLowerCase().trim();
+      }
+      
+      // Validar que los valores sean correctos
+      const validIndustries = [
+        'manufactura', 'retail', 'servicios', 'tecnologia', 'salud', 
+        'logistica', 'construccion', 'automotriz', 'agricultura', 
+        'energia', 'educacion', 'finanzas'
+      ];
+      
+      const validStatuses = ['activo', 'inactivo', 'prospecto'];
+      
+      if (cleanedFilters.industry && !validIndustries.includes(cleanedFilters.industry)) {
+        console.warn('Industria inválida para exportación:', cleanedFilters.industry);
+        delete cleanedFilters.industry;
+      }
+      
+      if (cleanedFilters.status && !validStatuses.includes(cleanedFilters.status)) {
+        console.warn('Status inválido para exportación:', cleanedFilters.status);
+        delete cleanedFilters.status;
+      }
+      
+      return cleanedFilters;
+    }
+    
+    // Función para exportar todos los clientes sin filtros
+    window.exportAllClients = async function() {
+      try {
+        console.log('Iniciando exportación de TODOS los clientes...');
+        
+        // Verificar que apiClient esté inicializado
+        if (!apiClient) {
+          setExportAllButtonLoading(false);
+          showErrorNotification('Error: Sistema no inicializado. Intenta recargar la página.');
+          return;
+        }
+        
+        setExportAllButtonLoading(true);
+        
+        const response = await apiClient.getClients({
+          limit: 1000,
+          page: 1
+        });
+        
+        if (!response.success) {
+          console.error('Error en respuesta del servidor:', response);
+          const errorMessage = response.errors ? 
+            `Errores de validación: ${response.errors.join(', ')}` : 
+            (response.message || 'Error al obtener datos para exportar');
+          throw new Error(errorMessage);
+        }
+        
+        const clients = response.data.clients || [];
+        console.log(`Exportando TODOS los ${clients.length} clientes...`);
+        
+        if (clients.length === 0) {
+          showErrorNotification('No hay clientes para exportar');
+          return;
+        }
+        
+        // Generar CSV
+        const csvContent = generateClientsCSV(clients);
+        
+        // Descargar archivo
+        downloadCSV(csvContent, 'todos-los-clientes-aim.csv');
+        
+        showSuccessNotification(`Todos los ${clients.length} clientes exportados exitosamente`);
+        
+      } catch (error) {
+        console.error('Error exportando todos los clientes:', error);
+        showErrorNotification('Error al exportar todos los clientes: ' + (error.message || 'Error desconocido'));
+      } finally {
+        setExportAllButtonLoading(false);
+      }
+    };
+    
+    // Funciones auxiliares para el botón de exportar todo
+    function setExportAllButtonLoading(loading) {
+      const btn = document.getElementById('exportAllBtn');
+      const text = document.getElementById('exportAllText');
+      const icon = document.getElementById('exportAllIcon');
+      const spinner = document.getElementById('exportAllSpinner');
+      
+      if (btn && text && spinner) {
+        if (loading) {
+          btn.disabled = true;
+          text.textContent = 'Exportando...';
+          if (icon) icon.style.display = 'none';
+          spinner.classList.remove('hidden');
+        } else {
+          resetExportAllButton();
+        }
+      }
+    }
+    
+    function resetExportAllButton() {
+      const btn = document.getElementById('exportAllBtn');
+      const text = document.getElementById('exportAllText');
+      const icon = document.getElementById('exportAllIcon');
+      const spinner = document.getElementById('exportAllSpinner');
+      
+      if (btn && text && spinner) {
+        btn.disabled = false;
+        text.textContent = 'Exportar Todo';
+        if (icon) icon.style.display = 'block';
+        spinner.classList.add('hidden');
+      }
+    }
+    
+    // Función para generar CSV de clientes
+    function generateClientsCSV(clients) {
+      console.log('Generando CSV con', clients.length, 'clientes');
+      
+      // Encabezados del CSV
+      const headers = [
+        'Empresa',
+        'RFC',
+        'Industria',
+        'Tamaño',
+        'Estado',
+        'Contacto Principal',
+        'Email Contacto',
+        'Teléfono Contacto',
+        'Cargo Contacto',
+        'Departamento Contacto',
+        'Sitio Web',
+        'Fuente de Referencia',
+        'Potencial de Negocio',
+        'Valor Total',
+        'Total Órdenes',
+        'Cliente Desde',
+        'Dirección Principal',
+        'Ciudad',
+        'Estado/Provincia',
+        'Código Postal',
+        'País',
+        'Notas',
+        'Fecha de Creación',
+        'Última Actualización'
+      ];
+      
+      // Generar filas de datos
+      const rows = clients.map(client => {
+        const primaryContact = client.primaryContact || {};
+        const primaryAddress = client.primaryAddress || {};
+        
+        return [
+          escapeCSVField(client.companyName || ''),
+          escapeCSVField(client.rfc || ''),
+          escapeCSVField(formatIndustry(client.industry || '')),
+          escapeCSVField(formatCompanySize(client.companySize) || ''),
+          escapeCSVField(formatStatus(client.status || '')),
+          escapeCSVField(primaryContact.fullName || ''),
+          escapeCSVField(primaryContact.email || ''),
+          escapeCSVField(primaryContact.phone || ''),
+          escapeCSVField(primaryContact.position || ''),
+          escapeCSVField(primaryContact.department || ''),
+          escapeCSVField(client.website || ''),
+          escapeCSVField(formatReferenceSource(client.referenceSource) || ''),
+          escapeCSVField(formatBusinessPotential(client.businessPotential) || ''),
+          escapeCSVField(client.totalValue ? formatCurrency(client.totalValue) : '$0'),
+          escapeCSVField(client.ordersCount?.toString() || '0'),
+          escapeCSVField(client.clientSince ? formatDate(client.clientSince) : ''),
+          escapeCSVField(primaryAddress.street ? 
+            `${primaryAddress.street}${primaryAddress.interiorNumber ? ` Int. ${primaryAddress.interiorNumber}` : ''}, ${primaryAddress.neighborhood}` : ''),
+          escapeCSVField(primaryAddress.city || ''),
+          escapeCSVField(primaryAddress.state || ''),
+          escapeCSVField(primaryAddress.postalCode || ''),
+          escapeCSVField(primaryAddress.country || ''),
+          escapeCSVField(client.notes || ''),
+          escapeCSVField(client.createdAt ? formatDate(client.createdAt) : ''),
+          escapeCSVField(client.updatedAt ? formatDate(client.updatedAt) : '')
+        ];
+      });
+      
+      // Combinar headers y filas
+      const csvRows = [headers, ...rows];
+      
+      // Generar contenido CSV
+      const csvContent = csvRows.map(row => row.join(',')).join('\n');
+      
+      console.log('CSV generado exitosamente');
+      return csvContent;
+    }
+    
+    // Función para escapar campos CSV
+    function escapeCSVField(field) {
+      if (field === null || field === undefined) {
+        return '';
+      }
+      
+      // Convertir a string
+      const fieldStr = String(field);
+      
+      // Si el campo contiene comas, comillas o saltos de línea, debe ir entre comillas
+      if (fieldStr.includes(',') || fieldStr.includes('"') || fieldStr.includes('\n') || fieldStr.includes('\r')) {
+        // Escapar comillas dobles duplicándolas
+        const escapedField = fieldStr.replace(/"/g, '""');
+        return `"${escapedField}"`;
+      }
+      
+      return fieldStr;
+    }
+    
+    // Función para descargar CSV
+    function downloadCSV(csvContent, filename) {
+      console.log('Iniciando descarga del archivo:', filename);
+      
+      // Agregar BOM para caracteres especiales
+      const BOM = '\uFEFF';
+      const csvWithBOM = BOM + csvContent;
+      
+      // Crear blob
+      const blob = new Blob([csvWithBOM], { 
+        type: 'text/csv;charset=utf-8;' 
+      });
+      
+      // Crear URL temporal
+      const url = window.URL.createObjectURL(blob);
+      
+      // Crear enlace temporal para descarga
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      link.style.display = 'none';
+      
+      // Agregar al DOM, hacer clic y remover
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Limpiar URL temporal
+      window.URL.revokeObjectURL(url);
+      
+      console.log('Descarga iniciada exitosamente');
+    }
+    
+    // Funciones auxiliares para el botón de exportar
+    function setExportButtonLoading(loading) {
+      const btn = document.getElementById('exportBtn');
+      const text = document.getElementById('exportText');
+      const icon = document.getElementById('exportIcon');
+      const spinner = document.getElementById('exportSpinner');
+      
+      if (btn && text && spinner) {
+        if (loading) {
+          btn.disabled = true;
+          text.textContent = 'Exportando...';
+          if (icon) icon.style.display = 'none';
+          spinner.classList.remove('hidden');
+        } else {
+          resetExportButton();
+        }
+      }
+    }
+    
+    function resetExportButton() {
+      const btn = document.getElementById('exportBtn');
+      const text = document.getElementById('exportText');
+      const icon = document.getElementById('exportIcon');
+      const spinner = document.getElementById('exportSpinner');
+      
+      if (btn && text && spinner) {
+        btn.disabled = false;
+        text.textContent = 'Exportar';
+        if (icon) icon.style.display = 'block';
+        spinner.classList.add('hidden');
+      }
+    }
+    
+    // Funciones auxiliares para el botón de actualizar
+    function setUpdateButtonLoading(loading) {
+      const btn = document.getElementById('updateClientBtn');
+      const text = document.getElementById('updateClientBtnText');
+      const spinner = document.getElementById('updateClientBtnSpinner');
+      
+      if (loading) {
+        btn.disabled = true;
+        text.textContent = 'Actualizando...';
+        spinner.classList.remove('hidden');
+      } else {
+        resetUpdateButton();
+      }
+    }
+    
+    function resetUpdateButton() {
+      const btn = document.getElementById('updateClientBtn');
+      const text = document.getElementById('updateClientBtnText');
+      const spinner = document.getElementById('updateClientBtnSpinner');
+      
+      btn.disabled = false;
+      text.textContent = 'Actualizar Cliente';
+      spinner.classList.add('hidden');
+    }
+    
+    // Función para generar órdenes simuladas
+    function generateSimulatedOrders(client) {
+      const orders = [];
+      const agentTypes = ['Agente de Automatización', 'Agente de Análisis', 'Agente de Optimización', 'Agente de Monitoreo'];
+      const statuses = ['En Proceso', 'Completada', 'Pendiente', 'Cancelada'];
+      
+      // Generar entre 2 y 8 órdenes
+      const numOrders = Math.floor(Math.random() * 7) + 2;
+      
+      for (let i = 0; i < numOrders; i++) {
+        const date = new Date();
+        date.setDate(date.getDate() - Math.floor(Math.random() * 365));
+        
+        orders.push({
+          id: `ORD-${String(i + 1).padStart(3, '0')}`,
+          agent: agentTypes[Math.floor(Math.random() * agentTypes.length)],
+          date: date,
+          status: statuses[Math.floor(Math.random() * statuses.length)],
+          value: Math.floor(Math.random() * 50000) + 5000
+        });
+      }
+      
+      return orders.sort((a, b) => b.date - a.date);
+    }
+    
+    // Función para renderizar lista de órdenes
+    function renderOrdersList(orders) {
+      const tbody = document.getElementById('clientOrdersList');
+      tbody.innerHTML = '';
+      
+      if (orders.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+              No hay órdenes registradas para este cliente
+            </td>
+          </tr>
+        `;
+        return;
+      }
+      
+      orders.forEach(order => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td class="px-4 py-3 text-sm font-medium text-gray-900">${order.id}</td>
+          <td class="px-4 py-3 text-sm text-gray-600">${order.agent}</td>
+          <td class="px-4 py-3 text-sm text-gray-600">${formatDate(order.date)}</td>
+          <td class="px-4 py-3">
+            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getOrderStatusColor(order.status)}">
+              ${order.status}
+            </span>
+          </td>
+          <td class="px-4 py-3 text-sm font-medium text-gray-900">${formatCurrency(order.value)}</td>
+          <td class="px-4 py-3 text-sm">
+            <button class="text-teal-600 hover:text-teal-900 mr-2">Ver</button>
+            <button class="text-blue-600 hover:text-blue-900">Editar</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+    
+    // Función para renderizar contactos
+    function renderContactsList(contacts) {
+      const tbody = document.getElementById('viewClientContactsList');
+      tbody.innerHTML = '';
+      
+      if (!contacts || contacts.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="px-4 py-8 text-center text-gray-500">
+              No hay contactos registrados
+            </td>
+          </tr>
+        `;
+        return;
+      }
+      
+      contacts.forEach(contact => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td class="px-4 py-3 text-sm font-medium text-gray-900">
+            ${contact.fullName}
+            ${contact.isPrimary ? '<span class="ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-teal-100 text-teal-800">Principal</span>' : ''}
+          </td>
+          <td class="px-4 py-3 text-sm text-gray-600">${contact.position || 'N/A'}</td>
+          <td class="px-4 py-3 text-sm text-gray-600">${contact.email}</td>
+          <td class="px-4 py-3 text-sm text-gray-600">${contact.phone}</td>
+          <td class="px-4 py-3 text-sm text-gray-600">${contact.department || 'N/A'}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+    
+    // Función para renderizar direcciones
+    function renderAddressesList(addresses) {
+      const tbody = document.getElementById('viewClientAddressesList');
+      tbody.innerHTML = '';
+      
+      if (!addresses || addresses.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="px-4 py-8 text-center text-gray-500">
+              No hay direcciones registradas
+            </td>
+          </tr>
+        `;
+        return;
+      }
+      
+      addresses.forEach(address => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td class="px-4 py-3 text-sm font-medium text-gray-900">
+            ${formatAddressType(address.type)}
+            ${address.isPrimary ? '<span class="ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-teal-100 text-teal-800">Principal</span>' : ''}
+          </td>
+          <td class="px-4 py-3 text-sm text-gray-600">
+            ${address.street}${address.interiorNumber ? ` Int. ${address.interiorNumber}` : ''}<br>
+            ${address.neighborhood}
+          </td>
+          <td class="px-4 py-3 text-sm text-gray-600">${address.city}</td>
+          <td class="px-4 py-3 text-sm text-gray-600">${address.state}</td>
+          <td class="px-4 py-3 text-sm text-gray-600">${address.postalCode}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+    
+    // Funciones de utilidad
+    function getCompanyInitials(companyName) {
+      return companyName
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase())
+        .join('')
+        .substring(0, 2);
+    }
+    
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('es-MX', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    }
+    
+    function formatCompanySize(size) {
+      const sizes = {
+        'micro': 'Micro (1-10 empleados)',
+        'pequena': 'Pequeña (11-50 empleados)',
+        'mediana': 'Mediana (51-250 empleados)',
+        'grande': 'Grande (251-1000 empleados)',
+        'corporativo': 'Corporativo (1000+ empleados)'
+      };
+      return sizes[size] || size;
+    }
+    
+    function formatBusinessPotential(potential) {
+      const potentials = {
+        'bajo': 'Bajo (< $10K)',
+        'medio': 'Medio ($10K - $50K)',
+        'alto': 'Alto ($50K - $200K)',
+        'premium': 'Premium (> $200K)'
+      };
+      return potentials[potential] || potential;
+    }
+    
+    function formatReferenceSource(source) {
+      const sources = {
+        'web': 'Sitio Web',
+        'redes': 'Redes Sociales',
+        'referido': 'Referido por cliente',
+        'evento': 'Evento/Conferencia',
+        'publicidad': 'Publicidad',
+        'cold-calling': 'Llamada en frío',
+        'partnership': 'Partner/Alianza',
+        'otro': 'Otro'
+      };
+      return sources[source] || source;
+    }
+    
+    function formatAddressType(type) {
+      const types = {
+        'fisica': 'Física',
+        'fiscal': 'Fiscal',
+        'envio': 'Envío'
+      };
+      return types[type] || type;
+    }
+    
+    function getOrderStatusColor(status) {
+      const colors = {
+        'En Proceso': 'bg-blue-100 text-blue-800',
+        'Completada': 'bg-green-100 text-green-800',
+        'Pendiente': 'bg-yellow-100 text-yellow-800',
+        'Cancelada': 'bg-red-100 text-red-800'
+      };
+      return colors[status] || 'bg-gray-100 text-gray-800';
+    }
+    
+    function formatCurrency(amount) {
+      return new Intl.NumberFormat('es-MX', {
+        style: 'currency',
+        currency: 'MXN'
+      }).format(amount);
+    }
+    
+    function formatIndustry(industry) {
+      if (!industry) return '';
+      
+      const normalizedIndustry = industry.toUpperCase();
+      const industries = {
+        'MANUFACTURA': 'Manufactura',
+        'RETAIL': 'Retail/Comercio',
+        'SERVICIOS': 'Servicios',
+        'TECNOLOGIA': 'Tecnología',
+        'SALUD': 'Salud',
+        'LOGISTICA': 'Logística',
+        'CONSTRUCCION': 'Construcción',
+        'AUTOMOTRIZ': 'Automotriz',
+        'ALIMENTARIA': 'Alimentaria',
+        'TEXTIL': 'Textil',
+        'ENERGIA': 'Energía',
+        'EDUCACION': 'Educación',
+        'FINANZAS': 'Finanzas',
+        'AGRICULTURA': 'Agricultura',
+        'OTRO': 'Otro'
+      };
+      return industries[normalizedIndustry] || industry;
+    }
+    
+    function formatStatus(status) {
+      if (!status) return '';
+      
+      const normalizedStatus = status.toUpperCase();
+      const statuses = {
+        'ACTIVO': 'Activo',
+        'INACTIVO': 'Inactivo',
+        'PROSPECTO': 'Prospecto'
+      };
+      return statuses[normalizedStatus] || status;
+    }
+    
+    function getIndustryColor(industry) {
+      if (!industry) return 'bg-gray-100 text-gray-800';
+      
+      const normalizedIndustry = industry.toUpperCase();
+      const colors = {
+        'MANUFACTURA': 'bg-blue-100 text-blue-800',
+        'RETAIL': 'bg-green-100 text-green-800',
+        'SERVICIOS': 'bg-purple-100 text-purple-800',
+        'TECNOLOGIA': 'bg-indigo-100 text-indigo-800',
+        'SALUD': 'bg-red-100 text-red-800',
+        'LOGISTICA': 'bg-yellow-100 text-yellow-800',
+        'CONSTRUCCION': 'bg-orange-100 text-orange-800',
+        'AUTOMOTRIZ': 'bg-gray-100 text-gray-800',
+        'ALIMENTARIA': 'bg-pink-100 text-pink-800',
+        'TEXTIL': 'bg-cyan-100 text-cyan-800',
+        'ENERGIA': 'bg-emerald-100 text-emerald-800',
+        'EDUCACION': 'bg-teal-100 text-teal-800',
+        'FINANZAS': 'bg-violet-100 text-violet-800',
+        'AGRICULTURA': 'bg-lime-100 text-lime-800',
+        'OTRO': 'bg-slate-100 text-slate-800'
+      };
+      return colors[normalizedIndustry] || 'bg-gray-100 text-gray-800';
+    }
+    
+    function getStatusColor(status) {
+      if (!status) return 'bg-gray-100 text-gray-800';
+      
+      const normalizedStatus = status.toUpperCase();
+      const colors = {
+        'ACTIVO': 'bg-green-100 text-green-800',
+        'INACTIVO': 'bg-red-100 text-red-800',
+        'PROSPECTO': 'bg-yellow-100 text-yellow-800'
+      };
+      return colors[normalizedStatus] || 'bg-gray-100 text-gray-800';
+    }
+    
+    function showError(message) {
+      console.error(message);
+      // Aquí podrías agregar una notificación visual si es necesario
+    }
+    
+    // Actualizar título de la página
+    function updatePageTitle(totalClients) {
+      try {
+        // Actualizar el número en el header principal
+        const headerNumber = document.getElementById('headerActiveClients');
+        if (headerNumber) {
+          headerNumber.textContent = totalClients || '0';
+        }
+        
+        // Actualizar title del documento si se desea
+        document.title = `Clientes (${totalClients || 0}) - Portal AIM | Automatización Industrial Mireles`;
+        
+        console.log('Título actualizado con total de clientes:', totalClients);
+      } catch (error) {
+        console.error('Error actualizando título:', error);
+      }
+    }
+    
+    function showLoadingState() {
+      const tableBody = document.getElementById('clientsTableBody');
+      const loadingRow = document.getElementById('loadingRow');
+      const emptyRow = document.getElementById('emptyRow');
+      
+      // Ocultar estado vacío
+      emptyRow.style.display = 'none';
+      
+      // Limpiar filas existentes excepto loading y empty
+      Array.from(tableBody.children).forEach(child => {
+        if (child.id !== 'loadingRow' && child.id !== 'emptyRow') {
+          child.remove();
+        }
+      });
+      
+      // Mostrar estado de carga
+      loadingRow.style.display = 'table-row';
+    }
+    
+    function showEmptyState() {
+      const tableBody = document.getElementById('clientsTableBody');
+      const emptyRow = document.getElementById('emptyRow');
+      const loadingRow = document.getElementById('loadingRow');
+      
+      loadingRow.style.display = 'none';
+      emptyRow.style.display = 'table-row';
+    }
+    
+    // Cerrar modales al hacer clic fuera
+    document.getElementById('newClientModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeNewClientModal();
+      }
+    });
+
+    document.getElementById('viewClientModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeViewClientModal();
+      }
+    });
+
+    document.getElementById('editClientModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeEditClientModal();
+      }
+    });
+
+    document.getElementById('clientOrdersModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeClientOrdersModal();
+      }
+    });
+
+    // Agregar event listeners para los formularios
+    function setupFormHandler() {
+      // Formulario de nuevo cliente
+      const newClientForm = document.getElementById('newClientForm');
+      if (newClientForm) {
+        newClientForm.addEventListener('submit', async function(e) {
+          e.preventDefault();
+          
+          const formData = new FormData(newClientForm);
+          await createClient(formData);
+        });
+      }
+
+      // Formulario de editar cliente
+      const editClientForm = document.getElementById('editClientForm');
+      if (editClientForm) {
+        editClientForm.addEventListener('submit', async function(e) {
+          e.preventDefault();
+          
+          const formData = new FormData(editClientForm);
+          await updateClient(formData);
+        });
+      }
+    }
+
+    // Inicializar cuando el DOM esté listo
+    document.addEventListener('DOMContentLoaded', function() {
+      initializeApp();
+      setupFormHandler();
+    });
+  </script>
+  </div>    <!-- End auth-container -->
+</PortalLayoutSidebar> 

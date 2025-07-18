@@ -1,0 +1,417 @@
+---
+import { Icon } from 'astro-icon/components';
+import UserDropdown from './UserDropdown.jsx';
+
+export const prerender = false;
+
+// Por ahora, no verificamos el usuario en SSR ya que JWT está en localStorage
+// La verificación se hará del lado del cliente
+const userSession = null;
+const user = null;
+
+const navLinks = [
+  { name: 'Soluciones', href: '/soluciones' },
+  { name: 'Industrias', href: '/industrias' },
+  { name: 'Planes', href: '/planes' },
+  { name: 'Calculadora ROI', href: '/herramientas/calculadora-roi' },
+  { name: 'Nosotros', href: '/nosotros' },
+];
+---
+
+<header id="main-header" class="fixed w-full top-6 z-50 transition-all duration-500 px-4">
+  <div class="mx-auto max-w-6xl">
+    <nav class="header-pill bg-white/70 backdrop-blur-lg rounded-full transition-all duration-500 border border-white/20 shadow-[0_8px_30px_rgb(0,0,0,0.12)] shadow-teal-900/[0.05]" id="nav-container">
+      <div class="container mx-auto px-8 py-4">
+        <div class="flex items-center justify-between">
+          <!-- Logo y Nombre -->
+          <a href="/" class="flex items-center space-x-3">
+            <div class="flex items-center">
+              <img src="/img/AIMblanco.png" alt="AIM Logo" class="h-8 w-auto min-w-[32px] transition-all duration-500" id="header-logo"/>
+              <span class="text-teal-900 font-bold text-xl ml-3">AIM</span>
+            </div>
+          </a>
+          
+          <!-- Menú de Escritorio (Desktop) -->
+      <div class="hidden md:flex items-center space-x-8">
+        {navLinks.map(link => (
+              <a href={link.href} class="text-teal-800 hover:text-teal-600 transition-colors duration-300 font-medium">
+            {link.name}
+          </a>
+        ))}
+      
+          
+          <!-- Botones de Autenticación (Desktop) - Controlado por JS -->
+          <div class="hidden md:flex items-center space-x-3" id="desktop-auth-buttons">
+            <!-- Por defecto mostramos botones de no autenticado -->
+            <div id="not-authenticated-desktop">
+              <a 
+                href="/login" 
+                class="inline-flex items-center text-teal-800 hover:text-teal-600 transition-colors duration-300 font-medium px-3 py-2 rounded-lg hover:bg-teal-50"
+              >
+                <Icon name="tabler:login" class="w-4 h-4 mr-2" />
+                Iniciar Sesión
+              </a>
+              <a 
+                href="/demo" 
+                class="inline-flex items-center bg-teal-600 hover:bg-teal-500 text-white font-bold py-2.5 px-6 rounded-full transition-all duration-300"
+              >
+                Agendar Demo
+              </a>
+            </div>
+            
+            <!-- Este div se llenará dinámicamente cuando esté autenticado -->
+            <div id="authenticated-desktop" class="hidden">
+              <!-- UserDropdown se insertará aquí dinámicamente -->
+            </div>
+          </div>
+
+          <!-- Botón del Menú Móvil (Hamburguesa) -->
+      <div class="md:hidden">
+            <button id="mobile-menu-button" class="text-teal-800 hover:text-teal-600 focus:outline-none">
+              <svg id="menu-open-icon" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+          </svg>
+               <svg id="menu-close-icon" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+        </button>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </div>
+  
+  <!-- Panel del Menú Móvil -->
+  <div id="mobile-menu" class="md:hidden fixed inset-x-4 top-24 z-40 hidden">
+    <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+      <div class="px-6 py-6">
+        <!-- Enlaces de navegación móvil -->
+        <div class="space-y-4 mb-6">
+          {navLinks.map(link => (
+            <a href={link.href} class="block text-teal-800 hover:text-teal-600 font-medium text-lg py-2">
+              {link.name}
+            </a>
+          ))}
+        </div>
+        
+        <!-- Botones de autenticación móvil - Controlado por JS -->
+        <div class="border-t border-gray-200 pt-6" id="mobile-auth-buttons">
+          <!-- Por defecto mostramos botones de no autenticado -->
+          <div id="not-authenticated-mobile" class="space-y-3">
+            <a 
+              href="/login" 
+              class="flex items-center text-teal-800 hover:text-teal-600 font-medium text-lg py-2"
+            >
+              <Icon name="tabler:login" class="w-5 h-5 mr-3" />
+              Iniciar Sesión
+            </a>
+            <a 
+              href="/demo" 
+              class="bg-teal-600 hover:bg-teal-500 text-white text-center font-bold py-3 px-6 rounded-full transition-all duration-300"
+            >
+              Agendar Demo
+            </a>
+          </div>
+          
+          <!-- Este div se llenará dinámicamente cuando esté autenticado -->
+          <div id="authenticated-mobile" class="hidden space-y-3">
+            <!-- Contenido móvil autenticado se insertará aquí -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<script>
+  // Importar userStore que es más confiable
+  import { userStore } from '../lib/userStore.js';
+
+  // Referencias a elementos del DOM
+  const desktopNotAuth = document.getElementById('not-authenticated-desktop');
+  const desktopAuth = document.getElementById('authenticated-desktop');
+  const mobileNotAuth = document.getElementById('not-authenticated-mobile');
+  const mobileAuth = document.getElementById('authenticated-mobile');
+  
+  const mobileMenuButton = document.getElementById('mobile-menu-button');
+  const mobileMenu = document.getElementById('mobile-menu');
+  const menuOpenIcon = document.getElementById('menu-open-icon');
+  const menuCloseIcon = document.getElementById('menu-close-icon');
+  const header = document.getElementById('main-header');
+  const navContainer = document.getElementById('nav-container');
+  const headerLogo = document.getElementById('header-logo');
+
+  // Función para verificar autenticación y actualizar UI
+  async function updateAuthUI() {
+    try {
+      console.log('🔍 Header: Verificando autenticación...');
+      
+      // Verificar si ya tenemos un usuario cargado y no hay error
+      const currentState = userStore.getState();
+      if (currentState.user && currentState.initialized && !currentState.error) {
+        console.log('✅ Header: Usando usuario ya cargado:', currentState.user.name);
+        displayAuthenticatedUI(currentState.user);
+        return;
+      }
+      
+      // Solo intentar cargar si no está cargando ya
+      if (currentState.isLoading) {
+        console.log('⏳ Header: Carga ya en progreso, esperando...');
+        return;
+      }
+      
+      // Intentar cargar usuario usando userStore
+      const user = await userStore.loadUser();
+      
+      if (user && user.name) {
+        console.log('✅ Header: Usuario autenticado encontrado:', user.name);
+        displayAuthenticatedUI(user);
+      } else {
+        console.log('ℹ️ Header: Usuario no autenticado');
+        displayUnauthenticatedUI();
+      }
+      
+    } catch (error) {
+      console.error('❌ Header: Error verificando autenticación:', error);
+      displayUnauthenticatedUI();
+    }
+  }
+
+  // Función para mostrar UI autenticada
+  function displayAuthenticatedUI(user) {
+    // Ocultar botones de no autenticado
+    desktopNotAuth?.classList.add('hidden');
+    mobileNotAuth?.classList.add('hidden');
+    
+    // Crear y mostrar UserDropdown para desktop
+    if (desktopAuth) {
+      desktopAuth.innerHTML = `
+        <div class="relative">
+          <button class="flex items-center space-x-2 text-teal-800 hover:text-teal-600 font-medium" id="user-menu-button">
+            <div class="flex items-center justify-center w-8 h-8 bg-teal-600 text-white rounded-full text-sm font-semibold">
+              ${getInitials(user.name)}
+            </div>
+            <span class="text-sm font-medium">${user.name}</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+          <div class="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border hidden z-50" id="user-dropdown">
+            <div class="px-4 py-3 border-b">
+              <p class="text-sm font-medium text-gray-900">${user.name}</p>
+              <p class="text-sm text-gray-500">${user.email}</p>
+              ${user.role ? `<p class="text-xs text-teal-600 font-medium mt-1">${user.role}</p>` : ''}
+            </div>
+            <div class="py-1">
+              <a href="/portal" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-teal-50">
+                <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+                Portal
+              </a>
+              <button type="button" onclick="handleLogout()" class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                Cerrar Sesión
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      // Mostrar el contenedor autenticado
+      desktopAuth.classList.remove('hidden');
+      
+      // Agregar funcionalidad al dropdown
+      setupDropdownEvents();
+    }
+    
+    // Crear contenido para móvil
+    if (mobileAuth) {
+      mobileAuth.innerHTML = `
+        <div class="border-b border-gray-200 pb-3 mb-3">
+          <div class="flex items-center space-x-3">
+            <div class="flex items-center justify-center w-10 h-10 bg-teal-600 text-white rounded-full text-sm font-semibold">
+              ${getInitials(user.name)}
+            </div>
+            <div>
+              <p class="text-sm font-medium text-gray-900">${user.name}</p>
+              <p class="text-xs text-gray-500">${user.email}</p>
+              ${user.role ? `<p class="text-xs text-teal-600 font-medium">${user.role}</p>` : ''}
+            </div>
+          </div>
+        </div>
+        <a href="/portal" class="flex items-center text-teal-800 hover:text-teal-600 font-medium text-lg py-2">
+          <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a3 3 0 012 2v2M7 7h10" />
+          </svg>
+          Portal
+        </a>
+        <button type="button" onclick="handleLogout()" class="flex items-center w-full text-red-600 hover:text-red-700 font-medium text-lg py-2">
+          <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          Cerrar Sesión
+        </button>
+      `;
+      
+      // Mostrar el contenedor autenticado móvil
+      mobileAuth.classList.remove('hidden');
+    }
+  }
+
+  // Función para mostrar UI no autenticada
+  function displayUnauthenticatedUI() {
+    // Mostrar botones de no autenticado
+    desktopNotAuth?.classList.remove('hidden');
+    mobileNotAuth?.classList.remove('hidden');
+    
+    // Ocultar contenido autenticado
+    desktopAuth?.classList.add('hidden');
+    mobileAuth?.classList.add('hidden');
+  }
+
+  // Función para obtener iniciales del nombre
+  function getInitials(name) {
+    if (!name) return 'U';
+    return name
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  }
+
+  // Configurar eventos del dropdown
+  function setupDropdownEvents() {
+    const userMenuButton = document.getElementById('user-menu-button');
+    const userDropdown = document.getElementById('user-dropdown');
+    
+    if (userMenuButton && userDropdown) {
+      userMenuButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        userDropdown.classList.toggle('hidden');
+      });
+      
+      // Cerrar dropdown al hacer click fuera
+      document.addEventListener('click', (e) => {
+        if (!userMenuButton.contains(e.target) && !userDropdown.contains(e.target)) {
+          userDropdown.classList.add('hidden');
+        }
+      });
+    }
+  }
+
+  // Función para manejar logout
+  window.handleLogout = async function() {
+    try {
+      console.log('🚪 Cerrando sesión...');
+      await userStore.logout();
+      window.location.href = '/';
+    } catch (error) {
+      console.error('❌ Error cerrando sesión:', error);
+      // Intentar limpiar de todas formas
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      window.location.href = '/';
+    }
+  };
+
+  // Configurar menú móvil
+  function setupMobileMenu() {
+    if (mobileMenuButton && mobileMenu) {
+      mobileMenuButton.addEventListener('click', () => {
+        const isOpen = !mobileMenu.classList.contains('hidden');
+        
+        if (isOpen) {
+          mobileMenu.classList.add('hidden');
+          menuOpenIcon?.classList.remove('hidden');
+          menuCloseIcon?.classList.add('hidden');
+        } else {
+          mobileMenu.classList.remove('hidden');
+          menuOpenIcon?.classList.add('hidden');
+          menuCloseIcon?.classList.remove('hidden');
+        }
+      });
+      
+      // Cerrar menú al hacer click fuera
+      document.addEventListener('click', (e) => {
+        if (!mobileMenuButton.contains(e.target) && !mobileMenu.contains(e.target)) {
+          mobileMenu.classList.add('hidden');
+          menuOpenIcon?.classList.remove('hidden');
+          menuCloseIcon?.classList.add('hidden');
+        }
+      });
+    }
+  }
+
+  // Configurar efectos de scroll del header
+  function setupScrollEffects() {
+    let lastScroll = 0;
+    
+    window.addEventListener('scroll', () => {
+      const currentScroll = window.pageYOffset;
+      
+      if (currentScroll > 100) {
+        header?.classList.add('header-scrolled');
+        navContainer?.classList.add('bg-white/90', 'backdrop-blur-xl');
+        headerLogo?.classList.add('h-7');
+      } else {
+        header?.classList.remove('header-scrolled');
+        navContainer?.classList.remove('bg-white/90', 'backdrop-blur-xl');
+        headerLogo?.classList.remove('h-7');
+      }
+      
+      lastScroll = currentScroll;
+    });
+  }
+
+  // Inicializar todo cuando el DOM esté listo
+  document.addEventListener('DOMContentLoaded', () => {
+    console.log('📱 Header: Inicializando...');
+    
+    setupMobileMenu();
+    setupScrollEffects();
+    
+    // Ejecutar updateAuthUI solo una vez al cargar
+    updateAuthUI();
+    
+    // Suscribirse a cambios del userStore SOLO cuando el estado cambie significativamente
+    let lastUserId = null;
+    let lastError = null;
+    
+    userStore.subscribe((state) => {
+      // Solo actualizar UI si realmente cambió algo importante
+      const currentUserId = state.user?.id || null;
+      const currentError = state.error;
+      
+      if (currentUserId !== lastUserId || currentError !== lastError) {
+        console.log('🔄 Header: Estado del usuario cambió, actualizando UI...');
+        
+        if (state.user) {
+          displayAuthenticatedUI(state.user);
+        } else {
+          displayUnauthenticatedUI();
+        }
+        
+        lastUserId = currentUserId;
+        lastError = currentError;
+      }
+    });
+  });
+</script>
+
+<style>
+  .header-scrolled {
+    @apply top-4;
+  }
+  
+  .header-pill {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  #header-logo {
+    transition: all 0.3s ease;
+  }
+</style>

@@ -1,0 +1,120 @@
+---
+import { Image } from 'astro:assets';
+---
+
+<section class="relative py-24 overflow-hidden bg-gradient-to-b from-white to-teal-50/30">
+    <!-- Elementos decorativos animados -->
+    <div class="absolute inset-0 pointer-events-none">
+        <div class="absolute w-[500px] h-[500px] bg-teal-100/20 rounded-full blur-3xl -top-48 -left-48 animate-pulse"></div>
+        <div class="absolute w-[500px] h-[500px] bg-blue-100/20 rounded-full blur-3xl -bottom-48 -right-48 animate-pulse" style="animation-delay: 1s;"></div>
+        
+        <!-- Patrones geométricos -->
+        <div class="absolute top-20 right-20 w-24 h-24 border-4 border-teal-200/30 rounded-lg rotate-12 animate-float"></div>
+        <div class="absolute bottom-20 left-20 w-32 h-32 border-4 border-teal-200/30 rounded-full animate-float" style="animation-delay: 0.5s;"></div>
+        <div class="absolute top-40 left-1/4 w-16 h-16 border-4 border-teal-200/30 rotate-45 animate-float" style="animation-delay: 1s;"></div>
+    </div>
+
+    <div class="container mx-auto px-4 relative">
+        <div class="max-w-5xl mx-auto">
+            <!-- Grid de dos columnas -->
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <!-- Columna de texto -->
+                <div class="cta-content space-y-8">
+                    <h2 class="text-4xl md:text-5xl font-bold text-teal-800 leading-tight">
+                        ¿Listo para que la IA haga el trabajo pesado?
+                    </h2>
+                    <div class="space-y-6">
+                        <div class="flex items-start space-x-4">
+                            <div class="flex-shrink-0 w-8 h-8 bg-teal-100 rounded-lg flex items-center justify-center">
+                                <svg class="w-5 h-5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
+                            <p class="text-lg text-teal-700">15 minutos de conversación sin compromiso</p>
+                        </div>
+                        <div class="flex items-start space-x-4">
+                            <div class="flex-shrink-0 w-8 h-8 bg-teal-100 rounded-lg flex items-center justify-center">
+                                <svg class="w-5 h-5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                            </div>
+                            <p class="text-lg text-teal-700">Descubre el potencial oculto en tus operaciones</p>
+                        </div>
+                        <div class="flex items-start space-x-4">
+                            <div class="flex-shrink-0 w-8 h-8 bg-teal-100 rounded-lg flex items-center justify-center">
+                                <svg class="w-5 h-5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                </svg>
+                            </div>
+                            <p class="text-lg text-teal-700">Soluciones personalizadas y seguras</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Columna del formulario/CTA -->
+                <div class="cta-action bg-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
+                    <div class="text-center space-y-6">
+                        <div class="inline-block p-3 bg-teal-100 rounded-xl mb-4">
+                            <svg class="w-8 h-8 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <h3 class="text-2xl font-bold text-teal-800">Agenda tu Demo Estratégica</h3>
+                        <p class="text-teal-600">Únete a las empresas que ya están transformando su operación con IA</p>
+                        <a href="/contacto" class="block w-full bg-teal-600 text-white font-bold py-4 px-8 rounded-xl hover:bg-teal-700 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl">
+                            Agendar Ahora
+                        </a>
+                        <p class="text-sm text-teal-500">Respuesta garantizada en menos de 24 horas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    @keyframes float {
+        0% { transform: translateY(0px) rotate(0deg); }
+        50% { transform: translateY(-20px) rotate(5deg); }
+        100% { transform: translateY(0px) rotate(0deg); }
+    }
+
+    .animate-float {
+        animation: float 6s ease-in-out infinite;
+    }
+
+    .cta-content, .cta-action {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    .cta-content.show {
+        opacity: 1;
+        transform: translateY(0);
+        transition: all 0.8s ease-out;
+    }
+
+    .cta-action.show {
+        opacity: 1;
+        transform: translateY(0);
+        transition: all 0.8s ease-out 0.2s;
+    }
+</style>
+
+<script>
+    // Animación de entrada con Intersection Observer
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('show');
+            }
+        });
+    }, {
+        threshold: 0.2
+    });
+
+    // Observar elementos
+    document.querySelectorAll('.cta-content, .cta-action').forEach(el => {
+        observer.observe(el);
+    });
+</script> 

@@ -1,0 +1,110 @@
+---
+import { Image } from 'astro:assets';
+---
+
+<section class="py-24 bg-gradient-to-b from-teal-50/50 to-white relative overflow-hidden">
+  <!-- Decorative elements -->
+  <div class="absolute inset-0 pointer-events-none">
+    <div class="absolute w-96 h-96 bg-teal-100/20 rounded-full blur-3xl -top-48 -left-48"></div>
+    <div class="absolute w-96 h-96 bg-blue-100/20 rounded-full blur-3xl -bottom-48 -right-48"></div>
+  </div>
+
+  <div class="container mx-auto px-4">
+    <div class="text-center mb-16">
+      <h2 class="text-4xl md:text-5xl font-bold text-teal-800 mb-4">¿Cómo lo hacemos?</h2>
+      <p class="text-lg text-teal-600 max-w-2xl mx-auto">Un proceso simple pero efectivo para transformar tu operación con IA</p>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+      <!-- Card 1 -->
+      <div class="process-card group relative bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+        <div class="absolute -top-6 left-8 w-12 h-12 bg-teal-600 rounded-lg flex items-center justify-center text-2xl font-bold text-white shadow-lg">
+          1
+        </div>
+        <div class="h-full flex flex-col">
+          <h3 class="text-2xl font-bold text-teal-800 mt-4 mb-4">Análisis de Procesos</h3>
+          <p class="text-teal-600 flex-grow">
+            Identificamos las tareas repetitivas y los cuellos de botella que están frenando tu operación.
+          </p>
+          <div class="mt-6 flex items-center text-teal-700 opacity-0 group-hover:opacity-100 transition-opacity">
+            <span class="text-sm font-medium">Descubre más</span>
+            <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="process-card group relative bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+        <div class="absolute -top-6 left-8 w-12 h-12 bg-teal-600 rounded-lg flex items-center justify-center text-2xl font-bold text-white shadow-lg">
+          2
+        </div>
+        <div class="h-full flex flex-col">
+          <h3 class="text-2xl font-bold text-teal-800 mt-4 mb-4">Diseño del Agente</h3>
+          <p class="text-teal-600 flex-grow">
+            Configuramos un Agente Inteligente específico para tus necesidades y sistemas existentes.
+          </p>
+          <div class="mt-6 flex items-center text-teal-700 opacity-0 group-hover:opacity-100 transition-opacity">
+            <span class="text-sm font-medium">Descubre más</span>
+            <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="process-card group relative bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+        <div class="absolute -top-6 left-8 w-12 h-12 bg-teal-600 rounded-lg flex items-center justify-center text-2xl font-bold text-white shadow-lg">
+          3
+        </div>
+        <div class="h-full flex flex-col">
+          <h3 class="text-2xl font-bold text-teal-800 mt-4 mb-4">Implementación y Mejora</h3>
+          <p class="text-teal-600 flex-grow">
+            Integramos el Agente y optimizamos su rendimiento basado en datos reales de operación.
+          </p>
+          <div class="mt-6 flex items-center text-teal-700 opacity-0 group-hover:opacity-100 transition-opacity">
+            <span class="text-sm font-medium">Descubre más</span>
+            <svg class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .process-card {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  .process-card.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+</style>
+
+<script>
+  // Animación de entrada de las cards
+  const cards = document.querySelectorAll('.process-card');
+  
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, index) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => {
+          entry.target.classList.add('show');
+        }, index * 200); // Añade delay para efecto cascada
+      }
+    });
+  }, {
+    threshold: 0.2
+  });
+
+  cards.forEach(card => {
+    observer.observe(card);
+  });
+</script> 

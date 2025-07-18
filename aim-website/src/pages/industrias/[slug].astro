@@ -1,0 +1,67 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { industriesData } from '../../data/industries.js';
+import { agents } from '../../data/agents.js'; // Importamos agentes para mostrar los relevantes
+import { Icon } from 'astro-icon/components';
+import AgentCard from '../../components/soluciones/AgentCard.astro';
+
+export const prerender = false;
+
+// Get the industry based on the slug from the URL
+const { slug } = Astro.params;
+const industry = industriesData.find(i => i.slug === slug);
+
+// If no industry found, return 404
+if (!industry) {
+  return new Response(null, { status: 404 });
+}
+
+// Filtramos los agentes relevantes para esta industria
+const relevantAgents = agents.filter(agent => 
+  industry.relevant_agents && industry.relevant_agents.includes(agent.slug)
+);
+---
+
+<BaseLayout title={industry.name} description={industry.short_description}>
+  <!-- Hero -->
+  <div class="bg-brand-dark text-white py-24">
+    <div class="container mx-auto px-4 max-w-4xl">
+      <p class="font-bold text-brand-secondary uppercase tracking-widest">{industry.name}</p>
+      <h1 class="mt-4 text-4xl md:text-6xl font-black">{industry.headline || industry.name}</h1>
+      <p class="mt-6 text-xl text-brand-gray">{industry.subheadline || industry.short_description}</p>
+    </div>
+  </div>
+
+  <!-- Desafíos Comunes -->
+  <div class="py-20">
+    <div class="container mx-auto px-4 max-w-5xl">
+      <h2 class="text-3xl font-bold text-center text-brand-dark">Transformamos Desafíos Comunes en Ventajas Competitivas</h2>
+      <div class="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
+        {industry.challenges && industry.challenges.map(challenge => (
+          <div class="bg-brand-light p-6 rounded-lg">
+            <h3 class="font-bold text-brand-dark">{challenge.title}</h3>
+            <p class="mt-2 text-sm text-brand-gray">{challenge.description}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  <!-- Soluciones Recomendadas -->
+  <div class="py-20 bg-white">
+      <div class="container mx-auto px-4">
+        <h2 class="text-3xl font-bold text-center text-brand-dark">Agentes Inteligentes Recomendados para {industry.name}</h2>
+        <div class="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {relevantAgents.map(agent => (
+            <AgentCard
+              title={agent.title}
+              category={agent.category}
+              description={agent.short_description}
+              href={`/soluciones/${agent.slug}`}
+              iconName={agent.icon}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+</BaseLayout> 

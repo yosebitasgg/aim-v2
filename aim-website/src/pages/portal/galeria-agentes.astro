@@ -1,0 +1,790 @@
+---
+import PortalLayoutSidebar from '../../layouts/PortalLayoutSidebar.astro';
+import { Icon } from 'astro-icon/components';
+
+// Los datos se cargarán dinámicamente desde la API
+// Plantillas de flujos n8n por tipo de conexión (datos de respaldo)
+const plantillasConexion = [
+  {
+    tipo: 'API',
+    titulo: 'Integración vía API',
+    icono: 'tabler:code',
+    descripcion: 'Conexión directa con sistemas mediante endpoints REST/SOAP',
+    ejemplos: ['ERP SAP', 'CRM Salesforce', 'Sistemas bancarios', 'APIs de e-commerce'],
+    flujo: {
+      nodos: ['HTTP Request', 'Function', 'Set', 'IF', 'Database'],
+      descripcion: 'Flujo optimizado para autenticación OAuth/JWT, manejo de rate limits y transformación de datos'
+    },
+    ventajas: ['Más estable', 'Mejor rendimiento', 'Menos mantenimiento', 'Datos estructurados'],
+    casos: ['Sincronización de facturas', 'Actualización de inventario', 'Integración CRM-ERP']
+  },
+  {
+    tipo: 'RPA',
+    titulo: 'Automatización RPA',
+    icono: 'tabler:robot',
+    descripcion: 'Emulación de interacciones humanas en interfaces gráficas',
+    ejemplos: ['Aplicaciones legacy', 'Sistemas sin API', 'Procesos manuales complejos', 'Múltiples sistemas'],
+    flujo: {
+      nodos: ['Screenshot', 'Mouse Click', 'Keyboard', 'Image Recognition', 'Loop'],
+      descripcion: 'Flujo robusto con reconocimiento de pantalla, manejo de errores y recuperación automática'
+    },
+    ventajas: ['No requiere API', 'Imita proceso humano', 'Flexible', 'Rápida implementación'],
+    casos: ['Descarga de reportes', 'Captura de datos web', 'Procesos administrativos']
+  },
+  {
+    tipo: 'Webscraping',
+    titulo: 'Extracción Web',
+    icono: 'tabler:world',
+    descripcion: 'Extracción automatizada de datos de sitios web',
+    ejemplos: ['Portales de proveedores', 'Sitios de tracking', 'Marketplaces', 'Fuentes de precios'],
+    flujo: {
+      nodos: ['HTTP Request', 'HTML Extract', 'Loop Over Items', 'Wait', 'Database'],
+      descripcion: 'Flujo inteligente con manejo de JavaScript, captchas y detección de cambios'
+    },
+    ventajas: ['Acceso a datos públicos', 'Monitoreo continuo', 'Bajo costo', 'Escalable'],
+    casos: ['Monitoreo de precios', 'Status de envíos', 'Noticias del sector']
+  },
+  {
+    tipo: 'Archivo',
+    titulo: 'Procesamiento de Archivos',
+    icono: 'tabler:file-text',
+    descripcion: 'Automatización basada en documentos y archivos',
+    ejemplos: ['PDFs de facturas', 'Excel de inventario', 'CSVs de ventas', 'Emails con adjuntos'],
+    flujo: {
+      nodos: ['Watch Folder', 'PDF Extract', 'OCR', 'Excel Parser', 'Email'],
+      descripcion: 'Flujo avanzado con OCR, procesamiento NLP y validación inteligente de datos'
+    },
+    ventajas: ['Procesa documentos', 'OCR integrado', 'Validación automática', 'Histórico completo'],
+    casos: ['Facturas de proveedores', 'Órdenes de compra', 'Reportes de ventas']
+  },
+  {
+    tipo: 'Base de Datos',
+    titulo: 'Integración BD',
+    icono: 'tabler:database',
+    descripcion: 'Conexión directa con bases de datos y sistemas internos',
+    ejemplos: ['SQL Server', 'Oracle', 'MySQL', 'PostgreSQL', 'MongoDB'],
+    flujo: {
+      nodos: ['Database Query', 'Transform', 'Aggregate', 'Schedule', 'Notification'],
+      descripcion: 'Flujo optimizado para consultas complejas, transformaciones ETL y sincronización'
+    },
+    ventajas: ['Acceso directo', 'Consultas complejas', 'Mejor rendimiento', 'Control total'],
+    casos: ['Reportes automáticos', 'Sincronización de datos', 'ETL personalizado']
+  },
+  {
+    tipo: 'IoT/Sensores',
+    titulo: 'Conectividad IoT',
+    icono: 'tabler:chart-line',
+    descripcion: 'Integración con dispositivos IoT y sensores industriales',
+    ejemplos: ['SCADA', 'PLCs', 'Sensores de temperatura', 'Contadores inteligentes'],
+    flujo: {
+      nodos: ['MQTT', 'ModBus', 'OPC-UA', 'Time Series', 'Alert'],
+      descripcion: 'Flujo especializado para protocolos industriales y análisis en tiempo real'
+    },
+    ventajas: ['Tiempo real', 'Protocolos industriales', 'Análisis predictivo', 'Alertas inteligentes'],
+    casos: ['Monitoreo OEE', 'Mantenimiento predictivo', 'Control de calidad']
+  }
+];
+---
+
+<PortalLayoutSidebar title="Galería de Agentes - Portal AIM">
+  <!-- Auth Guard Container -->
+  <div id="auth-container">
+    <!-- Loading state -->
+    <div id="auth-loading" class="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div class="text-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
+        <p class="text-gray-600">Verificando autenticación...</p>
+      </div>
+    </div>
+
+    <!-- Main content -->
+    <div id="main-content" class="hidden">
+      <!-- Header Principal -->
+      <div class="mb-8">
+        <div class="bg-gradient-to-r from-teal-600 to-emerald-600 rounded-xl p-6 text-white">
+          <div class="flex items-center justify-between">
+            <div>
+              <h1 class="text-2xl font-bold mb-2">Galería de Plantillas de Agentes</h1>
+              <p class="text-teal-100">Plantillas prediseñadas y flujos de n8n para diferentes tipos de automatización</p>
+            </div>
+            <div class="text-right">
+              <div class="text-teal-100 text-sm">Plantillas Disponibles</div>
+              <div class="text-xl font-bold">{plantillasConexion.length}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+  <!-- Resumen de Tipos de Conexión -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500 mb-1">Tipos de Conexión</p>
+          <p class="text-2xl font-bold text-gray-900" id="stats-connection-types">6</p>
+          <p class="text-sm text-teal-600 flex items-center mt-2">
+            <Icon name="tabler:link" class="w-4 h-4 mr-1" />
+            Tecnologías cubiertas
+          </p>
+        </div>
+        <div class="p-3 bg-teal-50 rounded-lg">
+          <Icon name="tabler:layout-grid" class="w-6 h-6 text-teal-600" />
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500 mb-1">Agentes Preconstruidos</p>
+          <p class="text-2xl font-bold text-gray-900" id="stats-agents">0</p>
+          <p class="text-sm text-emerald-600 flex items-center mt-2">
+            <Icon name="tabler:robot" class="w-4 h-4 mr-1" />
+            Listos para usar
+          </p>
+        </div>
+        <div class="p-3 bg-emerald-50 rounded-lg">
+          <Icon name="tabler:check" class="w-6 h-6 text-emerald-600" />
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500 mb-1">Tiempo de Deploy</p>
+          <p class="text-2xl font-bold text-gray-900" id="stats-deploy-time">1-3</p>
+          <p class="text-sm text-teal-600 flex items-center mt-2">
+            <Icon name="tabler:clock" class="w-4 h-4 mr-1" />
+            Días promedio
+          </p>
+        </div>
+        <div class="p-3 bg-teal-50 rounded-lg">
+          <Icon name="tabler:rocket" class="w-6 h-6 text-teal-600" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Selector de Vista -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
+    <div class="flex items-center justify-between">
+      <h3 class="text-xl font-semibold text-gray-900">Explorar Plantillas</h3>
+      <div class="flex space-x-2">
+        <button id="vistaPlantillas" class="bg-teal-600 text-white px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200">
+          <Icon name="tabler:layout-grid" class="w-4 h-4 inline mr-2" />
+          Por Tipo de Conexión
+        </button>
+        <button id="vistaAgentes" class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 hover:bg-gray-200">
+          <Icon name="tabler:robot" class="w-4 h-4 inline mr-2" />
+          Agentes Existentes
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vista de Plantillas por Tipo de Conexión -->
+  <div id="contenidoPlantillas" class="space-y-8">
+    <h2 class="text-2xl font-bold text-gray-900 mb-6">Plantillas por Tipo de Conexión</h2>
+    
+    <!-- Loading state -->
+    <div id="plantillas-loading" class="flex justify-center items-center py-12">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
+      <span class="ml-2 text-gray-600">Cargando plantillas...</span>
+    </div>
+    
+    <!-- Container for dynamic content -->
+    <div id="plantillas-container"></div>
+    
+    <!-- Error state -->
+    <div id="plantillas-error" class="hidden text-center py-12">
+      <div class="text-red-500 mb-4">
+        <Icon name="tabler:alert-circle" class="w-12 h-12 mx-auto mb-2" />
+        <p class="text-lg font-semibold">Error al cargar las plantillas</p>
+        <p class="text-sm text-gray-600 mt-1">Por favor, inténtalo de nuevo más tarde</p>
+      </div>
+      <button id="retry-plantillas" class="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700">
+        Reintentar
+      </button>
+    </div>
+  </div>
+
+  <!-- Vista de Agentes Existentes -->
+  <div id="contenidoAgentes" class="space-y-8 hidden">
+    <h2 class="text-2xl font-bold text-gray-900 mb-6">Agentes Preconstruidos</h2>
+    
+    <!-- Loading state -->
+    <div id="agentes-loading" class="flex justify-center items-center py-12">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
+      <span class="ml-2 text-gray-600">Cargando agentes...</span>
+    </div>
+    
+    <!-- Container for dynamic content -->
+    <div id="agentes-container"></div>
+    
+    <!-- Error state -->
+    <div id="agentes-error" class="hidden text-center py-12">
+      <div class="text-red-500 mb-4">
+        <Icon name="tabler:alert-circle" class="w-12 h-12 mx-auto mb-2" />
+        <p class="text-lg font-semibold">Error al cargar los agentes</p>
+        <p class="text-sm text-gray-600 mt-1">Por favor, inténtalo de nuevo más tarde</p>
+      </div>
+      <button id="retry-agentes" class="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700">
+        Reintentar
+      </button>
+    </div>
+  </div>
+
+  <!-- Acciones Rápidas -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mt-8">
+    <div class="text-center">
+      <h3 class="text-xl font-semibold text-gray-900 mb-3">¿Necesitas un Agente Personalizado?</h3>
+      <p class="text-gray-600 mb-6">Si no encuentras una plantilla que se ajuste a tus necesidades, podemos crear un agente a medida</p>
+      <div class="flex justify-center space-x-4">
+        <a href="/portal/crear-agente" class="bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg inline-flex items-center space-x-2">
+          <Icon name="tabler:plus" class="w-5 h-5" />
+          <span>Crear Agente Personalizado</span>
+        </a>
+        <button class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-medium transition-all duration-200 inline-flex items-center space-x-2">
+          <Icon name="tabler:help" class="w-5 h-5" />
+          <span>Consultoría Técnica</span>
+        </button>
+      </div>
+    </div>
+  </div>
+    </div> <!-- main-content -->
+  </div> <!-- auth-container -->
+</PortalLayoutSidebar>
+
+<script>
+  import galleryApiClient from '../../lib/galleryApiClient.js';
+  import { initializePortalAuth } from '../../lib/portalAuthScript.js';
+
+  // Estado global de la aplicación
+  let appState = {
+    connectionTypes: [],
+    agents: [],
+    categories: [],
+    templates: [],
+    currentView: 'plantillas',
+    loading: false,
+    error: null
+  };
+
+  // Funciones de autenticación
+  function showMainContent() {
+    document.getElementById('auth-loading').classList.add('hidden');
+    document.getElementById('main-content').classList.remove('hidden');
+  }
+
+  function showAuthError(message) {
+    document.getElementById('auth-loading').innerHTML = `
+      <div class="text-center">
+        <div class="mb-4">
+          <svg class="w-16 h-16 text-red-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+        </div>
+        <p class="text-red-600 font-medium mb-4">${message}</p>
+        <button onclick="window.location.reload()" class="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700">
+          Intentar de nuevo
+        </button>
+      </div>
+    `;
+  }
+
+  // Elementos del DOM
+  const elements = {
+    vistaPlantillas: document.getElementById('vistaPlantillas'),
+    vistaAgentes: document.getElementById('vistaAgentes'),
+    contenidoPlantillas: document.getElementById('contenidoPlantillas'),
+    contenidoAgentes: document.getElementById('contenidoAgentes'),
+    statsConnectionTypes: document.getElementById('stats-connection-types'),
+    statsAgents: document.getElementById('stats-agents'),
+    statsDeployTime: document.getElementById('stats-deploy-time'),
+    plantillasLoading: document.getElementById('plantillas-loading'),
+    plantillasContainer: document.getElementById('plantillas-container'),
+    plantillasError: document.getElementById('plantillas-error'),
+    agentesLoading: document.getElementById('agentes-loading'),
+    agentesContainer: document.getElementById('agentes-container'),
+    agentesError: document.getElementById('agentes-error'),
+    retryPlantillas: document.getElementById('retry-plantillas'),
+    retryAgentes: document.getElementById('retry-agentes')
+  };
+
+  // Funciones de utilidad
+  function showLoading(container) {
+    const loading = container.querySelector('[id$="-loading"]');
+    const content = container.querySelector('[id$="-container"]');
+    const error = container.querySelector('[id$="-error"]');
+    
+    if (loading) loading.classList.remove('hidden');
+    if (content) content.classList.add('hidden');
+    if (error) error.classList.add('hidden');
+  }
+
+  function showContent(container) {
+    const loading = container.querySelector('[id$="-loading"]');
+    const content = container.querySelector('[id$="-container"]');
+    const error = container.querySelector('[id$="-error"]');
+    
+    if (loading) loading.classList.add('hidden');
+    if (content) content.classList.remove('hidden');
+    if (error) error.classList.add('hidden');
+  }
+
+  function showError(container) {
+    const loading = container.querySelector('[id$="-loading"]');
+    const content = container.querySelector('[id$="-container"]');
+    const error = container.querySelector('[id$="-error"]');
+    
+    if (loading) loading.classList.add('hidden');
+    if (content) content.classList.add('hidden');
+    if (error) error.classList.remove('hidden');
+  }
+
+  function formatIcon(iconName) {
+    return iconName?.startsWith('tabler:') ? iconName : `tabler:${iconName || 'robot'}`;
+  }
+
+  function createIconElement(iconName) {
+    const icon = document.createElement('div');
+    icon.innerHTML = `<svg class="w-6 h-6"><use href="#${formatIcon(iconName)}"></use></svg>`;
+    return icon.innerHTML;
+  }
+
+  // Función para cargar datos iniciales
+  async function loadInitialData() {
+    try {
+      console.log('🔄 Cargando datos iniciales...');
+      
+      const overview = await galleryApiClient.getGalleryOverview();
+      
+      if (overview.success) {
+        const data = overview.data;
+        appState.connectionTypes = data.connectionTypes || [];
+        appState.categories = data.categories || [];
+        
+        // Actualizar estadísticas
+        if (elements.statsConnectionTypes) {
+          elements.statsConnectionTypes.textContent = data.stats.totalConnectionTypes || 6;
+        }
+        if (elements.statsAgents) {
+          elements.statsAgents.textContent = data.stats.totalAgents || 0;
+        }
+        if (elements.statsDeployTime) {
+          elements.statsDeployTime.textContent = data.stats.averageDeploymentTime || '1-3';
+        }
+        
+        console.log('✅ Datos iniciales cargados:', data);
+      }
+      
+    } catch (error) {
+      console.error('❌ Error cargando datos iniciales:', error);
+    }
+  }
+
+  // Función para cargar tipos de conexión y plantillas
+  async function loadConnectionTypes() {
+    try {
+      showLoading(elements.contenidoPlantillas);
+      
+      const [typesResponse, templatesResponse] = await Promise.all([
+        galleryApiClient.getConnectionTypes(),
+        galleryApiClient.getConnectionTemplates()
+      ]);
+      
+      if (typesResponse.success && templatesResponse.success) {
+        appState.connectionTypes = typesResponse.data;
+        appState.templates = templatesResponse.data;
+        
+        renderConnectionTypes();
+        showContent(elements.contenidoPlantillas);
+        
+        console.log('✅ Tipos de conexión cargados:', appState.connectionTypes);
+      } else {
+        throw new Error('Error en la respuesta de la API');
+      }
+      
+    } catch (error) {
+      console.error('❌ Error cargando tipos de conexión:', error);
+      showError(elements.contenidoPlantillas);
+    }
+  }
+
+  // Función para cargar agentes
+  async function loadAgents() {
+    try {
+      showLoading(elements.contenidoAgentes);
+      
+      const agentsResponse = await galleryApiClient.getAgents();
+      
+      if (agentsResponse.success) {
+        appState.agents = agentsResponse.data.items || [];
+        
+        renderAgents();
+        showContent(elements.contenidoAgentes);
+        
+        console.log('✅ Agentes cargados:', appState.agents);
+      } else {
+        throw new Error('Error en la respuesta de la API');
+      }
+      
+    } catch (error) {
+      console.error('❌ Error cargando agentes:', error);
+      showError(elements.contenidoAgentes);
+    }
+  }
+
+  // Función para renderizar tipos de conexión
+  function renderConnectionTypes() {
+    const container = elements.plantillasContainer;
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    appState.connectionTypes.forEach(connectionType => {
+      const template = appState.templates.find(t => t.connectionTypeId === connectionType.id);
+      
+      const connectionTypeElement = document.createElement('div');
+      connectionTypeElement.className = 'bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden';
+      connectionTypeElement.innerHTML = `
+        <div class="bg-gradient-to-r from-teal-500 to-emerald-500 p-6 text-white">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+              <div class="p-3 bg-white bg-opacity-20 rounded-lg">
+                <svg class="w-8 h-8"><use href="#${formatIcon(connectionType.icon)}"></use></svg>
+              </div>
+              <div>
+                <h3 class="text-xl font-semibold">${connectionType.title}</h3>
+                <p class="text-teal-100 mt-1">${connectionType.description}</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="text-teal-100 text-sm">Tipo</div>
+              <div class="text-lg font-semibold">${connectionType.name}</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="p-6">
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Ejemplos de Uso -->
+            <div>
+              <h4 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                <svg class="w-5 h-5 mr-2 text-teal-600"><use href="#tabler:list"></use></svg>
+                Ejemplos de Uso
+              </h4>
+              <ul class="space-y-2">
+                ${connectionType.examples.map(ejemplo => `
+                  <li class="flex items-center space-x-2">
+                    <svg class="w-4 h-4 text-emerald-500"><use href="#tabler:check"></use></svg>
+                    <span class="text-gray-700">${ejemplo}</span>
+                  </li>
+                `).join('')}
+              </ul>
+              
+              <div class="mt-6">
+                <h5 class="font-medium text-gray-900 mb-3">Ventajas Clave</h5>
+                <div class="grid grid-cols-2 gap-2">
+                  ${connectionType.advantages.map(ventaja => `
+                    <div class="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-sm text-center">
+                      ${ventaja}
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            </div>
+
+            <!-- Flujo n8n -->
+            <div>
+              <h4 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                <svg class="w-5 h-5 mr-2 text-teal-600"><use href="#tabler:route"></use></svg>
+                Flujo n8n
+              </h4>
+              <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                <h5 class="font-medium text-gray-800 mb-3">Nodos Principales</h5>
+                <div class="flex flex-wrap gap-2">
+                  ${template ? template.workflowNodes.map(nodo => `
+                    <span class="bg-teal-100 text-teal-800 px-2 py-1 rounded text-sm font-medium">
+                      ${nodo}
+                    </span>
+                  `).join('') : '<span class="text-gray-500">No disponible</span>'}
+                </div>
+              </div>
+              <p class="text-sm text-gray-600">${template?.nodeDescription || 'Descripción no disponible'}</p>
+              
+              <button class="mt-4 bg-gradient-to-r from-teal-600 to-emerald-600 text-white px-4 py-2 rounded-lg font-medium text-sm hover:from-teal-700 hover:to-emerald-700 transition-all duration-200 w-full" 
+                      onclick="downloadTemplate('${template?.id || ''}', 'connection')"
+                      ${!template ? 'disabled' : ''}>
+                <svg class="w-4 h-4 inline mr-2"><use href="#tabler:download"></use></svg>
+                ${template ? 'Descargar Plantilla n8n' : 'Plantilla no disponible'}
+              </button>
+            </div>
+
+            <!-- Casos de Uso Específicos -->
+            <div>
+              <h4 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                <svg class="w-5 h-5 mr-2 text-teal-600"><use href="#tabler:target"></use></svg>
+                Casos de Uso
+              </h4>
+              <div class="space-y-3">
+                ${connectionType.useCases.map(caso => `
+                  <div class="bg-gray-50 rounded-lg p-3">
+                    <div class="flex items-center space-x-2">
+                      <svg class="w-4 h-4 text-teal-500"><use href="#tabler:arrow-narrow-right"></use></svg>
+                      <span class="font-medium text-gray-800">${caso}</span>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+              
+              <div class="mt-6 p-4 bg-teal-50 rounded-lg">
+                <h5 class="font-medium text-teal-900 mb-2">🎯 Recomendación</h5>
+                <p class="text-sm text-teal-800">
+                  ${getRecommendation(connectionType.name)}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      container.appendChild(connectionTypeElement);
+    });
+  }
+
+  // Función para renderizar agentes
+  function renderAgents() {
+    const container = elements.agentesContainer;
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    // Agrupar agentes por categoría
+    const agentsByCategory = {};
+    appState.agents.forEach(agent => {
+      const categoryName = agent.category.name;
+      if (!agentsByCategory[categoryName]) {
+        agentsByCategory[categoryName] = [];
+      }
+      agentsByCategory[categoryName].push(agent);
+    });
+    
+    Object.entries(agentsByCategory).forEach(([categoryName, agents]) => {
+      const categoryElement = document.createElement('div');
+      categoryElement.className = 'bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden';
+      categoryElement.innerHTML = `
+        <div class="bg-gradient-to-r from-emerald-500 to-teal-500 p-6 text-white">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-xl font-semibold">${categoryName}</h3>
+              <p class="text-emerald-100 mt-1">${agents.length} agentes disponibles</p>
+            </div>
+            <div class="text-right">
+              <div class="text-emerald-100 text-sm">Agentes</div>
+              <div class="text-lg font-semibold">${agents.length}</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="p-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            ${agents.map(agent => `
+              <div class="border border-gray-200 rounded-lg p-4 hover:border-teal-300 transition-colors duration-200">
+                <div class="flex items-center space-x-3 mb-3">
+                  <div class="p-2 bg-teal-50 rounded-lg">
+                    <svg class="w-6 h-6 text-teal-600"><use href="#${formatIcon(agent.icon)}"></use></svg>
+                  </div>
+                  <div>
+                    <h4 class="font-semibold text-gray-900">${agent.title}</h4>
+                    <p class="text-sm text-gray-600">${agent.shortDescription}</p>
+                  </div>
+                </div>
+                
+                <div class="mb-4">
+                  <h5 class="font-medium text-gray-800 mb-2">Desafío que Resuelve:</h5>
+                  <p class="text-sm text-gray-600 line-clamp-3">${agent.challenge}</p>
+                </div>
+                
+                ${agent.features ? `
+                  <div class="mb-4">
+                    <h5 class="font-medium text-gray-800 mb-2">Características:</h5>
+                    <ul class="space-y-1">
+                      ${agent.features.slice(0, 2).map(feature => `
+                        <li class="flex items-center space-x-2">
+                          <svg class="w-3 h-3 text-emerald-500"><use href="#tabler:check"></use></svg>
+                          <span class="text-sm text-gray-600">${feature}</span>
+                        </li>
+                      `).join('')}
+                    </ul>
+                  </div>
+                ` : ''}
+                
+                <div class="flex space-x-2 mt-4">
+                  <button class="flex-1 bg-teal-100 text-teal-700 px-3 py-2 rounded-lg font-medium text-sm hover:bg-teal-200 transition-colors duration-200"
+                          onclick="viewAgentDetails('${agent.id}')">
+                    <svg class="w-4 h-4 inline mr-1"><use href="#tabler:eye"></use></svg>
+                    Ver Detalles
+                  </button>
+                  <button class="flex-1 bg-emerald-100 text-emerald-700 px-3 py-2 rounded-lg font-medium text-sm hover:bg-emerald-200 transition-colors duration-200"
+                          onclick="downloadTemplate('${agent.id}', 'agent')">
+                    <svg class="w-4 h-4 inline mr-1"><use href="#tabler:copy"></use></svg>
+                    Usar Plantilla
+                  </button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+      
+      container.appendChild(categoryElement);
+    });
+  }
+
+  // Función para obtener recomendación basada en el tipo
+  function getRecommendation(connectionTypeName) {
+    const recommendations = {
+      'API': 'Prioriza esta opción cuando esté disponible. Mejor estabilidad y rendimiento.',
+      'RPA': 'Ideal para sistemas legacy sin APIs. Requiere más mantenimiento pero es muy flexible.',
+      'Webscraping': 'Perfecto para datos públicos y monitoreo. Considera términos de uso del sitio.',
+      'Archivo': 'Excelente para documentos estructurados. OCR permite procesar PDFs escaneados.',
+      'Base de Datos': 'Máximo rendimiento para datos internos. Requiere acceso directo a BD.',
+      'IoT/Sensores': 'Especializado para industria 4.0. Protocolos MQTT, ModBus y OPC-UA.'
+    };
+    
+    return recommendations[connectionTypeName] || 'Recomendación personalizada según el caso de uso.';
+  }
+
+  // Función para descargar plantillas
+  window.downloadTemplate = async function(templateId, type) {
+    if (!templateId) {
+      galleryApiClient.showNotification('ID de plantilla no válido', 'error');
+      return;
+    }
+    
+    try {
+      let workflow;
+      let filename;
+      
+      if (type === 'connection') {
+        workflow = await galleryApiClient.downloadConnectionTemplate(templateId);
+        filename = `n8n-connection-template-${templateId}.json`;
+      } else {
+        workflow = await galleryApiClient.downloadAgentTemplate(templateId);
+        filename = `n8n-agent-template-${templateId}.json`;
+      }
+      
+      // Intentar copiar al portapapeles primero
+      const copied = await galleryApiClient.copyToClipboard(workflow);
+      
+      if (copied) {
+        galleryApiClient.showNotification('¡Plantilla copiada al portapapeles!', 'success');
+      } else {
+        // Si falla, descargar como archivo
+        const downloaded = await galleryApiClient.downloadAsFile(workflow, filename);
+        if (downloaded) {
+          galleryApiClient.showNotification('¡Plantilla descargada!', 'success');
+        } else {
+          throw new Error('Error al descargar la plantilla');
+        }
+      }
+      
+    } catch (error) {
+      console.error('Error downloading template:', error);
+      galleryApiClient.showNotification('Error al descargar la plantilla', 'error');
+    }
+  };
+
+  // Función para ver detalles del agente
+  window.viewAgentDetails = function(agentId) {
+    // Por ahora, solo mostrar una notificación
+    galleryApiClient.showNotification('Funcionalidad de detalles próximamente', 'info');
+  };
+
+  // Configurar navegación entre vistas
+  function setupNavigation() {
+    elements.vistaPlantillas?.addEventListener('click', function() {
+      appState.currentView = 'plantillas';
+      
+      // Cambiar botones
+      elements.vistaPlantillas.className = 'bg-teal-600 text-white px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200';
+      elements.vistaAgentes.className = 'bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 hover:bg-gray-200';
+      
+      // Cambiar contenido
+      elements.contenidoPlantillas?.classList.remove('hidden');
+      elements.contenidoAgentes?.classList.add('hidden');
+      
+      // Cargar datos si no están cargados
+      if (appState.connectionTypes.length === 0) {
+        loadConnectionTypes();
+      }
+    });
+
+    elements.vistaAgentes?.addEventListener('click', function() {
+      appState.currentView = 'agentes';
+      
+      // Cambiar botones
+      elements.vistaAgentes.className = 'bg-teal-600 text-white px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200';
+      elements.vistaPlantillas.className = 'bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 hover:bg-gray-200';
+      
+      // Cambiar contenido
+      elements.contenidoAgentes?.classList.remove('hidden');
+      elements.contenidoPlantillas?.classList.add('hidden');
+      
+      // Cargar datos si no están cargados
+      if (appState.agents.length === 0) {
+        loadAgents();
+      }
+    });
+  }
+
+  // Configurar botones de reintentar
+  function setupRetryButtons() {
+    elements.retryPlantillas?.addEventListener('click', loadConnectionTypes);
+    elements.retryAgentes?.addEventListener('click', loadAgents);
+  }
+
+  // Inicializar la aplicación
+  async function initializeApp() {
+    try {
+      await initializePortalAuth(
+        async () => {
+          // Autenticación exitosa, mostrar contenido principal
+          showMainContent();
+          
+          console.log('🚀 Inicializando Galería de Agentes...');
+          
+          setupNavigation();
+          setupRetryButtons();
+          
+          // Cargar datos iniciales
+          await loadInitialData();
+          
+          // Cargar datos de la vista actual
+          if (appState.currentView === 'plantillas') {
+            loadConnectionTypes();
+          } else {
+            loadAgents();
+          }
+          
+          console.log('✅ Galería de Agentes inicializada');
+        },
+        (error) => {
+          showAuthError(error || 'Error de autenticación');
+        }
+      );
+    } catch (error) {
+      console.error('Error inicializando app:', error);
+      showAuthError('Error al cargar la aplicación');
+    }
+  }
+
+  // Inicializar cuando esté listo
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeApp);
+  } else {
+    initializeApp();
+  }
+</script> 

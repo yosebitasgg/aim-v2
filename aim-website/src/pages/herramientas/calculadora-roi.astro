@@ -1,0 +1,28 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ROICalculator from '../../components/herramientas/ROICalculator.jsx';
+---
+
+<BaseLayout
+  title="Asesor de Automatización Virtual | AIM"
+  description="Calcula el retorno de inversión de automatizar tus procesos con IA. Descubre cuánto puedes ahorrar y mejorar la eficiencia de tu negocio."
+>
+  <div class="bg-gradient-to-b from-teal-50 to-white py-16 sm:py-24">
+    <div class="container mx-auto px-4">
+      <div class="text-center max-w-3xl mx-auto mb-12">
+        <h1 class="text-4xl md:text-5xl font-black text-teal-800 mb-4">
+          Asesor de Automatización Virtual
+        </h1>
+        <p class="text-xl text-teal-600">
+          Descubre el potencial de automatización en tu negocio en 3 simples pasos
+        </p>
+      </div>
+      
+      <ROICalculator client:load />
+
+      <div class="mt-12 text-center text-sm text-teal-600">
+        * Los cálculos son estimados basados en promedios de la industria y pueden variar según las características específicas de tu negocio.
+      </div>
+    </div>
+  </div>
+</BaseLayout>

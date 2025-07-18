@@ -1,0 +1,1803 @@
+---
+import PortalLayoutSidebar from '../../layouts/PortalLayoutSidebar.astro';
+import { Icon } from 'astro-icon/components';
+
+// Definir las fases del flujo de trabajo integrado
+const workflowPhases = [
+  {
+    id: 'fase-1',
+    number: 1,
+    title: 'Análisis Inicial',
+    description: 'Entender el problema y calcular viabilidad',
+    status: 'active', // active, completed, pending
+    duration: '3-5 días',
+    icon: 'tabler:search',
+    color: 'teal',
+    orderStatus: 'PENDING',
+    agentStatus: null,
+    documents: [
+      {
+        name: 'Reporte de Diagnóstico',
+        slug: 'diagnostico',
+        description: 'Análisis inicial de procesos y oportunidades de automatización con IA',
+        icon: 'tabler:search',
+        estimatedTime: '1-2 días',
+        required: true
+      },
+      {
+        name: 'Estimación de ROI',
+        slug: 'roi',
+        description: 'Cálculo de retorno de inversión y beneficios esperados de la automatización',
+        icon: 'tabler:calculator',
+        estimatedTime: '1 día',
+        required: true
+      }
+    ],
+    activities: [
+      'Análisis de procesos actuales del cliente',
+      'Identificación de oportunidades de automatización',
+      'Cálculo de retorno de inversión',
+      'Identificación preliminar del tipo de conexión necesaria'
+    ]
+  },
+  {
+    id: 'fase-2',
+    number: 2,
+    title: 'Diseño y Planificación',
+    description: 'Diseñar la solución técnica y seleccionar plantillas',
+    status: 'pending',
+    duration: '5-7 días',
+    icon: 'tabler:layout',
+    color: 'emerald',
+    orderStatus: 'IN_PROGRESS',
+    agentStatus: 'DRAFT',
+    documents: [
+      {
+        name: 'Documentación Técnica',
+        slug: 'arquitectura',
+        description: 'Especificaciones técnicas y diseño de arquitectura para agentes de IA',
+        icon: 'tabler:code',
+        estimatedTime: '3-5 días',
+        required: true
+      }
+    ],
+    activities: [
+      'Revisar la Galería de Agentes',
+      'Seleccionar plantillas apropiadas según el tipo de conexión',
+      'Evaluar complejidad y tiempo de desarrollo',
+      'Diseñar arquitectura de la solución'
+    ]
+  },
+  {
+    id: 'fase-3',
+    number: 3,
+    title: 'Propuesta Comercial',
+    description: 'Formalizar la propuesta y crear el agente',
+    status: 'pending',
+    duration: '3-5 días',
+    icon: 'tabler:file-text',
+    color: 'blue',
+    orderStatus: 'IN_PROGRESS',
+    agentStatus: 'DRAFT',
+    documents: [
+      {
+        name: 'Documento de Alcance y Solución',
+        slug: 'alcance-solucion',
+        description: 'Documento formal detallando el alcance del proyecto y la solución de automatización propuesta',
+        icon: 'tabler:file-description',
+        estimatedTime: '2-3 días',
+        required: true
+      },
+      {
+        name: 'Cotización AIM',
+        slug: 'cotizacion-aim',
+        description: 'Cotizador dinámico e interactivo con precios de agentes y planes de suscripción AIM',
+        icon: 'tabler:receipt',
+        estimatedTime: '1-2 días',
+        required: true
+      },
+      {
+        name: 'Propuesta Comercial',
+        slug: 'propuesta',
+        description: 'Documento formal con alcance, solución y cotización consolidada',
+        icon: 'tabler:file-text',
+        estimatedTime: '2-3 días',
+        required: true
+      },
+      {
+        name: 'Contrato de Servicios',
+        slug: 'contrato',
+        description: 'Contrato formal con términos y condiciones para servicios de automatización',
+        icon: 'tabler:file-check',
+        estimatedTime: '1-2 días',
+        required: false
+      }
+    ],
+    activities: [
+      'Crear el agente en /portal/crear-agente basado en plantillas seleccionadas',
+      'Estado inicial del agente: DRAFT',
+      'Asignar desarrollador responsable',
+      'Establecer cronograma de desarrollo',
+      'Formalizar términos comerciales'
+    ]
+  },
+  {
+    id: 'fase-4',
+    number: 4,
+    title: 'Desarrollo y Configuración',
+    description: 'Desarrollar y configurar el agente de IA',
+    status: 'pending',
+    duration: '1-3 semanas',
+    icon: 'tabler:code-plus',
+    color: 'cyan',
+    orderStatus: 'IN_PROGRESS',
+    agentStatus: 'IN_DEVELOPMENT',
+    documents: [
+      {
+        name: 'Especificaciones de Implementación',
+        slug: 'implementacion',
+        description: 'Detalles técnicos específicos para el desarrollo de agentes de IA',
+        icon: 'tabler:code-plus',
+        estimatedTime: '2-3 días',
+        required: true
+      },
+      {
+        name: 'Manual de Configuración',
+        slug: 'manual-configuracion',
+        description: 'Guía detallada para la configuración de agentes y sistemas',
+        icon: 'tabler:settings',
+        estimatedTime: '1-2 días',
+        required: true
+      }
+    ],
+    activities: [
+      'Cambiar estado del agente: DRAFT → IN_DEVELOPMENT',
+      'Configurar conexiones (API keys, credenciales, endpoints)',
+      'Desarrollar workflows n8n personalizados',
+      'Crear AgentConfiguration con todos los parámetros',
+      'Crear AgentWorkflow con el flujo n8n final'
+    ]
+  },
+  {
+    id: 'fase-5',
+    number: 5,
+    title: 'Testing y Validación',
+    description: 'Validar funcionamiento en ambiente controlado',
+    status: 'pending',
+    duration: '3-5 días',
+    icon: 'tabler:bug',
+    color: 'orange',
+    orderStatus: 'IN_REVIEW',
+    agentStatus: 'TESTING',
+    documents: [
+      {
+        name: 'Reportes de Testing',
+        slug: 'testing',
+        description: 'Resultados de pruebas QA y validación de agentes de IA',
+        icon: 'tabler:bug',
+        estimatedTime: '1-2 días',
+        required: true
+      },
+      {
+        name: 'Resultados de Validación UAT',
+        slug: 'validacion-uat',
+        description: 'Resultados de la validación con usuarios finales (User Acceptance Testing)',
+        icon: 'tabler:user-check',
+        estimatedTime: '1 día',
+        required: true
+      }
+    ],
+    activities: [
+      'Cambiar estado: IN_DEVELOPMENT → TESTING',
+      'Ejecutar en servidor de desarrollo',
+      'Probar todos los escenarios posibles',
+      'Actualizar métricas del agente (successRate, averageExecutionTime)',
+      'Validación con cliente (UAT)'
+    ]
+  },
+  {
+    id: 'fase-6',
+    number: 6,
+    title: 'Deployment e Integración',
+    description: 'Poner en producción según el plan del cliente',
+    status: 'pending',
+    duration: '2-3 días',
+    icon: 'tabler:rocket',
+    color: 'violet',
+    orderStatus: 'IN_REVIEW',
+    agentStatus: 'ACTIVE',
+    documents: [
+      {
+        name: 'Documentación de Deployment',
+        slug: 'deployment',
+        description: 'Proceso y configuración del despliegue de agentes a producción',
+        icon: 'tabler:rocket',
+        estimatedTime: '1-2 días',
+        required: true
+      },
+      {
+        name: 'Reportes de Integración',
+        slug: 'integracion',
+        description: 'Resultados de la integración de agentes con sistemas del cliente',
+        icon: 'tabler:plug',
+        estimatedTime: '1 día',
+        required: true
+      }
+    ],
+    activities: [
+      'Cambiar estado: TESTING → ACTIVE',
+      'Desplegar a servidor de producción',
+      'Integrar según plan del cliente (Básico/Pro/Enterprise)',
+      'Configurar monitoreo y alertas',
+      'Establecer deployedAt y métricas iniciales'
+    ]
+  },
+  {
+    id: 'fase-7',
+    number: 7,
+    title: 'Entrega y Soporte',
+    description: 'Entregar proyecto completo y establecer soporte',
+    status: 'pending',
+    duration: '2-3 días',
+    icon: 'tabler:book',
+    color: 'emerald',
+    orderStatus: 'COMPLETED',
+    agentStatus: 'ACTIVE',
+    documents: [
+      {
+        name: 'Manual de Usuario',
+        slug: 'manual-usuario',
+        description: 'Guía paso a paso para operadores finales de los agentes de IA',
+        icon: 'tabler:book',
+        estimatedTime: '1-2 días',
+        required: true
+      },
+      {
+        name: 'Manual Técnico',
+        slug: 'manual-tecnico',
+        description: 'Documentación técnica para administradores TI y soporte técnico',
+        icon: 'tabler:tool',
+        estimatedTime: '1-2 días',
+        required: true
+      },
+      {
+        name: 'Guía de Troubleshooting',
+        slug: 'troubleshooting',
+        description: 'Solución de problemas comunes y escalamiento para agentes de IA',
+        icon: 'tabler:alert-circle',
+        estimatedTime: '1 día',
+        required: false
+      }
+    ],
+    activities: [
+      'Mantener estado del agente: ACTIVE',
+      'Capacitación al cliente sobre el uso del agente',
+      'Monitoreo continuo de rendimiento',
+      'Establecer soporte técnico especializado'
+    ]
+  }
+];
+
+// Estadísticas del flujo
+const flowStats = {
+  totalPhases: workflowPhases.length,
+  totalDocuments: workflowPhases.reduce((sum, phase) => sum + phase.documents.length, 0),
+  estimatedDuration: '6-10 semanas',
+  documentsPerPhase: workflowPhases.map(phase => ({
+    phase: phase.title,
+    count: phase.documents.length
+  }))
+};
+---
+
+<PortalLayoutSidebar title="Flujo de Trabajo AIM - Portal">
+  <!-- Header Principal -->
+  <div class="mb-8">
+    <div class="bg-gradient-to-r from-teal-600 to-emerald-600 rounded-xl p-6 text-white">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold mb-2">Flujo de Trabajo Integrado AIM</h1>
+          <p class="text-teal-100">Automatización con Agentes de IA - Desde Análisis hasta Soporte</p>
+        </div>
+        <div class="text-right">
+          <div class="text-teal-100 text-sm">Duración Total</div>
+          <div class="text-xl font-bold">{flowStats.estimatedDuration}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estadísticas del Flujo -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500 mb-1">Fases Totales</p>
+          <p class="text-2xl font-bold text-gray-900">{flowStats.totalPhases}</p>
+        </div>
+        <div class="p-3 bg-teal-50 rounded-lg">
+          <Icon name="tabler:list-details" class="w-6 h-6 text-teal-600" />
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500 mb-1">Documentos Totales</p>
+          <p class="text-2xl font-bold text-gray-900">{flowStats.totalDocuments}</p>
+        </div>
+        <div class="p-3 bg-emerald-50 rounded-lg">
+          <Icon name="tabler:file-text" class="w-6 h-6 text-emerald-600" />
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500 mb-1">Estados de Agente</p>
+          <p class="text-2xl font-bold text-gray-900">7</p>
+        </div>
+        <div class="p-3 bg-teal-50 rounded-lg">
+          <Icon name="tabler:robot" class="w-6 h-6 text-teal-600" />
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500 mb-1">Estados de Orden</p>
+          <p class="text-2xl font-bold text-gray-900">4</p>
+        </div>
+        <div class="p-3 bg-emerald-50 rounded-lg">
+          <Icon name="tabler:package" class="w-6 h-6 text-emerald-600" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Flujo Interactivo de Trabajo -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h2 class="text-xl font-semibold text-gray-900">Flujo Interactivo de Trabajo</h2>
+        <p class="text-gray-600 mt-1">Ejecuta el proceso paso a paso para una orden específica</p>
+      </div>
+             <div class="text-sm text-gray-500">
+         <span id="flowProgress">0/7 fases completadas</span>
+         <span id="saveIndicator" class="ml-2 text-xs text-green-600 hidden">💾 Auto-guardado</span>
+       </div>
+    </div>
+
+    <!-- Selector de Orden -->
+    <div class="bg-gradient-to-r from-teal-50 to-emerald-50 rounded-lg p-4 mb-6">
+      <div class="flex items-center justify-between">
+        <div class="flex-1">
+          <label for="orderSelector" class="block text-sm font-medium text-teal-900 mb-2">
+            Seleccionar Orden para Procesar
+          </label>
+          <select id="orderSelector" class="w-full max-w-md border border-teal-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500">
+            <option value="">Cargando órdenes...</option>
+          </select>
+        </div>
+        <button id="startFlowBtn" disabled class="bg-gradient-to-r from-teal-600 to-emerald-600 text-white px-6 py-2 rounded-lg font-medium disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed hover:from-teal-700 hover:to-emerald-700 transition-colors">
+          Iniciar Flujo
+        </button>
+      </div>
+    </div>
+
+    <!-- Flujo de Fases -->
+    <div id="workflowContainer" class="hidden">
+      <!-- Información de la Orden Seleccionada -->
+      <div id="selectedOrderInfo" class="bg-gray-50 rounded-lg p-4 mb-6">
+        <!-- Se llenará dinámicamente -->
+      </div>
+
+      <!-- Fases del Flujo -->
+      <div id="phasesContainer" class="space-y-6">
+        <!-- Se llenará dinámicamente con las fases -->
+      </div>
+
+      <!-- Botones de Control -->
+      <div class="flex justify-between items-center pt-6 border-t border-gray-200">
+        <button id="prevPhaseBtn" disabled class="bg-gray-100 text-gray-700 px-6 py-2 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-200 transition-colors">
+          ← Fase Anterior
+        </button>
+        <div class="text-center">
+          <div class="text-sm text-gray-500">Fase <span id="currentPhaseNumber">1</span> de 7</div>
+          <div class="font-medium text-gray-900" id="currentPhaseName">Análisis Inicial</div>
+        </div>
+        <button id="nextPhaseBtn" class="bg-gradient-to-r from-teal-600 to-emerald-600 text-white px-6 py-2 rounded-lg font-medium hover:from-teal-700 hover:to-emerald-700 transition-colors">
+          Avanzar Fase →
+        </button>
+      </div>
+    </div>
+
+    <!-- Estado de carga -->
+    <div id="flowLoading" class="hidden text-center py-8">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mx-auto mb-4"></div>
+      <p class="text-gray-600">Actualizando estados...</p>
+    </div>
+  </div>
+
+  <!-- Timeline del Flujo -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
+    <h2 class="text-xl font-semibold text-gray-900 mb-6">Timeline del Proyecto</h2>
+    
+    <div class="relative">
+      <!-- Línea de tiempo -->
+      <div class="absolute left-8 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+      
+      <!-- Fases -->
+      <div class="space-y-8">
+        {workflowPhases.map((phase, index) => (
+          <div class="relative flex items-start space-x-4">
+            <!-- Indicador de fase -->
+            <div class={`relative z-10 flex items-center justify-center w-16 h-16 rounded-full border-4 ${
+              phase.status === 'completed' ? 'bg-green-500 border-green-200' :
+              phase.status === 'active' ? `bg-${phase.color}-500 border-${phase.color}-200` :
+              'bg-gray-100 border-gray-200'
+            }`}>
+              <Icon name={phase.icon} class={`w-6 h-6 ${
+                phase.status === 'completed' ? 'text-white' :
+                phase.status === 'active' ? 'text-white' :
+                'text-gray-400'
+              }`} />
+            </div>
+
+            <!-- Contenido de la fase -->
+            <div class="flex-1 min-w-0">
+              <div class="bg-gray-50 rounded-lg p-6">
+                <div class="flex items-start justify-between mb-4">
+          <div>
+                    <h3 class="text-lg font-semibold text-gray-900">
+                      {phase.title}
+                      <span class="ml-2 text-sm font-normal text-gray-500">({phase.duration})</span>
+                    </h3>
+                    <p class="text-gray-600 mt-1">{phase.description}</p>
+              </div>
+                  <div class="flex items-center space-x-2">
+                    <span class={`px-2 py-1 rounded-full text-xs font-medium ${
+                      phase.status === 'completed' ? 'bg-green-100 text-green-800' :
+                      phase.status === 'active' ? `bg-${phase.color}-100 text-${phase.color}-800` :
+                      'bg-gray-100 text-gray-600'
+                    }`}>
+                      {phase.status === 'completed' ? 'Completada' :
+                       phase.status === 'active' ? 'En Progreso' : 'Pendiente'}
+                    </span>
+        </div>
+      </div>
+      
+                <!-- Estados sincronizados -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div class="flex items-center space-x-2">
+                    <Icon name="tabler:package" class="w-4 h-4 text-gray-500" />
+                    <span class="text-sm text-gray-600">
+                      Estado Orden: 
+                      <span class="font-medium ml-1">{phase.orderStatus}</span>
+                    </span>
+                </div>
+                  <div class="flex items-center space-x-2">
+                    <Icon name="tabler:robot" class="w-4 h-4 text-gray-500" />
+                    <span class="text-sm text-gray-600">
+                      Estado Agente: 
+                      <span class="font-medium ml-1">
+                        {phase.agentStatus || 'No creado aún'}
+                      </span>
+                    </span>
+                </div>
+          </div>
+
+                <!-- Documentos de la fase -->
+                <div class="mb-4">
+                  <h4 class="text-sm font-medium text-gray-700 mb-3">
+                    Documentos ({phase.documents.length})
+            </h4>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {phase.documents.map((doc) => (
+                      <div class="flex items-center space-x-3 p-3 bg-white rounded-lg border border-gray-200">
+                        <Icon name={doc.icon} class="w-5 h-5 text-gray-500" />
+                        <div class="flex-1 min-w-0">
+                          <p class="text-sm font-medium text-gray-900 truncate">{doc.name}</p>
+                          <p class="text-xs text-gray-500">{doc.estimatedTime}</p>
+              </div>
+                        {doc.required && (
+                          <span class="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full">
+                            Requerido
+                          </span>
+                        )}
+              </div>
+                    ))}
+        </div>
+      </div>
+      
+                <!-- Actividades principales -->
+                <div>
+                  <h4 class="text-sm font-medium text-gray-700 mb-3">Actividades Principales</h4>
+                  <ul class="space-y-1">
+                    {phase.activities.map((activity) => (
+                      <li class="flex items-center space-x-2 text-sm text-gray-600">
+                        <Icon name="tabler:check" class="w-3 h-3 text-green-500" />
+                        <span>{activity}</span>
+              </li>
+                    ))}
+                </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+          </div>
+        </div>
+      </div>
+      
+  <!-- Acciones Rápidas -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+    <h3 class="text-xl font-semibold text-gray-900 mb-4">Acciones Rápidas</h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <a href="/portal/documentos" class="flex items-center space-x-3 p-4 bg-teal-50 hover:bg-teal-100 rounded-lg transition-colors">
+        <Icon name="tabler:file-text" class="w-6 h-6 text-teal-600" />
+          <div>
+          <p class="font-medium text-teal-900">Gestionar Documentos</p>
+          <p class="text-sm text-teal-700">Crear y editar documentos por fase</p>
+        </div>
+      </a>
+      
+      <a href="/portal/agentes" class="flex items-center space-x-3 p-4 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors">
+        <Icon name="tabler:robot" class="w-6 h-6 text-emerald-600" />
+          <div>
+          <p class="font-medium text-emerald-900">Gestionar Agentes</p>
+          <p class="text-sm text-emerald-700">Crear y configurar agentes de IA</p>
+        </div>
+      </a>
+      
+      <a href="/portal/ordenes" class="flex items-center space-x-3 p-4 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors">
+        <Icon name="tabler:package" class="w-6 h-6 text-emerald-600" />
+          <div>
+          <p class="font-medium text-emerald-900">Ver Órdenes</p>
+          <p class="text-sm text-emerald-700">Monitorear estado de proyectos</p>
+        </div>
+      </a>
+    </div>
+  </div>
+</PortalLayoutSidebar>
+
+<!-- Scripts externos como en otras páginas del portal -->
+<script is:inline src="/scripts/ordersApiClient.js"></script>
+
+<script is:inline>
+// Estado global del flujo interactivo
+let flowState = {
+  selectedOrder: null,
+  currentPhase: 0,
+  phaseStates: [], // Estado de cada fase
+  loading: false,
+  sessionId: null // ID único para esta sesión de flujo
+};
+
+// Clave para localStorage
+const FLOW_STORAGE_KEY = 'aim_flujo_interactivo_state';
+
+// Referencias a APIs
+let ordersApiClient = null; // Se carga desde script externo
+let agentsApiClient = null; // Se carga dinámicamente
+
+// Elementos del DOM para el flujo
+const flowElements = {};
+
+// ===== FUNCIONES DE PERSISTENCIA =====
+
+// Guardar estado del flujo en localStorage
+function saveFlowState() {
+  try {
+    const stateToSave = {
+      selectedOrder: flowState.selectedOrder,
+      currentPhase: flowState.currentPhase,
+      phaseStates: flowState.phaseStates,
+      sessionId: flowState.sessionId,
+      savedAt: new Date().toISOString()
+    };
+    
+    localStorage.setItem(FLOW_STORAGE_KEY, JSON.stringify(stateToSave));
+    console.log('💾 Estado del flujo guardado correctamente');
+    
+    // Mostrar indicador visual temporal
+    const saveIndicator = document.getElementById('saveIndicator');
+    if (saveIndicator) {
+      saveIndicator.classList.remove('hidden');
+      setTimeout(() => {
+        saveIndicator.classList.add('hidden');
+      }, 2000);
+    }
+  } catch (error) {
+    console.error('❌ Error guardando estado del flujo:', error);
+  }
+}
+
+// Cargar estado del flujo desde localStorage
+function loadFlowState() {
+  try {
+    const savedState = localStorage.getItem(FLOW_STORAGE_KEY);
+    if (savedState) {
+      const parsedState = JSON.parse(savedState);
+      console.log('📂 Estado del flujo cargado:', parsedState);
+      return parsedState;
+    }
+  } catch (error) {
+    console.error('❌ Error cargando estado del flujo:', error);
+  }
+  return null;
+}
+
+// Limpiar estado guardado
+function clearFlowState() {
+  try {
+    localStorage.removeItem(FLOW_STORAGE_KEY);
+    console.log('🗑️ Estado del flujo limpiado');
+  } catch (error) {
+    console.error('❌ Error limpiando estado del flujo:', error);
+  }
+}
+
+// Verificar si hay estado guardado para una orden específica
+function hasStoredStateForOrder(orderId) {
+  try {
+    const savedState = loadFlowState();
+    return savedState && savedState.selectedOrder && savedState.selectedOrder.id === orderId;
+  } catch (error) {
+    console.error('❌ Error verificando estado guardado:', error);
+    return false;
+  }
+}
+
+// Cargar estado del flujo para una orden específica
+function loadFlowStateForOrder(orderId) {
+  try {
+    const savedState = loadFlowState();
+    if (savedState && savedState.selectedOrder && savedState.selectedOrder.id === orderId) {
+      return savedState;
+    }
+  } catch (error) {
+    console.error('❌ Error cargando estado para orden:', error);
+  }
+  return null;
+}
+
+// Configuración de fases actualizada con mini-timelines
+const interactivePhases = [
+  {
+    id: 'fase-1',
+    number: 1,
+    title: 'Análisis Inicial',
+    description: 'Entender el problema y calcular viabilidad',
+    orderStatus: 'PENDING',
+    agentStatus: null,
+    activities: [
+      {
+        id: 'analizar-procesos',
+        title: 'Analizar procesos actuales del cliente',
+        description: 'Revisión detallada de los flujos de trabajo existentes',
+        type: 'task',
+        estimatedTime: '2-3 horas',
+        completed: false
+      },
+      {
+        id: 'identificar-oportunidades',
+        title: 'Identificar oportunidades de automatización',
+        description: 'Detectar puntos clave donde la IA puede optimizar procesos',
+        type: 'task',
+        estimatedTime: '1-2 horas',
+        completed: false
+      },
+      {
+        id: 'crear-diagnostico',
+        title: 'Crear reporte de diagnóstico',
+        description: 'Documentar hallazgos y recomendaciones iniciales',
+        type: 'document',
+        documentSlug: 'diagnostico',
+        action: 'create',
+        url: '/portal/documentos',
+        estimatedTime: '3-4 horas',
+        completed: false
+      },
+      {
+        id: 'calcular-roi',
+        title: 'Calcular estimación de ROI',
+        description: 'Análisis financiero del retorno de inversión esperado',
+        type: 'document',
+        documentSlug: 'roi',
+        action: 'create',
+        url: '/portal/documentos',
+        estimatedTime: '2-3 horas',
+        completed: false
+      }
+    ]
+  },
+  {
+    id: 'fase-2',
+    number: 2,
+    title: 'Diseño y Planificación',
+    description: 'Diseñar la solución técnica y seleccionar plantillas',
+    orderStatus: 'IN_PROGRESS',
+    agentStatus: null, // Agente se crea en fase 3
+    activities: [
+      {
+        id: 'revisar-galeria',
+        title: 'Revisar la Galería de Agentes',
+        description: 'Explorar plantillas disponibles según el tipo de conexión',
+        type: 'navigation',
+        url: '/portal/galeria-agentes',
+        estimatedTime: '1-2 horas',
+        completed: false
+      },
+      {
+        id: 'seleccionar-plantillas',
+        title: 'Seleccionar plantillas apropiadas',
+        description: 'Elegir las mejores plantillas para el caso de uso específico',
+        type: 'task',
+        estimatedTime: '2-3 horas',
+        completed: false
+      },
+      {
+        id: 'evaluar-complejidad',
+        title: 'Evaluar complejidad y tiempo de desarrollo',
+        description: 'Estimar recursos necesarios para la implementación',
+        type: 'task',
+        estimatedTime: '1-2 horas',
+        completed: false
+      },
+      {
+        id: 'crear-arquitectura',
+        title: 'Crear documentación técnica',
+        description: 'Diseñar la arquitectura y especificaciones técnicas',
+        type: 'document',
+        documentSlug: 'arquitectura',
+        action: 'create',
+        url: '/portal/documentos',
+        estimatedTime: '4-6 horas',
+        completed: false
+      }
+    ]
+  },
+  {
+    id: 'fase-3',
+    number: 3,
+    title: 'Propuesta Comercial',
+    description: 'Formalizar la propuesta y crear el agente',
+    orderStatus: 'IN_PROGRESS',
+    agentStatus: 'DRAFT',
+    activities: [
+      {
+        id: 'crear-agente',
+        title: 'Crear el agente en estado DRAFT',
+        description: 'Generar el agente inicial basado en plantillas seleccionadas',
+        type: 'agent',
+        action: 'create',
+        url: '/portal/crear-agente',
+        estimatedTime: '2-3 horas',
+        completed: false
+      },
+      {
+        id: 'asignar-desarrollador',
+        title: 'Asignar desarrollador responsable',
+        description: 'Definir quién será el encargado del desarrollo',
+        type: 'task',
+        estimatedTime: '30 minutos',
+        completed: false
+      },
+      {
+        id: 'crear-alcance',
+        title: 'Crear documento de alcance y solución',
+        description: 'Definir formalmente el scope del proyecto',
+        type: 'document',
+        documentSlug: 'alcance-solucion',
+        action: 'create',
+        url: '/portal/documentos',
+        estimatedTime: '3-4 horas',
+        completed: false
+      },
+      {
+        id: 'generar-cotizacion',
+        title: 'Generar cotización AIM',
+        description: 'Crear cotización dinámica con precios y planes',
+        type: 'document',
+        documentSlug: 'cotizacion-aim',
+        action: 'create',
+        url: '/portal/cotizaciones',
+        estimatedTime: '2-3 horas',
+        completed: false
+      },
+      {
+        id: 'crear-propuesta',
+        title: 'Consolidar propuesta comercial',
+        description: 'Documento final con alcance, solución y cotización',
+        type: 'document',
+        documentSlug: 'propuesta',
+        action: 'create',
+        url: '/portal/documentos',
+        estimatedTime: '2-3 horas',
+        completed: false
+      }
+    ]
+  },
+  {
+    id: 'fase-4',
+    number: 4,
+    title: 'Desarrollo y Configuración',
+    description: 'Desarrollar y configurar el agente de IA',
+    orderStatus: 'IN_PROGRESS',
+    agentStatus: 'IN_DEVELOPMENT',
+    activities: [
+      {
+        id: 'cambiar-estado-desarrollo',
+        title: 'Cambiar agente a IN_DEVELOPMENT',
+        description: 'Actualizar estado del agente para iniciar desarrollo',
+        type: 'agent_status',
+        targetStatus: 'IN_DEVELOPMENT',
+        estimatedTime: '5 minutos',
+        completed: false
+      },
+      {
+        id: 'configurar-conexiones',
+        title: 'Configurar conexiones y credenciales',
+        description: 'Establecer API keys, endpoints y autenticación',
+        type: 'agent',
+        action: 'configure',
+        url: '/portal/agentes',
+        estimatedTime: '2-4 horas',
+        completed: false
+      },
+      {
+        id: 'desarrollar-workflows',
+        title: 'Desarrollar workflows n8n personalizados',
+        description: 'Crear y personalizar los flujos de trabajo específicos',
+        type: 'agent',
+        action: 'edit_workflow',
+        url: '/portal/agentes',
+        estimatedTime: '8-12 horas',
+        completed: false
+      },
+      {
+        id: 'crear-implementacion',
+        title: 'Documentar especificaciones de implementación',
+        description: 'Detalles técnicos específicos del desarrollo',
+        type: 'document',
+        documentSlug: 'implementacion',
+        action: 'create',
+        url: '/portal/documentos',
+        estimatedTime: '2-3 horas',
+        completed: false
+      }
+    ]
+  },
+  {
+    id: 'fase-5',
+    number: 5,
+    title: 'Testing y Validación',
+    description: 'Validar funcionamiento en ambiente controlado',
+    orderStatus: 'IN_REVIEW',
+    agentStatus: 'TESTING',
+    activities: [
+      {
+        id: 'cambiar-estado-testing',
+        title: 'Cambiar agente a TESTING',
+        description: 'Actualizar estado para iniciar fase de pruebas',
+        type: 'agent_status',
+        targetStatus: 'TESTING',
+        estimatedTime: '5 minutos',
+        completed: false
+      },
+      {
+        id: 'ejecutar-testing',
+        title: 'Ejecutar pruebas en servidor de desarrollo',
+        description: 'Probar todos los escenarios posibles del agente',
+        type: 'task',
+        estimatedTime: '4-6 horas',
+        completed: false
+      },
+      {
+        id: 'actualizar-metricas',
+        title: 'Actualizar métricas del agente',
+        description: 'Registrar successRate, averageExecutionTime, etc.',
+        type: 'agent',
+        action: 'update_metrics',
+        url: '/portal/agentes',
+        estimatedTime: '1-2 horas',
+        completed: false
+      },
+      {
+        id: 'crear-reporte-testing',
+        title: 'Crear reportes de testing',
+        description: 'Documentar resultados de pruebas QA',
+        type: 'document',
+        documentSlug: 'testing',
+        action: 'create',
+        url: '/portal/documentos',
+        estimatedTime: '2-3 horas',
+        completed: false
+      },
+      {
+        id: 'validacion-uat',
+        title: 'Validación con cliente (UAT)',
+        description: 'User Acceptance Testing con usuarios finales',
+        type: 'document',
+        documentSlug: 'validacion-uat',
+        action: 'create',
+        url: '/portal/documentos',
+        estimatedTime: '3-4 horas',
+        completed: false
+      }
+    ]
+  },
+  {
+    id: 'fase-6',
+    number: 6,
+    title: 'Deployment e Integración',
+    description: 'Poner en producción según el plan del cliente',
+    orderStatus: 'IN_REVIEW',
+    agentStatus: 'ACTIVE',
+    activities: [
+      {
+        id: 'cambiar-estado-activo',
+        title: 'Cambiar agente a ACTIVE',
+        description: 'Activar el agente para producción',
+        type: 'agent_status',
+        targetStatus: 'ACTIVE',
+        estimatedTime: '5 minutos',
+        completed: false
+      },
+      {
+        id: 'desplegar-produccion',
+        title: 'Desplegar a servidor de producción',
+        description: 'Migrar el agente al entorno de producción',
+        type: 'task',
+        estimatedTime: '2-4 horas',
+        completed: false
+      },
+      {
+        id: 'configurar-monitoreo',
+        title: 'Configurar monitoreo y alertas',
+        description: 'Establecer sistemas de seguimiento y notificaciones',
+        type: 'task',
+        estimatedTime: '1-2 horas',
+        completed: false
+      },
+      {
+        id: 'crear-deployment',
+        title: 'Documentar proceso de deployment',
+        description: 'Registrar configuración del despliegue',
+        type: 'document',
+        documentSlug: 'deployment',
+        action: 'create',
+        url: '/portal/documentos',
+        estimatedTime: '1-2 horas',
+        completed: false
+      },
+      {
+        id: 'crear-integracion',
+        title: 'Documentar integración con sistemas',
+        description: 'Reportes de integración con sistemas del cliente',
+        type: 'document',
+        documentSlug: 'integracion',
+        action: 'create',
+        url: '/portal/documentos',
+        estimatedTime: '1-2 horas',
+        completed: false
+      }
+    ]
+  },
+  {
+    id: 'fase-7',
+    number: 7,
+    title: 'Entrega y Soporte',
+    description: 'Entregar proyecto completo y establecer soporte',
+    orderStatus: 'COMPLETED',
+    agentStatus: 'ACTIVE',
+    activities: [
+      {
+        id: 'capacitar-cliente',
+        title: 'Capacitar al cliente sobre el agente',
+        description: 'Entrenamiento para operadores finales',
+        type: 'task',
+        estimatedTime: '2-3 horas',
+        completed: false
+      },
+      {
+        id: 'establecer-monitoreo',
+        title: 'Establecer monitoreo continuo',
+        description: 'Configurar alertas y seguimiento de rendimiento',
+        type: 'task',
+        estimatedTime: '1-2 horas',
+        completed: false
+      },
+      {
+        id: 'crear-manual-usuario',
+        title: 'Crear manual de usuario',
+        description: 'Guía paso a paso para operadores finales',
+        type: 'document',
+        documentSlug: 'manual-usuario',
+        action: 'create',
+        url: '/portal/documentos',
+        estimatedTime: '3-4 horas',
+        completed: false
+      },
+      {
+        id: 'crear-manual-tecnico',
+        title: 'Crear manual técnico',
+        description: 'Documentación para administradores TI',
+        type: 'document',
+        documentSlug: 'manual-tecnico',
+        action: 'create',
+        url: '/portal/documentos',
+        estimatedTime: '2-3 horas',
+        completed: false
+      },
+      {
+        id: 'completar-orden',
+        title: 'Marcar orden como COMPLETED',
+        description: 'Finalizar oficialmente el proyecto',
+        type: 'order_status',
+        targetStatus: 'COMPLETED',
+        estimatedTime: '10 minutos',
+        completed: false
+      }
+    ]
+  }
+];
+
+// Inicialización del flujo interactivo
+async function initializeInteractiveFlow() {
+  try {
+    // Obtener elementos del DOM
+    await initializeFlowElements();
+    
+    // Cargar dependencias de API
+    await loadFlowDependencies();
+    
+    // Cargar órdenes disponibles
+    await loadAvailableOrders();
+    
+    // Configurar event listeners
+    setupFlowEventListeners();
+    
+    // Verificar si hay estado guardado para la orden seleccionada
+    const selectedOrderId = flowElements.orderSelector.value;
+    if (selectedOrderId && hasStoredStateForOrder(selectedOrderId)) {
+      const savedState = loadFlowStateForOrder(selectedOrderId);
+      flowState.selectedOrder = savedState.selectedOrder;
+      flowState.currentPhase = savedState.currentPhase;
+      flowState.phaseStates = savedState.phaseStates;
+      flowState.sessionId = savedState.sessionId;
+      
+      // Actualizar UI
+      flowElements.orderSelector.value = selectedOrderId;
+      flowElements.startFlowBtn.disabled = false;
+      flowElements.startFlowBtn.textContent = 'Continuar Flujo';
+      
+      // Mostrar flujo
+      flowElements.workflowContainer.classList.remove('hidden');
+      renderSelectedOrderInfo();
+      renderCurrentPhase();
+      
+      ordersApiClient.showNotification(`Flujo restaurado para la orden ${flowState.selectedOrder.orderNumber}`, 'success');
+    }
+    
+    console.log('✅ Flujo interactivo inicializado correctamente');
+  } catch (error) {
+    console.error('❌ Error inicializando flujo interactivo:', error);
+    showFlowError('Error al cargar el flujo interactivo');
+  }
+}
+
+// Inicializar elementos del DOM
+async function initializeFlowElements() {
+  const maxRetries = 10;
+  let retries = 0;
+  
+  while (retries < maxRetries) {
+    flowElements.orderSelector = document.getElementById('orderSelector');
+    flowElements.startFlowBtn = document.getElementById('startFlowBtn');
+    flowElements.workflowContainer = document.getElementById('workflowContainer');
+    flowElements.selectedOrderInfo = document.getElementById('selectedOrderInfo');
+    flowElements.phasesContainer = document.getElementById('phasesContainer');
+    flowElements.prevPhaseBtn = document.getElementById('prevPhaseBtn');
+    flowElements.nextPhaseBtn = document.getElementById('nextPhaseBtn');
+    flowElements.currentPhaseNumber = document.getElementById('currentPhaseNumber');
+    flowElements.currentPhaseName = document.getElementById('currentPhaseName');
+    flowElements.flowProgress = document.getElementById('flowProgress');
+    flowElements.flowLoading = document.getElementById('flowLoading');
+    
+    if (flowElements.orderSelector && flowElements.startFlowBtn) {
+      break;
+    }
+    
+    retries++;
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+  
+  if (retries >= maxRetries) {
+    throw new Error('No se pudieron encontrar elementos del flujo');
+  }
+}
+
+// Cargar dependencias de API
+async function loadFlowDependencies() {
+  try {
+    // Esperar a que el script externo se cargue
+    let attempts = 0;
+    const maxAttempts = 20;
+    
+    while (!window.ordersApiClient && attempts < maxAttempts) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      attempts++;
+    }
+    
+    // OrdersApiClient se carga desde script externo (window.ordersApiClient)
+    ordersApiClient = window.ordersApiClient;
+    
+    // AgentsApiClient se carga dinámicamente
+    const agentsModule = await import('/src/lib/agentsApiClient.js');
+    agentsApiClient = agentsModule.default;
+    
+    if (!ordersApiClient) {
+      throw new Error('OrdersApiClient no disponible en window.ordersApiClient después de esperar');
+    }
+    
+    if (!agentsApiClient) {
+      throw new Error('AgentsApiClient no disponible');
+    }
+    
+    console.log('✅ APIs cargadas correctamente:', { 
+      ordersApiClient: !!ordersApiClient, 
+      agentsApiClient: !!agentsApiClient,
+      attempts 
+    });
+  } catch (error) {
+    console.error('❌ Error cargando APIs:', error);
+    throw error;
+  }
+}
+
+// Cargar órdenes disponibles
+async function loadAvailableOrders() {
+  try {
+    console.log('🔍 Cargando órdenes con ordersApiClient:', ordersApiClient);
+    
+    const response = await ordersApiClient.getOrders({
+      status: 'PENDING,IN_PROGRESS,IN_REVIEW',
+      limit: 100
+    });
+    
+    console.log('📊 Respuesta de órdenes:', response);
+    
+    // El script externo retorna directamente la estructura con orders
+    const orders = response.orders || [];
+    
+    if (orders.length > 0) {
+      populateOrderSelector(orders);
+      console.log(`✅ ${orders.length} órdenes cargadas correctamente`);
+    } else {
+      flowElements.orderSelector.innerHTML = '<option value="">No hay órdenes disponibles</option>';
+      console.log('⚠️ No se encontraron órdenes');
+    }
+  } catch (error) {
+    console.error('❌ Error cargando órdenes:', error);
+    flowElements.orderSelector.innerHTML = '<option value="">Error cargando órdenes</option>';
+  }
+}
+
+// Poblar selector de órdenes
+function populateOrderSelector(orders) {
+  const selector = flowElements.orderSelector;
+  selector.innerHTML = '<option value="">Selecciona una orden...</option>';
+  
+  orders.forEach(order => {
+    const option = document.createElement('option');
+    option.value = order.id;
+    option.textContent = `${order.orderNumber} - ${order.client?.companyName || 'Cliente'} - ${order.title}`;
+    selector.appendChild(option);
+  });
+}
+
+// Configurar event listeners
+function setupFlowEventListeners() {
+  // Cambio en selector de orden
+  flowElements.orderSelector.addEventListener('change', function() {
+    const orderId = this.value;
+    flowElements.startFlowBtn.disabled = !orderId;
+    
+    if (orderId) {
+      // Verificar si hay un flujo guardado para esta orden
+      if (hasStoredStateForOrder(orderId)) {
+        flowElements.startFlowBtn.textContent = 'Continuar Flujo';
+      } else {
+        flowElements.startFlowBtn.textContent = 'Iniciar Flujo';
+      }
+    } else {
+      flowElements.startFlowBtn.textContent = 'Selecciona una orden';
+    }
+  });
+  
+  // Iniciar flujo
+  flowElements.startFlowBtn.addEventListener('click', startInteractiveFlow);
+  
+  // Navegación entre fases
+  flowElements.prevPhaseBtn.addEventListener('click', () => navigateToPhase(flowState.currentPhase - 1));
+  flowElements.nextPhaseBtn.addEventListener('click', advanceToNextPhase);
+}
+
+// Iniciar flujo interactivo
+async function startInteractiveFlow() {
+  try {
+    const orderId = flowElements.orderSelector.value;
+    if (!orderId) return;
+    
+    showFlowLoading(true);
+    
+    // Verificar si hay un flujo existente para esta orden
+    const existingFlowState = loadFlowStateForOrder(orderId);
+    
+    if (existingFlowState) {
+      // Restaurar flujo existente
+      flowState.selectedOrder = existingFlowState.selectedOrder;
+      flowState.currentPhase = existingFlowState.currentPhase;
+      flowState.phaseStates = existingFlowState.phaseStates;
+      flowState.sessionId = existingFlowState.sessionId;
+      
+      ordersApiClient.showNotification(`Flujo continuado desde Fase ${flowState.currentPhase + 1}`, 'info');
+    } else {
+      // Cargar información de la orden para nuevo flujo
+      const orderResponse = await ordersApiClient.getOrderById(orderId);
+      console.log('📋 Respuesta orden específica:', orderResponse);
+      
+      // El script externo maneja las respuestas de manera diferente
+      flowState.selectedOrder = orderResponse;
+      flowState.currentPhase = 0;
+      flowState.phaseStates = interactivePhases.map(() => ({ completed: false, activities: {} }));
+      flowState.sessionId = `flow_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      ordersApiClient.showNotification('Nuevo flujo iniciado', 'success');
+    }
+    
+    // Guardar estado inicial/actualizado
+    saveFlowState();
+    
+    // Mostrar contenedor del flujo
+    flowElements.workflowContainer.classList.remove('hidden');
+    
+    // Renderizar información de la orden
+    renderSelectedOrderInfo();
+    
+    // Renderizar fase actual
+    renderCurrentPhase();
+    
+    showFlowLoading(false);
+    
+    // Scroll hacia el flujo
+    flowElements.workflowContainer.scrollIntoView({ behavior: 'smooth' });
+    
+  } catch (error) {
+    console.error('Error iniciando flujo:', error);
+    showFlowError('Error al iniciar el flujo: ' + error.message);
+    showFlowLoading(false);
+  }
+}
+
+// Renderizar información de la orden seleccionada
+function renderSelectedOrderInfo() {
+  const order = flowState.selectedOrder;
+  
+  flowElements.selectedOrderInfo.innerHTML = `
+    <div class="flex items-start justify-between">
+      <div class="flex-1">
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">
+          ${order.orderNumber} - ${order.title}
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+          <div>
+            <span class="font-medium text-gray-600">Cliente:</span>
+            <span class="ml-2">${order.client?.companyName || 'N/A'}</span>
+          </div>
+          <div>
+            <span class="font-medium text-gray-600">Estado Actual:</span>
+            <span class="ml-2 px-2 py-1 rounded-full text-xs ${ordersApiClient.getStatusColor(order.status)}">
+              ${ordersApiClient.getStatusLabel(order.status)}
+            </span>
+          </div>
+          <div>
+            <span class="font-medium text-gray-600">Prioridad:</span>
+            <span class="ml-2 px-2 py-1 rounded-full text-xs ${ordersApiClient.getPriorityColor(order.priority)}">
+              ${ordersApiClient.getPriorityLabel(order.priority)}
+            </span>
+          </div>
+        </div>
+      </div>
+      <button onclick="resetFlow()" class="text-gray-400 hover:text-gray-600 text-sm">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+  `;
+}
+
+// Renderizar fase actual
+function renderCurrentPhase() {
+  const phase = interactivePhases[flowState.currentPhase];
+  
+  // Actualizar indicadores
+  flowElements.currentPhaseNumber.textContent = phase.number;
+  flowElements.currentPhaseName.textContent = phase.title;
+  flowElements.flowProgress.textContent = `${flowState.currentPhase}/7 fases completadas`;
+  
+  // Renderizar actividades de la fase
+  flowElements.phasesContainer.innerHTML = `
+    <div class="bg-gradient-to-r from-${getPhaseColor(phase.number)}-50 to-${getPhaseColor(phase.number)}-100 rounded-lg p-6">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h3 class="text-xl font-semibold text-${getPhaseColor(phase.number)}-900">
+            Fase ${phase.number}: ${phase.title}
+          </h3>
+          <p class="text-${getPhaseColor(phase.number)}-700 mt-1">${phase.description}</p>
+        </div>
+        <div class="text-right text-sm">
+          <div class="text-${getPhaseColor(phase.number)}-700">Estado Objetivo</div>
+          <div class="font-medium">Orden: ${ordersApiClient.getStatusLabel(phase.orderStatus)}</div>
+          ${phase.agentStatus ? `<div class="font-medium">Agente: ${phase.agentStatus}</div>` : ''}
+        </div>
+      </div>
+      
+      <div class="space-y-4">
+        <h4 class="font-medium text-${getPhaseColor(phase.number)}-900">Actividades a completar:</h4>
+        ${phase.activities.map(renderActivity).join('')}
+      </div>
+    </div>
+  `;
+  
+  // Actualizar botones de navegación
+  flowElements.prevPhaseBtn.disabled = flowState.currentPhase === 0;
+  flowElements.nextPhaseBtn.disabled = false;
+  
+  if (flowState.currentPhase === interactivePhases.length - 1) {
+    flowElements.nextPhaseBtn.textContent = 'Finalizar Proyecto';
+  } else {
+    flowElements.nextPhaseBtn.textContent = 'Avanzar Fase →';
+  }
+}
+
+// Renderizar una actividad
+function renderActivity(activity, index) {
+  const phaseState = flowState.phaseStates[flowState.currentPhase];
+  const activityState = phaseState.activities[activity.id] || { completed: false };
+  
+  return `
+    <div class="bg-white rounded-lg border border-gray-200 p-4 ${activityState.completed ? 'bg-green-50 border-green-200' : ''}">
+      <div class="flex items-start justify-between">
+        <div class="flex items-start space-x-3 flex-1">
+          <div class="flex-shrink-0 mt-1">
+            ${activityState.completed 
+              ? '<svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>'
+              : `<div class="w-5 h-5 rounded-full border-2 border-gray-300 flex items-center justify-center text-xs font-medium text-gray-500">${index + 1}</div>`
+            }
+          </div>
+          <div class="flex-1">
+            <h5 class="font-medium text-gray-900 ${activityState.completed ? 'line-through text-green-700' : ''}">
+              ${activity.title}
+            </h5>
+            <p class="text-sm text-gray-600 mt-1">${activity.description}</p>
+            <div class="flex items-center space-x-4 mt-2 text-xs text-gray-500">
+              <span>⏱️ ${activity.estimatedTime}</span>
+              <span>📋 ${getActivityTypeLabel(activity.type)}</span>
+            </div>
+          </div>
+        </div>
+        <div class="flex-shrink-0 ml-4">
+          ${renderActivityButton(activity, activityState)}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// Renderizar botón de actividad
+function renderActivityButton(activity, activityState) {
+  if (activityState.completed) {
+    return `<span class="text-green-600 text-sm font-medium">✓ Completado</span>`;
+  }
+  
+  switch (activity.type) {
+    case 'document':
+      return `<button onclick="handleDocumentAction('${activity.id}', '${activity.documentSlug}', '${activity.url}')" 
+                class="bg-teal-100 text-teal-700 px-3 py-1 rounded text-sm hover:bg-teal-200 transition-colors">
+                📄 Crear Documento
+              </button>`;
+    
+    case 'agent':
+      return `<button onclick="handleAgentAction('${activity.id}', '${activity.action}', '${activity.url}')" 
+                class="bg-teal-100 text-teal-700 px-3 py-1 rounded text-sm hover:bg-teal-200 transition-colors">
+                🤖 ${activity.action === 'create' ? 'Crear Agente' : 'Configurar Agente'}
+              </button>`;
+    
+    case 'navigation':
+      return `<button onclick="handleNavigationAction('${activity.id}', '${activity.url}')" 
+                class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded text-sm hover:bg-emerald-200 transition-colors">
+                🔗 Ir a Página
+              </button>`;
+    
+    case 'agent_status':
+      return `<button onclick="handleAgentStatusChange('${activity.id}', '${activity.targetStatus}')" 
+                class="bg-teal-100 text-teal-700 px-3 py-1 rounded text-sm hover:bg-teal-200 transition-colors">
+                ⚡ Cambiar Estado
+              </button>`;
+    
+    case 'order_status':
+      return `<button onclick="handleOrderStatusChange('${activity.id}', '${activity.targetStatus}')" 
+                class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded text-sm hover:bg-emerald-200 transition-colors">
+                📋 Actualizar Orden
+              </button>`;
+    
+    default:
+      return `<button onclick="completeActivity('${activity.id}')" 
+                class="bg-gray-100 text-gray-700 px-3 py-1 rounded text-sm hover:bg-gray-200 transition-colors">
+                ✓ Marcar Completado
+              </button>`;
+  }
+}
+
+// Obtener color de la fase
+function getPhaseColor(phaseNumber) {
+  const colors = ['teal', 'emerald', 'teal', 'emerald', 'teal', 'emerald', 'teal'];
+  return colors[(phaseNumber - 1) % colors.length];
+}
+
+// Obtener etiqueta del tipo de actividad
+function getActivityTypeLabel(type) {
+  const labels = {
+    'task': 'Tarea',
+    'document': 'Documento',
+    'agent': 'Agente',
+    'navigation': 'Navegación',
+    'agent_status': 'Estado Agente',
+    'order_status': 'Estado Orden'
+  };
+  return labels[type] || 'Actividad';
+}
+
+// Manejar acciones de documentos
+function handleDocumentAction(activityId, documentSlug, url) {
+  // Abrir la página de documentos en una nueva pestaña con parámetros
+  const documentUrl = `${url}?create=${documentSlug}&orderId=${flowState.selectedOrder.id}`;
+  window.open(documentUrl, '_blank');
+  
+  // Marcar como completado después de un delay
+  setTimeout(() => {
+    completeActivity(activityId);
+  }, 2000);
+}
+
+// Manejar acciones de agentes
+function handleAgentAction(activityId, action, url) {
+  let targetUrl = url;
+  
+  if (action === 'create') {
+    targetUrl = `${url}?orderId=${flowState.selectedOrder.id}`;
+  } else if (action === 'configure' || action === 'edit_workflow') {
+    targetUrl = `${url}`;
+  }
+  
+  window.open(targetUrl, '_blank');
+  
+  // Marcar como completado después de un delay
+  setTimeout(() => {
+    completeActivity(activityId);
+  }, 2000);
+}
+
+// Manejar acciones de navegación
+function handleNavigationAction(activityId, url) {
+  window.open(url, '_blank');
+  
+  // Marcar como completado después de un delay
+  setTimeout(() => {
+    completeActivity(activityId);
+  }, 1500);
+}
+
+// Manejar cambio de estado del agente
+async function handleAgentStatusChange(activityId, targetStatus) {
+  try {
+    showFlowLoading(true);
+    
+    // Buscar el agente asociado a esta orden
+    const agentsResponse = await agentsApiClient.getCreatedAgents({
+      orderId: flowState.selectedOrder.id,
+      limit: 1
+    });
+    
+    console.log('🤖 Respuesta búsqueda agentes:', agentsResponse);
+    
+    if (!agentsResponse.success || !agentsResponse.data.items?.length) {
+      throw new Error('No se encontró un agente asociado a esta orden. Asegúrate de haber creado el agente primero.');
+    }
+    
+    const agent = agentsResponse.data.items[0];
+    console.log('🤖 Agente a actualizar:', { id: agent.id, currentStatus: agent.status, targetStatus });
+    
+    // Validar estado objetivo
+    const validStatuses = ['DRAFT', 'IN_DEVELOPMENT', 'TESTING', 'ACTIVE', 'INACTIVE', 'ARCHIVED', 'ERROR'];
+    if (!validStatuses.includes(targetStatus)) {
+      throw new Error(`Estado de agente inválido: ${targetStatus}. Estados válidos: ${validStatuses.join(', ')}`);
+    }
+    
+    // Actualizar estado del agente
+    const updateResponse = await agentsApiClient.updateCreatedAgent(agent.id, {
+      status: targetStatus
+    });
+    
+    console.log('🤖 Respuesta actualización agente:', updateResponse);
+    
+    if (!updateResponse.success) {
+      throw new Error(`Error al actualizar el estado del agente: ${updateResponse.message || 'Error desconocido'}`);
+    }
+    
+    ordersApiClient.showNotification(`Estado del agente actualizado a ${targetStatus}`, 'success');
+    completeActivity(activityId);
+    
+  } catch (error) {
+    console.error('Error actualizando estado del agente:', error);
+    ordersApiClient.showNotification('Error: ' + error.message, 'error');
+  } finally {
+    showFlowLoading(false);
+  }
+}
+
+// Manejar cambio de estado de la orden
+async function handleOrderStatusChange(activityId, targetStatus) {
+  try {
+    showFlowLoading(true);
+    
+    const response = await ordersApiClient.changeOrderStatus(
+      flowState.selectedOrder.id,
+      targetStatus,
+      `Actualización automática del flujo - Fase ${flowState.currentPhase + 1}`
+    );
+    
+    console.log('📊 Respuesta cambio de estado orden:', response);
+    
+    // Actualizar estado local
+    flowState.selectedOrder.status = targetStatus;
+    
+    ordersApiClient.showNotification(`Estado de la orden actualizado a ${ordersApiClient.getStatusLabel(targetStatus)}`, 'success');
+    completeActivity(activityId);
+    
+    // Re-renderizar información de la orden
+    renderSelectedOrderInfo();
+    
+  } catch (error) {
+    console.error('Error actualizando estado de la orden:', error);
+    ordersApiClient.showNotification('Error: ' + error.message, 'error');
+  } finally {
+    showFlowLoading(false);
+  }
+}
+
+// Completar actividad
+function completeActivity(activityId) {
+  const phaseState = flowState.phaseStates[flowState.currentPhase];
+  if (!phaseState.activities[activityId]) {
+    phaseState.activities[activityId] = {};
+  }
+  phaseState.activities[activityId].completed = true;
+  
+  // Re-renderizar la fase actual
+  renderCurrentPhase();
+  
+  // Guardar progreso
+  saveFlowState();
+  
+  ordersApiClient.showNotification('Actividad completada', 'success');
+}
+
+// Avanzar a la siguiente fase
+async function advanceToNextPhase() {
+  try {
+    const currentPhase = interactivePhases[flowState.currentPhase];
+    
+    // Verificar que todas las actividades estén completadas
+    const phaseState = flowState.phaseStates[flowState.currentPhase];
+    const incompleteActivities = currentPhase.activities.filter(activity => 
+      !phaseState.activities[activity.id]?.completed
+    );
+    
+    if (incompleteActivities.length > 0) {
+      ordersApiClient.showNotification(
+        `Completa todas las actividades antes de avanzar (${incompleteActivities.length} pendientes)`,
+        'warning'
+      );
+      return;
+    }
+    
+    showFlowLoading(true);
+    
+    // Actualizar estados según la fase
+    await updatePhaseStates(currentPhase);
+    
+    // Marcar fase como completada
+    flowState.phaseStates[flowState.currentPhase].completed = true;
+    
+    // Avanzar a la siguiente fase o finalizar
+    if (flowState.currentPhase < interactivePhases.length - 1) {
+      flowState.currentPhase++;
+      renderCurrentPhase();
+      
+      // Guardar progreso
+      saveFlowState();
+      
+      ordersApiClient.showNotification(`Avanzado a Fase ${flowState.currentPhase + 1}`, 'success');
+    } else {
+      // Proyecto completado
+      markFlowAsCompleted();
+      ordersApiClient.showNotification('¡Proyecto completado exitosamente!', 'success');
+    }
+    
+  } catch (error) {
+    console.error('Error avanzando fase:', error);
+    ordersApiClient.showNotification('Error al avanzar: ' + error.message, 'error');
+  } finally {
+    showFlowLoading(false);
+  }
+}
+
+// Actualizar estados según la fase
+async function updatePhaseStates(phase) {
+  const promises = [];
+  
+  // Actualizar estado de la orden si es necesario
+  if (phase.orderStatus && flowState.selectedOrder.status !== phase.orderStatus) {
+    promises.push(
+      ordersApiClient.changeOrderStatus(
+        flowState.selectedOrder.id,
+        phase.orderStatus,
+        `Avance automático a Fase ${phase.number}: ${phase.title}`
+      ).then(response => {
+        console.log('📊 Actualización automática orden:', response);
+        // Con el script externo, si no hay error, es exitoso
+        flowState.selectedOrder.status = phase.orderStatus;
+      })
+    );
+  }
+  
+  // Actualizar estado del agente si es necesario
+  if (phase.agentStatus) {
+    const agentPromise = agentsApiClient.getCreatedAgents({
+      orderId: flowState.selectedOrder.id,
+      limit: 1
+    }).then(agentsResponse => {
+      console.log('🤖 Búsqueda automática agentes:', agentsResponse);
+      if (agentsResponse.success && agentsResponse.data.items?.length) {
+        const agent = agentsResponse.data.items[0];
+        console.log('🤖 Agente encontrado:', agent);
+        
+        if (agent.status !== phase.agentStatus) {
+          console.log(`🔄 Actualizando agente de ${agent.status} a ${phase.agentStatus}`);
+          return agentsApiClient.updateCreatedAgent(agent.id, {
+            status: phase.agentStatus
+          }).then(updateResp => {
+            console.log('🤖 Actualización automática agente exitosa:', updateResp);
+            return updateResp;
+          });
+        } else {
+          console.log('✅ Agente ya tiene el estado correcto:', agent.status);
+        }
+      } else {
+        console.log('⚠️ No se encontró agente para esta orden, saltando actualización');
+        // No es un error, simplemente no hay agente aún
+        return Promise.resolve();
+      }
+    }).catch(error => {
+      console.warn('⚠️ Error buscando/actualizando agente (puede ser normal en fases tempranas):', error);
+      // No propagar el error si es solo que no hay agente
+      return Promise.resolve();
+    });
+    
+    promises.push(agentPromise);
+  }
+  
+  await Promise.all(promises);
+}
+
+// Navegar a una fase específica
+function navigateToPhase(phaseIndex) {
+  if (phaseIndex >= 0 && phaseIndex < interactivePhases.length) {
+    flowState.currentPhase = phaseIndex;
+    renderCurrentPhase();
+  }
+}
+
+// Marcar flujo como completado
+function markFlowAsCompleted() {
+  // Limpiar estado guardado
+  clearFlowState();
+  
+  // Agregar badge de completado
+  const completedBadge = document.createElement('div');
+  completedBadge.className = 'bg-teal-100 border border-teal-200 rounded-lg p-4 mt-4';
+  completedBadge.innerHTML = `
+    <div class="flex items-center space-x-3">
+      <div class="p-2 bg-teal-500 rounded-full">
+        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+        </svg>
+      </div>
+      <div>
+        <h3 class="font-medium text-teal-900">¡Flujo Completado!</h3>
+        <p class="text-sm text-teal-700">
+          Proyecto ${flowState.selectedOrder?.orderNumber} finalizado exitosamente.
+          <br>Estado final: Orden COMPLETED, Agente ACTIVE
+        </p>
+      </div>
+    </div>
+    <div class="mt-3">
+      <button onclick="resetFlow(); this.parentElement.parentElement.remove()" 
+              class="bg-teal-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-teal-700">
+        Iniciar Nuevo Flujo
+      </button>
+    </div>
+  `;
+  
+  flowElements.phasesContainer.appendChild(completedBadge);
+}
+
+// Reiniciar flujo
+function resetFlow() {
+  // Limpiar estado guardado
+  clearFlowState();
+  
+  flowState = {
+    selectedOrder: null,
+    currentPhase: 0,
+    phaseStates: [],
+    loading: false,
+    sessionId: null
+  };
+  
+  flowElements.workflowContainer.classList.add('hidden');
+  flowElements.orderSelector.value = '';
+  flowElements.startFlowBtn.disabled = true;
+  flowElements.startFlowBtn.textContent = 'Selecciona una orden';
+}
+
+// Mostrar/ocultar loading
+function showFlowLoading(show) {
+  if (show) {
+    flowElements.flowLoading.classList.remove('hidden');
+  } else {
+    flowElements.flowLoading.classList.add('hidden');
+  }
+}
+
+// Mostrar error
+function showFlowError(message) {
+  ordersApiClient?.showNotification?.(message, 'error') || 
+  console.error(message);
+}
+
+// Funciones globales
+window.handleDocumentAction = handleDocumentAction;
+window.handleAgentAction = handleAgentAction;
+window.handleNavigationAction = handleNavigationAction;
+window.handleAgentStatusChange = handleAgentStatusChange;
+window.handleOrderStatusChange = handleOrderStatusChange;
+window.completeActivity = completeActivity;
+window.resetFlow = resetFlow;
+window.clearFlowState = clearFlowState;
+
+// Inicializar cuando el DOM esté listo
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeInteractiveFlow);
+} else {
+  setTimeout(initializeInteractiveFlow, 100);
+}
+</script>

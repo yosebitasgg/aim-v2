@@ -1,0 +1,841 @@
+---
+import PortalLayoutSidebar from '../../layouts/PortalLayoutSidebar.astro';
+import { Icon } from 'astro-icon/components';
+---
+
+<PortalLayoutSidebar title="Configuración - Portal AIM">
+  <!-- Contenedor principal -->
+  <div class="min-h-screen bg-gray-50">
+    
+    <!-- Estado de carga -->
+    <div id="loading-screen" class="flex items-center justify-center min-h-screen">
+      <div class="text-center">
+        <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-teal-600 mx-auto mb-4"></div>
+        <p class="text-gray-600 text-lg">Cargando configuración...</p>
+        <p class="text-gray-500 text-sm mt-2">Obteniendo datos del usuario</p>
+      </div>
+    </div>
+
+    <!-- Estado de error -->
+    <div id="error-screen" class="hidden flex items-center justify-center min-h-screen">
+      <div class="text-center max-w-md mx-auto p-6">
+        <div class="text-red-500 text-6xl mb-4">⚠️</div>
+        <h2 class="text-2xl font-bold text-gray-900 mb-2">Error de Autenticación</h2>
+        <p class="text-gray-600 mb-6">No se pudo cargar la información de tu cuenta.</p>
+        <div class="space-y-3">
+          <button id="retry-btn" class="w-full bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200">
+            Reintentar
+          </button>
+          <a href="/login" class="block w-full bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-lg font-medium transition-colors duration-200">
+            Iniciar Sesión
+          </a>
+            </div>
+          </div>
+        </div>
+
+    <!-- Contenido principal -->
+    <div id="main-screen" class="hidden">
+      
+      <!-- Header -->
+      <div class="mb-8">
+        <div class="bg-gradient-to-r from-teal-600 to-emerald-600 rounded-xl p-6 text-white">
+          <div class="flex items-center justify-between">
+            <div>
+              <h1 class="text-2xl font-bold mb-2">Configuración de Cuenta</h1>
+              <p class="text-teal-100">Administra tu perfil y configuraciones del sistema</p>
+            </div>
+            <div class="text-right">
+              <div class="text-teal-100 text-sm">Estado</div>
+              <div class="text-3xl font-bold">✓</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grid principal -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Columna principal -->
+        <div class="lg:col-span-2 space-y-6">
+          
+          <!-- Información del perfil -->
+          <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <div class="flex items-center justify-between mb-6">
+              <h3 class="text-lg font-semibold text-gray-900">Información del Perfil</h3>
+              <span class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm">Solo lectura</span>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Nombre Completo</label>
+                <span id="config-user-name" class="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-900 font-medium">Cargando...</span>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Correo Electrónico</label>
+                <span id="config-user-email" class="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-900 font-medium">Cargando...</span>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">ID de Usuario</label>
+                <input 
+                  type="text" 
+                  id="config-user-id"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 font-mono text-sm"
+                  value="Cargando..."
+                  readonly
+                />
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Rol del Usuario</label>
+                <input 
+                  type="text" 
+                  id="config-user-role"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-900 font-medium capitalize"
+                  value="Cargando..."
+                  readonly
+                />
+              </div>
+              
+              <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Fecha de Registro</label>
+                <input 
+                  type="text" 
+                  id="config-user-created"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-900 font-medium"
+                  value="Cargando..."
+                  readonly
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Cambio de contraseña -->
+          <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <h3 class="text-lg font-semibold text-gray-900 mb-6">Cambiar Contraseña</h3>
+            
+            <form id="password-form" class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Contraseña Actual</label>
+                <input 
+                  type="password" 
+                  id="current-password"
+                  name="currentPassword"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  placeholder="Ingresa tu contraseña actual"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Nueva Contraseña</label>
+                <input 
+                  type="password" 
+                  id="new-password"
+                  name="newPassword"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  placeholder="Mínimo 8 caracteres"
+                  required
+                  minlength="8"
+                />
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Confirmar Nueva Contraseña</label>
+                <input 
+                  type="password" 
+                  id="confirm-password"
+                  name="confirmPassword"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  placeholder="Confirma tu nueva contraseña"
+                  required
+                />
+              </div>
+              
+              <button 
+                type="submit" 
+                class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center"
+              >
+                <Icon name="tabler:lock" class="w-4 h-4 mr-2" />
+                Actualizar Contraseña
+              </button>
+            </form>
+          </div>
+              
+          <!-- Actividades recientes -->
+          <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <div class="flex items-center justify-between mb-6">
+              <h3 class="text-lg font-semibold text-gray-900">Actividad Reciente</h3>
+              <a href="/portal/mis-actividades" class="text-teal-600 hover:text-teal-700 font-medium">
+                Ver todas →
+              </a>
+            </div>
+            
+            <div id="recent-activities">
+              <div class="flex items-center justify-center py-8">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
+                <span class="ml-3 text-gray-600">Cargando actividades...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Columna lateral -->
+        <div class="space-y-6">
+          
+          <!-- Información de sesión -->
+          <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Información de Sesión</h3>
+            
+            <div class="space-y-4">
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-600">Estado:</span>
+                <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">Activa</span>
+              </div>
+              
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-600">Última conexión:</span>
+                <span class="text-sm font-medium text-gray-900" id="last-login">Ahora</span>
+              </div>
+              
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-600">Navegador:</span>
+                <span class="text-sm font-medium text-gray-900" id="user-browser">Chrome</span>
+              </div>
+              
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-600">IP:</span>
+                <span class="text-sm font-medium text-gray-900" id="user-ip">Detectando...</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Estadísticas -->
+          <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Mis Estadísticas</h3>
+            
+            <div id="user-stats" class="space-y-4">
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-600">Total actividades:</span>
+                <div class="flex items-center">
+                  <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse mr-2"></div>
+                  <span class="text-sm font-medium text-gray-900">Cargando...</span>
+              </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Acciones rápidas -->
+          <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Acciones Rápidas</h3>
+            
+            <div class="space-y-3">
+              <button 
+                id="export-btn" 
+                class="w-full flex items-center justify-center px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg font-medium transition-colors duration-200"
+              >
+                <Icon name="tabler:download" class="w-4 h-4 mr-2" />
+                Exportar Mis Datos
+              </button>
+              
+              <button 
+                id="refresh-btn" 
+                class="w-full flex items-center justify-center px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg font-medium transition-colors duration-200"
+              >
+                <Icon name="tabler:refresh" class="w-4 h-4 mr-2" />
+                Actualizar Información
+              </button>
+              
+              <button 
+                id="logout-btn" 
+                class="w-full flex items-center justify-center px-3 py-2 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg font-medium transition-colors duration-200"
+              >
+                <Icon name="tabler:logout" class="w-4 h-4 mr-2" />
+                Cerrar Sesión
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Script principal -->
+  <script>
+    import { userStore } from '../../lib/userStore.js';
+    import { apiClient } from '../../lib/apiClient.js';
+
+    // Variables globales
+    let unsubscribe = null;
+    let isInitialized = false;
+
+    // Inicialización al cargar la página
+    document.addEventListener('DOMContentLoaded', async () => {
+      console.log('🚀 Iniciando página de configuración con store centralizado...');
+      
+      // Pequeño delay para asegurar que el DOM esté completamente listo
+      setTimeout(async () => {
+        await initializeConfigPage();
+      }, 100);
+    });
+
+    // Función principal de inicialización
+    async function initializeConfigPage() {
+      try {
+        // Mostrar pantalla de carga
+        showLoadingScreen();
+        
+        // Suscribirse a cambios del store
+        unsubscribe = userStore.subscribe(handleStoreUpdate);
+        
+        // Obtener el estado actual del store
+        const currentState = userStore.getState();
+        
+        if (currentState.user && currentState.initialized) {
+          console.log('✅ Usando datos ya cargados del store');
+          await loadAllData(currentState.user, currentState.activities);
+        } else {
+          console.log('📡 Cargando datos del usuario...');
+          // Cargar usuario y actividades
+          await Promise.all([
+            userStore.loadUser(),
+            userStore.loadActivities({ limit: 5 })
+          ]);
+        }
+        
+        // Configurar event listeners
+        setupEventListeners();
+        
+        // Mostrar contenido principal
+        showMainScreen();
+        
+        isInitialized = true;
+        console.log('✅ Página de configuración inicializada correctamente');
+        
+      } catch (error) {
+        console.error('❌ Error inicializando configuración:', error);
+        showErrorScreen();
+      }
+    }
+
+    // Manejar actualizaciones del store
+    function handleStoreUpdate(state) {
+      console.log('📡 Store actualizado en configuración:', state);
+      
+      if (state.user && !state.isLoading && !state.error) {
+        loadAllData(state.user, state.activities);
+      } else if (state.error) {
+        console.error('❌ Error en el store:', state.error);
+        showErrorScreen();
+      }
+    }
+
+    // Cargar todos los datos
+    async function loadAllData(user, activities = []) {
+      console.log('🔄 Iniciando loadAllData...');
+      console.log('👤 Usuario recibido:', user);
+      console.log('📊 Actividades recibidas:', activities);
+      
+      if (!user) {
+        console.error('❌ No hay usuario para cargar');
+        return;
+      }
+      
+      try {
+        console.log('📋 Ejecutando todas las funciones de carga...');
+        
+        // Ejecutar secuencialmente para mejor debugging
+        console.log('1️⃣ Cargando perfil...');
+        await loadUserProfile(user);
+        
+        console.log('2️⃣ Cargando actividades...');
+        await loadUserActivities(activities);
+        
+        console.log('3️⃣ Cargando estadísticas...');
+        await loadUserStats();
+        
+        console.log('4️⃣ Cargando info de sesión...');
+        await loadSessionInfo();
+        
+        console.log('✅ loadAllData completado');
+        
+      } catch (error) {
+        console.error('❌ Error cargando datos:', error);
+      }
+    }
+
+    // Cargar perfil del usuario
+    async function loadUserProfile(user) {
+      try {
+        console.log('👤 Cargando perfil del usuario en página de configuración...');
+        console.log('📋 Datos del usuario recibidos:', user);
+        
+        // Nombre (elemento span en configuración)
+        const nameEl = document.getElementById('config-user-name');
+        console.log('🔍 Buscando elemento config-user-name:', nameEl);
+        if (nameEl) {
+          const nameValue = user.name || user.username || 'Sin nombre';
+          console.log('📝 Asignando nombre a configuración:', nameValue);
+          nameEl.textContent = nameValue;
+          console.log('✅ Nombre asignado en configuración. Valor actual:', nameEl.textContent);
+        } else {
+          console.error('❌ Elemento config-user-name no encontrado');
+        }
+        
+        // Email (elemento span en configuración)
+        const emailEl = document.getElementById('config-user-email');
+        console.log('🔍 Buscando elemento config-user-email:', emailEl);
+        if (emailEl) {
+          const emailValue = user.email || 'Sin email';
+          console.log('📝 Asignando email a configuración:', emailValue);
+          emailEl.textContent = emailValue;
+          console.log('✅ Email asignado en configuración. Valor actual:', emailEl.textContent);
+        } else {
+          console.error('❌ Elemento config-user-email no encontrado');
+        }
+        
+        // ID (elemento input en configuración)
+        const idEl = document.getElementById('config-user-id');
+        if (idEl) {
+          idEl.value = user.id || 'Sin ID';
+          console.log('✅ ID asignado en configuración:', idEl.value);
+        } else {
+          console.error('❌ Elemento config-user-id no encontrado');
+        }
+        
+        // Rol (elemento input en configuración)
+        const roleEl = document.getElementById('config-user-role');
+        if (roleEl) {
+          roleEl.value = user.role || 'user';
+          console.log('✅ Rol asignado en configuración:', roleEl.value);
+        } else {
+          console.error('❌ Elemento config-user-role no encontrado');
+        }
+        
+        // Fecha de creación (elemento input en configuración)
+        const createdEl = document.getElementById('config-user-created');
+        if (createdEl && user.createdAt) {
+          try {
+            const date = new Date(user.createdAt);
+            createdEl.value = date.toLocaleDateString('es-ES', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            });
+            console.log('✅ Fecha de creación asignada en configuración:', createdEl.value);
+          } catch (error) {
+            createdEl.value = 'Fecha no disponible';
+            console.error('❌ Error procesando fecha:', error);
+          }
+        } else {
+          console.error('❌ Elemento config-user-created no encontrado o sin fecha');
+        }
+        
+        console.log('✅ Perfil cargado correctamente en página de configuración');
+        
+      } catch (error) {
+        console.error('❌ Error cargando perfil en configuración:', error);
+      }
+    }
+
+    // Cargar actividades del usuario
+    async function loadUserActivities(activities = []) {
+      try {
+        console.log('📊 Cargando actividades...');
+        
+        // Si no se pasaron actividades, obtener del store
+        if (!activities || activities.length === 0) {
+          const state = userStore.getState();
+          activities = state.activities || [];
+          
+          // Si tampoco hay en el store, cargar desde API
+          if (activities.length === 0) {
+            activities = await userStore.loadActivities({ limit: 5 });
+          }
+        }
+        
+        const container = document.getElementById('recent-activities');
+        
+        if (activities.length === 0) {
+          container.innerHTML = `
+            <div class="text-center py-8">
+              <div class="text-gray-400 text-5xl mb-3">📝</div>
+              <p class="text-gray-500 font-medium">No hay actividades recientes</p>
+              <p class="text-gray-400 text-sm mt-1">Tus acciones aparecerán aquí</p>
+            </div>
+          `;
+          return;
+        }
+        
+        const activitiesHtml = activities.map(activity => `
+          <div class="flex items-center justify-between py-4 border-b border-gray-100 last:border-b-0">
+            <div class="flex-1">
+              <p class="font-medium text-gray-900">${activity.activityType || 'Actividad'}</p>
+              <p class="text-sm text-gray-500">${formatDate(activity.createdAt)}</p>
+              ${activity.details ? `<p class="text-xs text-gray-400 mt-1">${activity.module || 'Sistema'}</p>` : ''}
+            </div>
+            <div class="text-xs px-3 py-1 rounded-full font-medium ${getSeverityColor(activity.severity)}">
+              ${(activity.severity || 'low').toUpperCase()}
+            </div>
+          </div>
+        `).join('');
+        
+        container.innerHTML = activitiesHtml;
+        console.log(`✅ ${activities.length} actividades cargadas`);
+        
+      } catch (error) {
+        console.error('❌ Error cargando actividades:', error);
+        document.getElementById('recent-activities').innerHTML = `
+          <div class="text-center py-8">
+            <div class="text-red-400 text-5xl mb-3">⚠️</div>
+            <p class="text-red-600 font-medium">Error cargando actividades</p>
+          </div>
+        `;
+      }
+    }
+
+    // Cargar estadísticas del usuario
+    async function loadUserStats() {
+      try {
+        console.log('📈 Cargando estadísticas...');
+        
+        // Obtener estadísticas del store
+        let stats = userStore.getStats();
+        
+        // Si no hay estadísticas, cargar todas las actividades
+        if (!stats) {
+          await userStore.loadActivities({ limit: 100 });
+          stats = userStore.getStats();
+        }
+        
+        // Si aún no hay estadísticas, mostrar valores por defecto
+        if (!stats) {
+          stats = {
+            total: 0,
+            thisWeek: 0,
+            mostCommon: 'Ninguno',
+            lastActivity: null
+          };
+        }
+        
+        // Mostrar estadísticas
+        const container = document.getElementById('user-stats');
+        container.innerHTML = `
+          <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-600">Total actividades:</span>
+            <span class="text-sm font-bold text-gray-900">${stats.total}</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-600">Esta semana:</span>
+            <span class="text-sm font-bold text-teal-600">${stats.thisWeek}</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-600">Más común:</span>
+            <span class="text-sm font-bold text-gray-900">${stats.mostCommon}</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-600">Última actividad:</span>
+            <span class="text-sm font-bold text-gray-900">${stats.lastActivity ? formatDate(stats.lastActivity) : 'Nunca'}</span>
+          </div>
+        `;
+        
+        console.log('✅ Estadísticas cargadas');
+        
+      } catch (error) {
+        console.error('❌ Error cargando estadísticas:', error);
+        document.getElementById('user-stats').innerHTML = `
+          <div class="text-center py-4">
+            <p class="text-red-500 text-sm">Error cargando estadísticas</p>
+          </div>
+        `;
+      }
+    }
+
+    // Cargar información de sesión
+    async function loadSessionInfo() {
+      try {
+        // Navegador
+        const browserEl = document.getElementById('user-browser');
+        if (browserEl) {
+          const ua = navigator.userAgent;
+          let browser = 'Desconocido';
+          if (ua.includes('Chrome')) browser = 'Chrome';
+          else if (ua.includes('Firefox')) browser = 'Firefox';
+          else if (ua.includes('Safari')) browser = 'Safari';
+          else if (ua.includes('Edge')) browser = 'Edge';
+          browserEl.textContent = browser;
+        }
+        
+        // IP (simulada)
+        const ipEl = document.getElementById('user-ip');
+        if (ipEl) {
+          setTimeout(() => {
+            ipEl.textContent = '192.168.1.x';
+          }, 1000);
+        }
+        
+      } catch (error) {
+        console.error('❌ Error cargando info de sesión:', error);
+      }
+    }
+
+    // Configurar event listeners
+    function setupEventListeners() {
+      // Formulario de contraseña
+      const passwordForm = document.getElementById('password-form');
+      if (passwordForm) {
+        passwordForm.addEventListener('submit', handlePasswordChange);
+      }
+      
+      // Botones de acción
+      const exportBtn = document.getElementById('export-btn');
+      if (exportBtn) {
+        exportBtn.addEventListener('click', handleExport);
+      }
+      
+      const refreshBtn = document.getElementById('refresh-btn');
+      if (refreshBtn) {
+        refreshBtn.addEventListener('click', handleRefresh);
+      }
+      
+      const logoutBtn = document.getElementById('logout-btn');
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', handleLogout);
+      }
+      
+      const retryBtn = document.getElementById('retry-btn');
+      if (retryBtn) {
+        retryBtn.addEventListener('click', () => {
+          isInitialized = false;
+          initializeConfigPage();
+        });
+      }
+    }
+
+    // Manejar cambio de contraseña
+    async function handlePasswordChange(event) {
+      event.preventDefault();
+      
+      const currentPassword = document.getElementById('current-password').value;
+      const newPassword = document.getElementById('new-password').value;
+      const confirmPassword = document.getElementById('confirm-password').value;
+      
+      if (newPassword !== confirmPassword) {
+        showNotification('Las contraseñas no coinciden', 'error');
+        return;
+      }
+      
+      if (newPassword.length < 8) {
+        showNotification('La nueva contraseña debe tener al menos 8 caracteres', 'error');
+        return;
+      }
+      
+      try {
+        showNotification('Cambiando contraseña...', 'loading');
+        
+        // TODO: Implementar endpoint de cambio de contraseña
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        showNotification('Función de cambio de contraseña en desarrollo', 'info');
+        
+        // Limpiar formulario
+        event.target.reset();
+        
+      } catch (error) {
+        console.error('❌ Error cambiando contraseña:', error);
+        showNotification('Error al cambiar la contraseña', 'error');
+      }
+    }
+
+    // Manejar exportación
+    async function handleExport() {
+      try {
+        showNotification('Exportando datos...', 'loading');
+        
+        // Obtener todas las actividades del store
+        let activities = userStore.getState().activities || [];
+        
+        // Si no hay actividades en el store, cargar desde API
+        if (activities.length === 0) {
+          activities = await userStore.loadActivities({ limit: 100 });
+        }
+        
+        if (activities.length === 0) {
+          showNotification('No hay datos para exportar', 'info');
+          return;
+        }
+        
+        // Crear CSV
+        const headers = ['Fecha', 'Tipo', 'Módulo', 'Acción', 'Severidad'];
+        const rows = activities.map(a => [
+          a.createdAt ? new Date(a.createdAt).toLocaleString('es-ES') : 'Sin fecha',
+          a.activityType || 'Desconocido',
+          a.module || 'Sin módulo',
+          a.action || 'Sin acción',
+          a.severity || 'low'
+        ]);
+        
+        const csv = [headers, ...rows].map(row => 
+          row.map(field => `"${field}"`).join(',')
+        ).join('\n');
+        
+        // Descargar
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `mis_datos_${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        
+        showNotification(`${activities.length} registros exportados exitosamente`, 'success');
+        
+      } catch (error) {
+        console.error('❌ Error exportando:', error);
+        showNotification('Error al exportar datos', 'error');
+      }
+    }
+
+    // Manejar refresh
+    async function handleRefresh() {
+      try {
+        showNotification('Actualizando datos...', 'loading');
+        
+        // Refrescar datos usando el store
+        const user = await userStore.refresh();
+        const activities = await userStore.loadActivities({ limit: 5 });
+        
+        // Recargar todos los datos
+        await loadAllData(user, activities);
+        
+        showNotification('Datos actualizados correctamente', 'success');
+        
+      } catch (error) {
+        console.error('❌ Error refrescando:', error);
+        showNotification('Error al actualizar datos', 'error');
+      }
+    }
+
+    // Manejar logout
+    async function handleLogout() {
+      if (!confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+        return;
+      }
+      
+      try {
+        showNotification('Cerrando sesión...', 'loading');
+        
+        // Usar el store para logout
+        await userStore.logout();
+        apiClient.clearTokens();
+        
+        window.location.href = '/login';
+        
+      } catch (error) {
+        console.error('❌ Error en logout:', error);
+        userStore.clear();
+        apiClient.clearTokens();
+        window.location.href = '/login';
+      }
+    }
+
+    // Funciones de utilidad
+    function formatDate(dateString) {
+      if (!dateString) return 'Sin fecha';
+      
+      try {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diff = Math.abs(now - date);
+        const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+        
+        if (days === 0) return 'Hoy';
+        if (days === 1) return 'Ayer';
+        if (days < 7) return `Hace ${days} días`;
+        
+        return date.toLocaleDateString('es-ES');
+      } catch {
+        return 'Fecha inválida';
+      }
+    }
+
+    function getSeverityColor(severity) {
+      const colors = {
+        low: 'bg-green-100 text-green-700',
+        medium: 'bg-yellow-100 text-yellow-700',
+        high: 'bg-orange-100 text-orange-700',
+        critical: 'bg-red-100 text-red-700'
+      };
+      return colors[severity] || colors.low;
+    }
+
+    // Control de pantallas
+    function showLoadingScreen() {
+      document.getElementById('loading-screen').classList.remove('hidden');
+      document.getElementById('error-screen').classList.add('hidden');
+      document.getElementById('main-screen').classList.add('hidden');
+    }
+
+    function showErrorScreen() {
+      document.getElementById('loading-screen').classList.add('hidden');
+      document.getElementById('error-screen').classList.remove('hidden');
+      document.getElementById('main-screen').classList.add('hidden');
+    }
+
+    function showMainScreen() {
+      document.getElementById('loading-screen').classList.add('hidden');
+      document.getElementById('error-screen').classList.add('hidden');
+      document.getElementById('main-screen').classList.remove('hidden');
+    }
+
+    // Sistema de notificaciones
+    function showNotification(message, type) {
+      // Remover notificaciones anteriores
+      const existing = document.querySelectorAll('.notification');
+      existing.forEach(notif => notif.remove());
+      
+      const colors = {
+        loading: 'bg-blue-100 border-blue-400 text-blue-700',
+        success: 'bg-green-100 border-green-400 text-green-700',
+        error: 'bg-red-100 border-red-400 text-red-700',
+        info: 'bg-yellow-100 border-yellow-400 text-yellow-700'
+      };
+      
+      const icons = {
+        loading: '⏳',
+        success: '✅',
+        error: '❌',
+        info: 'ℹ️'
+      };
+      
+      const notification = document.createElement('div');
+      notification.className = `notification fixed top-4 right-4 ${colors[type]} px-4 py-3 rounded-lg shadow-lg z-50 max-w-sm border`;
+      notification.innerHTML = `
+        <div class="flex items-center">
+          <span class="mr-2">${icons[type]}</span>
+          <span>${message}</span>
+        </div>
+      `;
+      
+      document.body.appendChild(notification);
+      
+      if (type !== 'loading') {
+        setTimeout(() => {
+          if (notification.parentNode) {
+            notification.remove();
+          }
+        }, 4000);
+      }
+    }
+
+    // Limpiar suscripción al cerrar la página
+    window.addEventListener('beforeunload', () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    });
+  </script>
+</PortalLayoutSidebar> 

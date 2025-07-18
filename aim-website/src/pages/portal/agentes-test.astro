@@ -1,0 +1,133 @@
+---
+import PortalLayout from '../../layouts/PortalLayout.astro';
+import { verifyAuth } from '../../lib/auth.js';
+
+const user = await verifyAuth(Astro.cookies);
+if (!user) {
+  return Astro.redirect('/login');
+}
+
+// Importar los datos mock de los agentes del cliente
+import { clientAgentsData } from '../../data/clientAgentsData.js';
+---
+
+<PortalLayout title="Mis Agentes TEST - Portal AIM" active="agentes">
+  <div class="bg-gray-50 min-h-screen">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- Header de la página -->
+      <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Mis Agentes (TEST - SIN REACT)</h1>
+        <p class="text-gray-600 mt-2">Esta es una página de prueba para diagnosticar problemas de navegación</p>
+        <p class="text-sm text-blue-600 mt-2">URL actual: {Astro.url.pathname}</p>
+        <p class="text-sm text-green-600 mt-1">Usuario autenticado: {user.name} ({user.email})</p>
+      </div>
+
+      <!-- Estadísticas Rápidas -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white p-6 rounded-lg shadow-sm border">
+          <div class="flex items-center">
+            <div class="bg-green-100 p-3 rounded-full mr-4">
+              <span class="text-green-600 text-xl">🤖</span>
+            </div>
+            <div>
+              <p class="text-sm text-gray-600">Agentes Activos</p>
+              <p class="text-2xl font-bold text-gray-900">{clientAgentsData.filter(agent => agent.status === 'Activo').length}</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="bg-white p-6 rounded-lg shadow-sm border">
+          <div class="flex items-center">
+            <div class="bg-teal-100 p-3 rounded-full mr-4">
+              <span class="text-teal-600 text-xl">⚡</span>
+            </div>
+            <div>
+              <p class="text-sm text-gray-600">Ejecuciones Hoy</p>
+              <p class="text-2xl font-bold text-gray-900">{clientAgentsData.reduce((sum, agent) => sum + parseInt(agent.executionsToday), 0)}</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="bg-white p-6 rounded-lg shadow-sm border">
+          <div class="flex items-center">
+            <div class="bg-blue-100 p-3 rounded-full mr-4">
+              <span class="text-blue-600 text-xl">📈</span>
+            </div>
+            <div>
+              <p class="text-sm text-gray-600">Eficiencia Promedio</p>
+              <p class="text-2xl font-bold text-gray-900">96%</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grid de Agentes (SIN REACT) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {clientAgentsData.map((agent) => (
+          <div class="bg-white p-6 rounded-lg border shadow-sm hover:shadow-md transition-shadow flex flex-col">
+            <div class="flex justify-between items-start mb-4">
+                <h3 class="text-xl font-bold text-teal-800">{agent.name}</h3>
+                <span class={`text-xs font-bold px-3 py-1 rounded-full ${
+                  agent.status === 'Activo' 
+                    ? 'bg-green-100 text-green-800' 
+                    : 'bg-red-100 text-red-800'
+                }`}>
+                    {agent.status}
+                </span>
+            </div>
+            
+            <div class="grid grid-cols-3 gap-4 text-center flex-grow content-start mb-6">
+                <div>
+                  <p class="text-2xl font-black text-teal-800">{agent.executionsToday}</p>
+                  <p class="text-xs text-gray-600">Ejecuciones Hoy</p>
+                </div>
+                <div>
+                  <p class="text-2xl font-black text-teal-800">{agent.avgExecutionTime}</p>
+                  <p class="text-xs text-gray-600">Tiempo Promedio</p>
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-teal-800 mt-2">{agent.lastRun}</p>
+                  <p class="text-xs text-gray-600">Última Ejecución</p>
+                </div>
+            </div>
+            
+            <div class="border-t pt-4 grid grid-cols-3 gap-2">
+                <button class="text-sm font-medium text-teal-600 hover:bg-teal-50 p-2 rounded-md transition-colors duration-200 flex items-center justify-center">
+                  📊 Métricas
+                </button>
+                <button class="text-sm font-medium text-teal-600 hover:bg-teal-50 p-2 rounded-md transition-colors duration-200 flex items-center justify-center">
+                  ⚙️ Configurar
+                </button>
+                <button class="text-sm font-medium text-teal-600 hover:bg-teal-50 p-2 rounded-md transition-colors duration-200 flex items-center justify-center">
+                  📄 Reporte
+                </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <!-- Navegación de Prueba -->
+      <div class="mt-12 bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+        <h3 class="text-lg font-semibold text-yellow-800 mb-4">🔧 Herramientas de Diagnóstico</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <a href="/portal" class="bg-blue-500 hover:bg-blue-600 text-white text-center py-2 px-4 rounded-lg transition-colors">
+            ← Portal Dashboard
+          </a>
+          <a href="/portal/agentes" class="bg-green-500 hover:bg-green-600 text-white text-center py-2 px-4 rounded-lg transition-colors">
+            Agentes Original
+          </a>
+          <a href="/portal/cotizaciones" class="bg-purple-500 hover:bg-purple-600 text-white text-center py-2 px-4 rounded-lg transition-colors">
+            Cotizaciones
+          </a>
+          <button onclick="window.location.reload()" class="bg-gray-500 hover:bg-gray-600 text-white text-center py-2 px-4 rounded-lg transition-colors">
+            🔄 Reload
+          </button>
+        </div>
+        <p class="text-sm text-yellow-700 mt-4">
+          <strong>Debug Info:</strong> Si esta página funciona pero /portal/agentes no, el problema está en React. 
+          Si esta página también redirige, el problema está en el PortalLayout o auth.
+        </p>
+      </div>
+    </div>
+  </div>
+</PortalLayout> 

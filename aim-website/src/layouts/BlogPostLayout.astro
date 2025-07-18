@@ -1,0 +1,15 @@
+---
+// src/layouts/BlogPostLayout.astro
+import BaseLayout from './BaseLayout.astro';
+const { frontmatter } = Astro.props;
+---
+<BaseLayout title={frontmatter.title} description={frontmatter.description}>
+  <article class="py-20 container mx-auto px-4 max-w-3xl">
+    <h1 class="text-4xl font-black text-brand-dark">{frontmatter.title}</h1>
+    <p class="text-brand-gray mt-2">Publicado el {new Date(frontmatter.pubDate).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+    
+    <div class="prose lg:prose-xl mt-12">
+        <slot />
+    </div>
+  </article>
+</BaseLayout> 

@@ -1,0 +1,238 @@
+# =================================================================
+# .gitignore para AIM (Asociación de Ingeniería Mireles)
+# Proyecto Full-Stack: Node.js + TypeScript + Astro.js + PostgreSQL
+# =================================================================
+
+# =================================================================
+# ARCHIVOS DE ENTORNO Y CONFIGURACIÓN SENSIBLE
+# =================================================================
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env.staging
+
+# Mantener solo el ejemplo
+!env.example
+
+# =================================================================
+# DEPENDENCIAS Y CACHÉS
+# =================================================================
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.npm
+.yarn-integrity
+jspm_packages/
+
+# Cachés de package managers
+.pnp.*
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+# =================================================================
+# ARCHIVOS DE CONSTRUCCIÓN Y COMPILACIÓN
+# =================================================================
+
+# Build outputs generales
+dist/
+build/
+out/
+
+# Frontend Astro.js
+.astro/
+
+# Backend TypeScript
+*.tsbuildinfo
+typings/
+
+# Archivos compilados
+*.js.map
+*.d.ts.map
+
+# =================================================================
+# LOGS Y ARCHIVOS TEMPORALES
+# =================================================================
+
+# Logs
+logs/
+*.log
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Runtime data
+lib-cov
+coverage
+*.lcov
+.nyc_output
+
+# Archivos temporales
+.tmp/
+tmp/
+.cache/
+.parcel-cache/
+
+# =================================================================
+# BASES DE DATOS Y DATOS LOCALES
+# =================================================================
+
+# SQLite (si se usa para desarrollo)
+*.sqlite
+*.sqlite3
+*.db
+
+# Backups de base de datos
+*.sql.bak
+*.dump
+backups/
+
+# Datos de desarrollo
+data/
+uploads/
+storage/
+
+# =================================================================
+# DOCKER Y CONTAINERIZACIÓN
+# =================================================================
+
+# No versionar datos de Docker
+docker-data/
+postgres-data/
+
+# Archivos de Docker locales (mantener los templates)
+docker-compose.override.local.yml
+
+# =================================================================
+# IDEs Y EDITORES
+# =================================================================
+
+# Visual Studio Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# JetBrains IDEs
+.idea/
+*.swp
+*.swo
+*~
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# =================================================================
+# SISTEMA OPERATIVO
+# =================================================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+
+# =================================================================
+# ARCHIVOS ESPECÍFICOS DEL PROYECTO
+# =================================================================
+
+# Scripts de seeding y testing (no necesarios en producción)
+*-seeder.js
+test-*.js
+test-*.html
+debug-*.html
+fix-*.js
+fix-*.sql
+run-*.js
+
+# Scripts PowerShell de desarrollo
+ps1/
+
+# Documentación generada
+docs/generated/
+
+# Archivos de backup
+*.bak
+*.backup
+*.old
+*.orig
+*.copy
+
+# Certificados SSL locales
+ssl/
+certs/
+*.pem
+*.key
+*.crt
+
+# =================================================================
+# ARCHIVOS DE ANÁLISIS Y TESTING
+# =================================================================
+
+# Coverage reports
+coverage/
+.nyc_output/
+
+# Test results
+test-results/
+junit.xml
+
+# Performance monitoring
+.clinic/
+flamegraph.html
+
+# =================================================================
+# ARCHIVOS DE DEPLOYMENT Y CI/CD
+# =================================================================
+
+# Archivos de deployment específicos (mantener templates)
+.deploy/
+deployment-local.yml
+
+# Secretos de CI/CD (GitHub Actions usa secrets del repositorio)
+secrets.yml
+secrets.json
+
+# =================================================================
+# DIRECTORIOS OPCIONALES ESPECÍFICOS
+# =================================================================
+
+# Directorio de logos y assets que pueden ser grandes
+# (comentado porque podrían ser necesarios)
+# Logos/
+
+# Backups del proyecto
+Backups/
+
+# Archivos de documentación temporal
+md-info/temp/ 

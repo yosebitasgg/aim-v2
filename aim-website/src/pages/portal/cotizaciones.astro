@@ -1,0 +1,3028 @@
+---
+import PortalLayoutSidebar from '../../layouts/PortalLayoutSidebar.astro';
+import PortalAuthGuard from '../../components/PortalAuthGuard.jsx';
+import { Icon } from 'astro-icon/components';
+
+// Los datos se cargarán dinámicamente desde el cliente
+// para evitar problemas con la API en tiempo de build
+---
+
+<PortalLayoutSidebar title="Cotizaciones - Portal AIM">
+  <PortalAuthGuard client:load>
+    <!-- Header Principal -->
+    <div class="mb-8">
+      <div class="bg-gradient-to-r from-teal-600 to-emerald-600 rounded-xl p-6 text-white">
+        <div class="flex items-center justify-between">
+          <div>
+            <h1 class="text-2xl font-bold mb-2">Gestión de Cotizaciones</h1>
+            <p class="text-teal-100">Genera y administra cotizaciones para órdenes de automatización</p>
+          </div>
+          <div class="text-right">
+            <div class="text-teal-100 text-sm">Cotizaciones Generadas</div>
+            <div class="text-xl font-bold" id="totalQuotes">0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-500 mb-1">Cotizaciones Totales</p>
+            <p class="text-2xl font-bold text-gray-900" id="totalQuotesCount">
+              <div class="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
+            </p>
+            <p class="text-sm text-teal-600 flex items-center mt-2">
+              <Icon name="tabler:file-text" class="w-4 h-4 mr-1" />
+              Generadas
+            </p>
+          </div>
+          <div class="p-3 bg-teal-50 rounded-lg">
+            <Icon name="tabler:calculator" class="w-6 h-6 text-teal-600" />
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-500 mb-1">Este Mes</p>
+            <p class="text-2xl font-bold text-gray-900" id="quotesThisMonth">
+              <div class="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
+            </p>
+            <p class="text-sm text-orange-600 flex items-center mt-2">
+              <Icon name="tabler:calendar" class="w-4 h-4 mr-1" />
+              Nuevas
+            </p>
+          </div>
+          <div class="p-3 bg-orange-50 rounded-lg">
+            <Icon name="tabler:calendar" class="w-6 h-6 text-orange-600" />
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-500 mb-1">Valor Total</p>
+            <p class="text-2xl font-bold text-gray-900" id="totalQuoteValue">
+              <div class="animate-pulse bg-gray-200 h-8 w-20 rounded"></div>
+            </p>
+            <p class="text-sm text-emerald-600 flex items-center mt-2">
+              <Icon name="tabler:currency-dollar" class="w-4 h-4 mr-1" />
+              Cotizado
+            </p>
+          </div>
+          <div class="p-3 bg-emerald-50 rounded-lg">
+            <Icon name="tabler:currency-dollar" class="w-6 h-6 text-emerald-600" />
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-500 mb-1">Órdenes Sin Cotizar</p>
+            <p class="text-2xl font-bold text-gray-900" id="ordersWithoutQuote">
+              <div class="animate-pulse bg-gray-200 h-8 w-12 rounded"></div>
+            </p>
+            <p class="text-sm text-red-600 flex items-center mt-2">
+              <Icon name="tabler:alert-circle" class="w-4 h-4 mr-1" />
+              Pendientes
+            </p>
+          </div>
+          <div class="p-3 bg-red-50 rounded-lg">
+            <Icon name="tabler:alert-circle" class="w-6 h-6 text-red-600" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabla de Órdenes y Estado de Cotización -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div class="bg-gradient-to-r from-teal-500 to-emerald-500 p-6 text-white">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-xl font-semibold">Órdenes y Estado de Cotización</h3>
+            <p class="text-teal-100 mt-1">Estado de cotización por orden de trabajo</p>
+          </div>
+          <button id="btnCrearCotizacion" class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200">
+            <Icon name="tabler:plus" class="w-4 h-4 inline mr-2" />
+            Crear Cotización
+          </button>
+        </div>
+      </div>
+      
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="text-left py-3 px-6 font-medium text-gray-900">Orden</th>
+              <th class="text-left py-3 px-6 font-medium text-gray-900">Cliente/Proyecto</th>
+              <th class="text-left py-3 px-6 font-medium text-gray-900">Agente Solicitado</th>
+              <th class="text-left py-3 px-6 font-medium text-gray-900">Estado Cotización</th>
+              <th class="text-left py-3 px-6 font-medium text-gray-900">Valor Cotizado</th>
+              <th class="text-left py-3 px-6 font-medium text-gray-900">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="ordersQuoteTableBody" class="divide-y divide-gray-200">
+            <!-- Loading placeholders -->
+            <tr class="hover:bg-gray-50 animate-pulse">
+              <td class="py-4 px-6">
+                <div>
+                  <div class="h-4 bg-gray-200 rounded w-24 mb-1"></div>
+                  <div class="h-3 bg-gray-200 rounded w-20"></div>
+                </div>
+              </td>
+              <td class="py-4 px-6">
+                <div>
+                  <div class="h-4 bg-gray-200 rounded w-32 mb-1"></div>
+                  <div class="h-3 bg-gray-200 rounded w-28"></div>
+                </div>
+              </td>
+              <td class="py-4 px-6">
+                <div class="h-4 bg-gray-200 rounded w-28"></div>
+              </td>
+              <td class="py-4 px-6">
+                <div class="h-6 bg-gray-200 rounded-full w-20"></div>
+              </td>
+              <td class="py-4 px-6">
+                <div class="h-4 bg-gray-200 rounded w-16"></div>
+              </td>
+              <td class="py-4 px-6">
+                <div class="flex space-x-2">
+                  <div class="h-8 bg-gray-200 rounded w-16"></div>
+                  <div class="h-8 bg-gray-200 rounded w-16"></div>
+                </div>
+              </td>
+            </tr>
+            <tr class="hover:bg-gray-50 animate-pulse">
+              <td class="py-4 px-6">
+                <div>
+                  <div class="h-4 bg-gray-200 rounded w-24 mb-1"></div>
+                  <div class="h-3 bg-gray-200 rounded w-20"></div>
+                </div>
+              </td>
+              <td class="py-4 px-6">
+                <div>
+                  <div class="h-4 bg-gray-200 rounded w-32 mb-1"></div>
+                  <div class="h-3 bg-gray-200 rounded w-28"></div>
+                </div>
+              </td>
+              <td class="py-4 px-6">
+                <div class="h-4 bg-gray-200 rounded w-28"></div>
+              </td>
+              <td class="py-4 px-6">
+                <div class="h-6 bg-gray-200 rounded-full w-20"></div>
+              </td>
+              <td class="py-4 px-6">
+                <div class="h-4 bg-gray-200 rounded w-16"></div>
+              </td>
+              <td class="py-4 px-6">
+                <div class="flex space-x-2">
+                  <div class="h-8 bg-gray-200 rounded w-16"></div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Modal para crear cotización -->
+    <div id="modalCrearCotizacion" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+      <div class="bg-white rounded-xl max-w-6xl w-full max-h-[95vh] overflow-y-auto">
+        <div class="p-6">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-xl font-semibold text-gray-900">Crear Nueva Cotización</h3>
+            <button id="cerrarModalCrear" class="text-gray-400 hover:text-gray-600">
+              <Icon name="tabler:x" class="w-6 h-6" />
+            </button>
+          </div>
+          <div id="contenidoModalCrear">
+            <!-- Contenido dinámico aquí -->
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Modal Selector de Orden -->
+    <div id="modalSelectorOrden" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+      <div class="bg-white rounded-xl max-w-2xl w-full">
+        <div class="p-6">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-xl font-semibold text-gray-900">Seleccionar Orden para Cotizar</h3>
+            <button id="cerrarModalSelector" class="text-gray-400 hover:text-gray-600">
+              <Icon name="tabler:x" class="w-6 h-6" />
+            </button>
+          </div>
+          <div id="contenidoModalSelector">
+            <!-- Contenido dinámico aquí -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Vista Previa de Cotización -->
+    <div id="modalVistaPrevia" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-2">
+      <div class="bg-white rounded-xl max-w-[98vw] w-full max-h-[98vh] overflow-y-auto shadow-2xl">
+        <div class="p-4 sm:p-6">
+          <div class="flex items-center justify-between mb-4 sm:mb-6">
+            <h3 class="text-xl font-semibold text-gray-900">Vista Previa de la Cotización</h3>
+            <button id="cerrarModalPrevia" class="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors">
+              <Icon name="tabler:x" class="w-6 h-6" />
+            </button>
+          </div>
+          <div id="contenidoModalPrevia" class="min-h-[400px]">
+            <!-- Contenido dinámico aquí -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </PortalAuthGuard>
+
+  <!-- Estilos para el sistema desplegable -->
+  <style>
+    /* Animaciones suaves para el contenido desplegable */
+    .phase-content {
+      max-height: 0;
+      opacity: 0;
+      transition: max-height 0.5s ease-in-out, opacity 0.3s ease-in-out;
+    }
+    
+    .modal-phase-content {
+      max-height: 0;
+      opacity: 0;
+      transition: max-height 0.5s ease-in-out, opacity 0.3s ease-in-out;
+    }
+    
+    /* Efectos hover mejorados para las cards */
+    .document-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Efectos hover para los headers de fase */
+    .collapsible-header:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .modal-collapsible-header:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Animación para las flechas */
+    .phase-arrow {
+      transition: transform 0.3s ease-in-out;
+    }
+    
+    .modal-phase-arrow {
+      transition: transform 0.3s ease-in-out;
+    }
+    
+    /* Efectos de pulsación en botones */
+    .collapsible-header:active,
+    .modal-collapsible-header:active {
+      transform: translateY(0);
+    }
+    
+    /* Mejoras visuales para los indicadores */
+    .phase-content .document-card {
+      animation: slideUp 0.3s ease-out;
+    }
+    
+    .modal-phase-content .document-card {
+      animation: slideUp 0.3s ease-out;
+    }
+    
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    /* Hover effects para badges */
+    .phase-content .document-card:hover .rounded-full {
+      transform: scale(1.1);
+    }
+    
+    .modal-phase-content .document-card:hover .rounded-full {
+      transform: scale(1.1);
+    }
+    
+    /* Estilos para componentes de formulario */
+    .file-upload-component {
+      transition: all 0.3s ease;
+    }
+    
+    .file-upload-component:hover {
+      border-color: #14b8a6;
+      background-color: #f0fdfa;
+    }
+    
+    .roi-calculator-simple {
+      border: 1px solid #e5e7eb;
+      transition: all 0.3s ease;
+    }
+    
+    .roi-calculator-simple:hover {
+      border-color: #14b8a6;
+      box-shadow: 0 4px 12px rgba(20, 184, 166, 0.1);
+    }
+    
+    .attachment-field .file-list {
+      animation: fadeIn 0.3s ease-in-out;
+    }
+    
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+
+  <!-- Cargar API Client primero -->
+  <script is:inline src="/scripts/documentsApiClient.js"></script>
+  <script is:inline src="/scripts/ordersApiClient.js"></script>
+  
+  <!-- Importar React para componentes dinámicos -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+  <!-- Lógica principal de cotizaciones -->
+  <script is:inline>
+    // Variables globales para almacenar datos
+    let documentTypes = [];
+    let documents = [];
+    let orders = [];
+    let quotes = []; // Documentos de tipo cotización
+    let stats = {};
+    let selectedOrder = null;
+    let selectedDocumentType = null;
+    let createdDocument = null;
+    
+    // Solo trabajamos con cotizaciones
+    const QUOTE_DOCUMENT_SLUGS = ['propuesta', 'cotizacion', 'quote', 'presupuesto'];
+
+    // Crear instancias globales de los API clients
+    window.documentsApi = new DocumentsApiClient();
+    window.ordersApi = new OrdersApiClient();
+
+    // Función para probar conectividad del backend
+    async function testBackendConnection() {
+      try {
+        console.log('🔌 Probando conectividad con el backend...');
+        
+        // Intentar una llamada simple a la API
+        const response = await fetch('http://localhost:3001/api/documents/types', {
+          method: 'GET',
+          headers: window.documentsApi.getHeaders(),
+          credentials: 'include'
+        });
+        
+        console.log('📡 Estado de la respuesta:', response.status);
+        
+        if (response.ok) {
+          console.log('✅ Backend conectado correctamente');
+          return true;
+        } else if (response.status === 401) {
+          console.warn('⚠️ Backend conectado pero token de autenticación inválido');
+          return false;
+        } else {
+          console.warn('⚠️ Backend respondió con error:', response.status);
+          return false;
+        }
+      } catch (error) {
+        console.error('❌ No se pudo conectar al backend:', error);
+        return false;
+      }
+    }
+
+    // Inicializar la página cuando el DOM esté listo
+    document.addEventListener('DOMContentLoaded', async function() {
+      try {
+        console.log('🚀 Inicializando página de cotizaciones...');
+        
+        // Esperar un poco para asegurar que todos los scripts se carguen
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Verificar que las dependencias estén disponibles
+        if (!window.documentsApi) {
+          throw new Error('documentsApi no está disponible');
+        }
+        
+        if (!window.ordersApi) {
+          throw new Error('ordersApi no está disponible');
+        }
+        
+        // Probar conectividad del backend
+        await testBackendConnection();
+        
+        // Inicializar la página
+        await initializePage();
+        
+        // Configurar event listeners
+        setupEventListeners();
+        
+        console.log('✅ Página de cotizaciones inicializada correctamente');
+      } catch (error) {
+        console.error('❌ Error inicializando página de cotizaciones:', error);
+        showInitializationError(error);
+      }
+    });
+
+    async function initializePage() {
+      try {
+        // Mostrar indicadores de carga
+        showLoadingState();
+        
+        // Cargar datos en paralelo
+        const results = await Promise.allSettled([
+          loadDocumentTypes(),
+          loadDocuments(),
+          loadOrders(),
+          loadQuoteStats()
+        ]);
+
+        // Log de resultados para debugging
+        results.forEach((result, index) => {
+          const operations = ['documentTypes', 'documents', 'orders', 'stats'];
+          if (result.status === 'rejected') {
+            console.warn(`Error cargando ${operations[index]}:`, result.reason);
+          }
+        });
+
+        // Filtrar solo cotizaciones de los documentos cargados
+        quotes = documents.filter(doc => isQuoteDocument(doc));
+        console.log(`💰 Cotizaciones filtradas: ${quotes.length} de ${documents.length} documentos totales`);
+
+        // Renderizar la interfaz
+        renderQuoteStats();
+        renderOrdersQuoteTable();
+        
+        // Ocultar indicadores de carga
+        hideLoadingState();
+        
+      } catch (error) {
+        console.error('Error inicializando la página:', error);
+        showError('Error cargando los datos. Por favor recarga la página.');
+      }
+    }
+
+    function setupEventListeners() {
+      // Event listener para botón crear cotización principal
+      const btnCrearCotizacion = document.getElementById('btnCrearCotizacion');
+      if (btnCrearCotizacion) {
+        btnCrearCotizacion.addEventListener('click', function() {
+          mostrarSelectorOrden();
+        });
+      }
+
+      // Event listeners para cerrar modales
+      const cerrarModalCrear = document.getElementById('cerrarModalCrear');
+      if (cerrarModalCrear) {
+        cerrarModalCrear.addEventListener('click', function() {
+          document.getElementById('modalCrearCotizacion').classList.add('hidden');
+        });
+      }
+      
+      const cerrarModalSelector = document.getElementById('cerrarModalSelector');
+      if (cerrarModalSelector) {
+        cerrarModalSelector.addEventListener('click', function() {
+          document.getElementById('modalSelectorOrden').classList.add('hidden');
+        });
+      }
+
+      const cerrarModalPrevia = document.getElementById('cerrarModalPrevia');
+      if (cerrarModalPrevia) {
+        cerrarModalPrevia.addEventListener('click', function() {
+          document.getElementById('modalVistaPrevia').classList.add('hidden');
+        });
+      }
+
+      // Event listener para cerrar modales con escape
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          document.getElementById('modalCrearCotizacion').classList.add('hidden');
+          document.getElementById('modalSelectorOrden').classList.add('hidden');
+          document.getElementById('modalVistaPrevia').classList.add('hidden');
+        }
+      });
+    }
+
+    function showLoadingState() {
+      // Mostrar skeleton loaders en lugar de contenido real
+      const statsElements = ['totalQuotesCount', 'quotesThisMonth', 'totalQuoteValue', 'ordersWithoutQuote'];
+      statsElements.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+          element.innerHTML = '<div class="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>';
+        }
+      });
+    }
+
+    function hideLoadingState() {
+      // Los elementos ya se actualizan en renderQuoteStats(), etc.
+    }
+
+    function showInitializationError(error) {
+      const tableBody = document.getElementById('ordersQuoteTableBody');
+      if (tableBody) {
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="6" class="px-6 py-8 text-center text-red-500">
+              <div class="flex flex-col items-center">
+                <svg class="w-12 h-12 text-red-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                </svg>
+                <p class="text-lg font-medium">Error inicializando el sistema de cotizaciones</p>
+                <p class="text-sm mb-4">${error.message}</p>
+                <button onclick="location.reload()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                  Reintentar
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }
+    }
+
+    async function loadDocumentTypes() {
+      try {
+        const allDocTypes = await window.documentsApi.getDocumentTypes();
+        // Filtrar solo tipos de documentos relacionados con cotizaciones
+        documentTypes = allDocTypes.filter(docType => 
+          QUOTE_DOCUMENT_SLUGS.some(slug => 
+            docType.slug.toLowerCase().includes(slug) || 
+            docType.name.toLowerCase().includes('cotiz') ||
+            docType.name.toLowerCase().includes('propuesta') ||
+            docType.name.toLowerCase().includes('presupuesto')
+          )
+        );
+        console.log('💰 Tipos de documentos de cotización cargados:', documentTypes.length);
+      } catch (error) {
+        console.error('❌ Error cargando tipos de documentos:', error);
+        documentTypes = [];
+      }
+    }
+
+    async function loadDocuments() {
+      try {
+        console.log('📄 Cargando documentos desde el backend...');
+        const response = await window.documentsApi.getDocuments({ limit: 100 });
+        console.log('📄 Respuesta de getDocuments:', response);
+        
+        documents = response.documents || [];
+        console.log('✅ Documentos cargados:', documents.length);
+        
+      } catch (error) {
+        console.error('❌ Error cargando documentos:', error);
+        documents = [];
+      }
+    }
+
+    async function loadOrders() {
+      try {
+        const response = await window.ordersApi.getOrders({ limit: 100 });
+        orders = response.orders || [];
+        console.log('✅ Órdenes cargadas:', orders.length);
+        
+        // Si no hay órdenes reales, crear algunas de prueba 
+        if (orders.length === 0) {
+          console.log('📝 No hay órdenes reales, creando datos de prueba...');
+          orders = await createTestOrders();
+        }
+      } catch (error) {
+        console.error('❌ Error cargando órdenes:', error);
+        console.log('📝 Creando órdenes de prueba...');
+        orders = await createTestOrders();
+      }
+    }
+
+    async function loadQuoteStats() {
+      try {
+        // Las estadísticas se calcularán después de cargar documentos y órdenes
+        stats = {};
+      } catch (error) {
+        console.error('❌ Error cargando estadísticas:', error);
+        stats = {};
+      }
+    }
+
+    // Función para determinar si un documento es una cotización
+    function isQuoteDocument(document) {
+      if (!document) return false;
+      
+      const docTypeName = document.documentType?.name?.toLowerCase() || '';
+      const docTypeSlug = document.documentType?.slug?.toLowerCase() || '';
+      const docTitle = document.title?.toLowerCase() || '';
+      
+      return (
+        QUOTE_DOCUMENT_SLUGS.some(slug => docTypeSlug.includes(slug)) ||
+        docTypeName.includes('cotiz') ||
+        docTypeName.includes('propuesta') ||
+        docTypeName.includes('presupuesto') ||
+        docTitle.includes('cotiz') ||
+        docTitle.includes('presupuesto')
+      );
+    }
+
+    function renderQuoteStats() {
+      try {
+        // Calcular estadísticas de cotizaciones
+        const totalQuotes = quotes.length;
+        const quotesThisMonth = quotes.filter(quote => {
+          const createdDate = new Date(quote.createdAt);
+          const now = new Date();
+          return (
+            createdDate.getMonth() === now.getMonth() &&
+            createdDate.getFullYear() === now.getFullYear()
+          );
+        }).length;
+
+        // Calcular valor total de cotizaciones (esto requeriría extraer datos del calculador)
+        let totalValue = 0;
+        quotes.forEach(quote => {
+          // Intentar extraer el valor de la cotización del specificData
+          if (quote.specificData) {
+            Object.values(quote.specificData).forEach(data => {
+              if (typeof data === 'string') {
+                try {
+                  const parsedData = JSON.parse(data);
+                  if (parsedData.calculations?.grandTotal) {
+                    totalValue += parsedData.calculations.grandTotal;
+                  }
+                } catch (e) {
+                  // No es JSON válido
+                }
+              } else if (data && data.calculations?.grandTotal) {
+                totalValue += data.calculations.grandTotal;
+              }
+            });
+          }
+        });
+
+        // Calcular órdenes sin cotizar
+        const quotedOrderIds = new Set(quotes.map(quote => quote.orderId));
+        const ordersWithoutQuote = orders.filter(order => !quotedOrderIds.has(order.id)).length;
+
+        // Actualizar elementos del DOM
+        document.getElementById('totalQuotes').textContent = totalQuotes;
+        document.getElementById('totalQuotesCount').textContent = totalQuotes;
+        document.getElementById('quotesThisMonth').textContent = quotesThisMonth;
+        document.getElementById('totalQuoteValue').textContent = `$${totalValue.toLocaleString()}`;
+        document.getElementById('ordersWithoutQuote').textContent = ordersWithoutQuote;
+
+        console.log('📊 Estadísticas de cotización renderizadas:', {
+          totalQuotes,
+          quotesThisMonth,
+          totalValue,
+          ordersWithoutQuote
+        });
+
+      } catch (error) {
+        console.error('❌ Error renderizando estadísticas:', error);
+      }
+    }
+
+    function renderOrdersQuoteTable() {
+      const tableBody = document.getElementById('ordersQuoteTableBody');
+      if (!tableBody) return;
+
+      try {
+        if (orders.length === 0) {
+          tableBody.innerHTML = `
+            <tr>
+              <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                <div class="flex flex-col items-center">
+                  <svg class="w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                  </svg>
+                  <p class="text-lg font-medium">No hay órdenes disponibles</p>
+                  <p class="text-sm">Crea nuevas órdenes en el módulo de órdenes</p>
+                </div>
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        const tableRows = orders.map(order => {
+          // Buscar si ya existe una cotización para esta orden
+          const existingQuote = quotes.find(quote => quote.orderId === order.id);
+          
+          // Extraer valor de cotización si existe
+          let quoteValue = '';
+          if (existingQuote && existingQuote.specificData) {
+            Object.values(existingQuote.specificData).forEach(data => {
+              if (typeof data === 'string') {
+                try {
+                  const parsedData = JSON.parse(data);
+                  if (parsedData.calculations?.grandTotal) {
+                    quoteValue = `$${parsedData.calculations.grandTotal.toLocaleString()}`;
+                  }
+                } catch (e) {
+                  // No es JSON válido
+                }
+              } else if (data && data.calculations?.grandTotal) {
+                quoteValue = `$${data.calculations.grandTotal.toLocaleString()}`;
+              }
+            });
+          }
+
+          const quoteStatus = existingQuote ? getQuoteStatusBadge(existingQuote.status) : '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Sin Cotizar</span>';
+          
+          // Extraer agente solicitado del campo agent o de agentData
+          let requestedAgent = 'No especificado';
+          if (order.agent?.name) {
+            requestedAgent = order.agent.name;
+          } else if (order.agentData?.name) {
+            requestedAgent = order.agentData.name;
+          } else if (order.title?.includes('Agente')) {
+            // Intentar extraer del título
+            const match = order.title.match(/Agente[^,]*/i);
+            if (match) {
+              requestedAgent = match[0];
+            }
+          }
+
+          return `
+            <tr class="hover:bg-gray-50 transition-colors duration-200">
+              <td class="py-4 px-6">
+                <div>
+                  <div class="font-medium text-gray-900">${order.orderNumber || order.id}</div>
+                  <div class="text-sm text-gray-500">${formatDate(order.createdAt)}</div>
+                </div>
+              </td>
+              <td class="py-4 px-6">
+                <div>
+                  <div class="font-medium text-gray-900">${order.client?.companyName || order.clientCompanyName || 'Cliente no especificado'}</div>
+                  <div class="text-sm text-gray-500">${order.title || 'Sin título'}</div>
+                </div>
+              </td>
+              <td class="py-4 px-6">
+                <div class="text-sm text-gray-700">${requestedAgent}</div>
+              </td>
+              <td class="py-4 px-6">
+                ${quoteStatus}
+              </td>
+              <td class="py-4 px-6">
+                <div class="text-sm font-medium text-gray-900">
+                  ${quoteValue || '-'}
+                </div>
+              </td>
+              <td class="py-4 px-6">
+                <div class="flex items-center space-x-2">
+                  ${existingQuote ? `
+                    <button 
+                      onclick="mostrarVistaPreviaCotizacion('${existingQuote.id}')"
+                      class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-teal-700 bg-teal-100 hover:bg-teal-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
+                    >
+                      <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                      </svg>
+                      Ver
+                    </button>
+                  ` : `
+                    <button 
+                      onclick="crearCotizacionParaOrden('${order.id}')"
+                      class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
+                    >
+                      <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                      </svg>
+                      Cotizar
+                    </button>
+                  `}
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+        tableBody.innerHTML = tableRows;
+
+      } catch (error) {
+        console.error('❌ Error renderizando tabla de órdenes:', error);
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="6" class="px-6 py-8 text-center text-red-500">
+              <p>Error cargando las órdenes</p>
+            </td>
+          </tr>
+        `;
+      }
+    }
+
+    function getQuoteStatusBadge(status) {
+      const statusMap = {
+        'DRAFT': { color: 'yellow', text: 'Borrador' },
+        'FINALIZED': { color: 'blue', text: 'Finalizada' },
+        'SENT': { color: 'indigo', text: 'Enviada' },
+        'REVIEWED': { color: 'purple', text: 'Revisada' },
+        'APPROVED': { color: 'green', text: 'Aprobada' },
+        'REJECTED': { color: 'red', text: 'Rechazada' },
+        'ARCHIVED': { color: 'gray', text: 'Archivada' }
+      };
+
+      const statusInfo = statusMap[status] || { color: 'gray', text: status };
+      
+      return `<span class="px-2 py-1 text-xs font-semibold rounded-full bg-${statusInfo.color}-100 text-${statusInfo.color}-800">${statusInfo.text}</span>`;
+    }
+
+    // Función global para crear cotización para una orden específica
+    window.crearCotizacionParaOrden = function(orderId) {
+      const order = orders.find(o => o.id === orderId);
+      if (order) {
+        selectedOrder = order;
+        mostrarFormularioCotizacion();
+      }
+    };
+
+    // Función global para mostrar vista previa de cotización
+    window.mostrarVistaPreviaCotizacion = function(quoteId) {
+      const quote = quotes.find(q => q.id === quoteId);
+      if (quote) {
+        mostrarVistaPrevia(quote);
+      }
+    };
+
+    // Función para mostrar selector de orden
+    function mostrarSelectorOrden() {
+      const modal = document.getElementById('modalSelectorOrden');
+      const contenido = document.getElementById('contenidoModalSelector');
+      
+      // Filtrar órdenes que no tienen cotización
+      const quotedOrderIds = new Set(quotes.map(quote => quote.orderId));
+      const ordersWithoutQuote = orders.filter(order => !quotedOrderIds.has(order.id));
+      
+      if (ordersWithoutQuote.length === 0) {
+        contenido.innerHTML = `
+          <div class="text-center py-8">
+            <div class="text-gray-400 text-6xl mb-4">📋</div>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">Todas las órdenes ya tienen cotización</h3>
+            <p class="text-gray-500">No hay órdenes disponibles para cotizar en este momento.</p>
+          </div>
+        `;
+      } else {
+        const ordersList = ordersWithoutQuote.map(order => `
+          <div class="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors" onclick="seleccionarOrdenParaCotizar('${order.id}')">
+            <div class="flex justify-between items-start">
+              <div class="flex-1">
+                <h4 class="font-medium text-gray-900">${order.orderNumber || order.id}</h4>
+                <p class="text-sm text-gray-600 mt-1">${order.title || 'Sin título'}</p>
+                <div class="flex items-center text-xs text-gray-500 mt-2">
+                  <span>${order.client?.companyName || order.clientCompanyName || 'Cliente no especificado'}</span>
+                  <span class="mx-2">•</span>
+                  <span>${formatDate(order.createdAt)}</span>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                  Sin Cotizar
+                </span>
+              </div>
+            </div>
+          </div>
+        `).join('');
+
+        contenido.innerHTML = `
+          <div class="space-y-4">
+            <p class="text-gray-600">Selecciona una orden para crear su cotización:</p>
+            <div class="max-h-96 overflow-y-auto space-y-3">
+              ${ordersList}
+            </div>
+          </div>
+        `;
+      }
+      
+      modal.classList.remove('hidden');
+    }
+
+    // Función global para seleccionar orden para cotizar
+    window.seleccionarOrdenParaCotizar = function(orderId) {
+      const order = orders.find(o => o.id === orderId);
+      if (order) {
+        selectedOrder = order;
+        document.getElementById('modalSelectorOrden').classList.add('hidden');
+        mostrarFormularioCotizacion();
+      }
+    };
+
+    // Aquí continuaría con las funciones de formulario de cotización y vista previa...
+    // Por límites de espacio, las funciones adicionales irían aquí siguiendo el mismo patrón
+    // que la página de documentos pero específicas para cotizaciones
+
+    // Funciones auxiliares
+    function formatDate(dateString) {
+      if (!dateString) return '';
+      try {
+        return new Date(dateString).toLocaleDateString('es-ES', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        });
+      } catch (error) {
+        return dateString;
+      }
+    }
+
+         function showSuccess(message) {
+       // Implementar notificación de éxito
+       console.log('✅', message);
+       showNotification(message, 'success');
+     }
+
+     function showError(message) {
+       // Implementar notificación de error
+       console.error('❌', message);
+       showNotification(message, 'error');
+     }
+
+     function showNotification(message, type = 'info') {
+       // Crear contenedor de notificaciones si no existe
+       let container = document.getElementById('notification-container');
+       if (!container) {
+         container = document.createElement('div');
+         container.id = 'notification-container';
+         container.className = 'fixed top-4 right-4 z-50 space-y-2';
+         document.body.appendChild(container);
+       }
+
+       // Crear notificación
+       const notification = document.createElement('div');
+       notification.className = `
+         max-w-sm w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5 
+         ${type === 'success' 
+           ? 'bg-green-50 border-green-400 text-green-700' 
+           : type === 'error'
+           ? 'bg-red-50 border-red-400 text-red-700'
+           : 'bg-blue-50 border-blue-400 text-blue-700'
+         }
+         transform transition-all duration-300 translate-x-full
+       `;
+       
+       const iconSvg = type === 'success' 
+         ? '<svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>'
+         : type === 'error'
+         ? '<svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>'
+         : '<svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>';
+       
+       notification.innerHTML = `
+         <div class="flex items-center p-4">
+           <div class="flex-shrink-0">${iconSvg}</div>
+           <div class="ml-3 flex-1">
+             <p class="text-sm font-medium">${message}</p>
+           </div>
+           <div class="ml-4 flex-shrink-0">
+             <button onclick="this.parentElement.parentElement.parentElement.remove()" class="text-gray-400 hover:text-gray-600">
+               <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                 <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+               </svg>
+             </button>
+           </div>
+         </div>
+       `;
+
+       container.appendChild(notification);
+       setTimeout(() => notification.classList.remove('translate-x-full'), 100);
+
+       // Auto-remove después de 5 segundos
+       setTimeout(() => {
+         if (notification.parentElement) {
+           notification.remove();
+         }
+       }, 5000);
+     }
+
+    async function createTestOrders() {
+      // Crear órdenes de prueba si no existen datos reales
+      return [
+        {
+          id: 'test-order-1',
+          orderNumber: 'ORD-2024-001',
+          title: 'Automatización Cuentas por Pagar',
+          clientCompanyName: 'Empresa ABC',
+          createdAt: new Date().toISOString(),
+          agent: {
+            name: 'Agente de Inspección Visual con IA'
+          }
+        },
+        {
+          id: 'test-order-2',
+          orderNumber: 'ORD-2024-002',
+          title: 'Sistema de Monitoreo OEE',
+          clientCompanyName: 'Industrias XYZ',
+          createdAt: new Date(Date.now() - 86400000).toISOString(),
+          agent: {
+            name: 'Agente de Monitoreo OEE'
+          }
+        }
+      ];
+    }
+
+         // Funciones adicionales para formulario y vista previa
+     // (continuación basada en documentos.astro)
+     function mostrarFormularioCotizacion() {
+       console.log('🎯 Mostrando formulario de cotización para orden:', selectedOrder);
+       
+       if (!selectedOrder) {
+         showError('No se ha seleccionado una orden');
+         return;
+       }
+
+       // Buscar tipo de documento de cotización
+       const cotizacionDocType = documentTypes.find(dt => 
+         dt.slug.includes('propuesta') || 
+         dt.slug.includes('cotizacion') ||
+         dt.name.toLowerCase().includes('propuesta')
+       );
+
+       if (!cotizacionDocType) {
+         showError('No se encontró tipo de documento de cotización');
+         return;
+       }
+
+       selectedDocumentType = cotizacionDocType;
+       
+       const modal = document.getElementById('modalCrearCotizacion');
+       const contenido = document.getElementById('contenidoModalCrear');
+       
+       // Generar formulario dinámico basado en el esquema del tipo de documento
+       const formHTML = generateQuoteForm(selectedDocumentType, selectedOrder);
+       
+       contenido.innerHTML = formHTML;
+       modal.classList.remove('hidden');
+       
+       // Configurar React componentes y formulario después de que el DOM esté listo
+       setTimeout(() => {
+         setupQuoteCalculator();
+         setupFormEventListener();
+       }, 100);
+     }
+
+     function generateQuoteForm(documentType, order) {
+       return `
+         <form id="formCotizacion" class="space-y-6">
+           <!-- Información de la orden -->
+           <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+             <h4 class="font-medium text-blue-900 mb-2">📋 Información de la Orden</h4>
+             <div class="grid grid-cols-2 gap-4 text-sm">
+               <div>
+                 <span class="text-blue-700">Orden:</span>
+                 <span class="ml-2 font-medium">${order.orderNumber || order.id}</span>
+               </div>
+               <div>
+                 <span class="text-blue-700">Cliente:</span>
+                 <span class="ml-2 font-medium">${order.client?.companyName || order.clientCompanyName || 'Sin especificar'}</span>
+               </div>
+               <div class="col-span-2">
+                 <span class="text-blue-700">Proyecto:</span>
+                 <span class="ml-2 font-medium">${order.title || 'Sin título'}</span>
+               </div>
+             </div>
+           </div>
+
+           <!-- Título de la cotización -->
+           <div>
+             <label for="documentTitle" class="block text-sm font-medium text-gray-700 mb-2">
+               Título de la Cotización <span class="text-red-500">*</span>
+             </label>
+             <input 
+               type="text" 
+               id="documentTitle"
+               name="title"
+               value="Cotización - ${order.title || order.orderNumber || order.id}"
+               required
+               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+               placeholder="Ingresa el título de la cotización"
+             />
+           </div>
+
+           <!-- Descripción -->
+           <div>
+             <label for="documentDescription" class="block text-sm font-medium text-gray-700 mb-2">
+               Descripción
+             </label>
+             <textarea 
+               id="documentDescription"
+               name="description"
+               rows="3"
+               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+               placeholder="Descripción detallada de la cotización..."
+             >Cotización para ${order.title || 'proyecto de automatización'} solicitado por ${order.client?.companyName || order.clientCompanyName || 'el cliente'}.</textarea>
+           </div>
+
+           <!-- Calculador de Cotización Embebido -->
+           <div>
+             <label class="block text-sm font-medium text-gray-700 mb-2">
+               Configuración de la Cotización <span class="text-red-500">*</span>
+             </label>
+             <div id="quoteCalculatorContainer" class="border border-gray-300 rounded-lg p-4">
+               <!-- El calculador React se montará aquí -->
+               <div class="text-center py-8">
+                 <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mx-auto mb-4"></div>
+                 <p class="text-gray-600">Cargando calculador de cotización...</p>
+               </div>
+             </div>
+             <input type="hidden" name="quoteCalculatorData" id="quoteCalculatorData" required />
+           </div>
+
+           <!-- Campos adicionales del tipo de documento -->
+           ${generateAdditionalFields(documentType)}
+
+           <!-- Botones -->
+           <div class="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+             <button 
+               type="button"
+               onclick="document.getElementById('modalCrearCotizacion').classList.add('hidden')"
+               class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+             >
+               Cancelar
+             </button>
+             <button 
+               type="submit"
+               class="px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors flex items-center"
+             >
+               <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+               </svg>
+               Crear Cotización
+             </button>
+           </div>
+         </form>
+       `;
+     }
+
+     function generateAdditionalFields(documentType) {
+       if (!documentType.formSchema?.fields) return '';
+       
+       return documentType.formSchema.fields
+         .filter(field => !['title', 'description'].includes(field.name))
+         .map(field => {
+           switch (field.type) {
+             case 'textarea':
+               return `
+                 <div>
+                   <label for="${field.name}" class="block text-sm font-medium text-gray-700 mb-2">
+                     ${field.label} ${field.required ? '<span class="text-red-500">*</span>' : ''}
+                   </label>
+                   <textarea 
+                     id="${field.name}"
+                     name="${field.name}"
+                     rows="3"
+                     ${field.required ? 'required' : ''}
+                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                     placeholder="${field.description || field.label}"
+                   ></textarea>
+                 </div>
+               `;
+             case 'number':
+               return `
+                 <div>
+                   <label for="${field.name}" class="block text-sm font-medium text-gray-700 mb-2">
+                     ${field.label} ${field.required ? '<span class="text-red-500">*</span>' : ''}
+                   </label>
+                   <input 
+                     type="number"
+                     id="${field.name}"
+                     name="${field.name}"
+                     ${field.required ? 'required' : ''}
+                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                     placeholder="${field.description || field.label}"
+                   />
+                 </div>
+               `;
+             case 'select':
+               const options = field.options?.map(opt => `<option value="${opt.value}">${opt.label}</option>`).join('') || '';
+               return `
+                 <div>
+                   <label for="${field.name}" class="block text-sm font-medium text-gray-700 mb-2">
+                     ${field.label} ${field.required ? '<span class="text-red-500">*</span>' : ''}
+                   </label>
+                   <select 
+                     id="${field.name}"
+                     name="${field.name}"
+                     ${field.required ? 'required' : ''}
+                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                   >
+                     <option value="">Seleccionar...</option>
+                     ${options}
+                   </select>
+                 </div>
+               `;
+             default:
+               return `
+                 <div>
+                   <label for="${field.name}" class="block text-sm font-medium text-gray-700 mb-2">
+                     ${field.label} ${field.required ? '<span class="text-red-500">*</span>' : ''}
+                   </label>
+                   <input 
+                     type="text"
+                     id="${field.name}"
+                     name="${field.name}"
+                     ${field.required ? 'required' : ''}
+                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                     placeholder="${field.description || field.label}"
+                   />
+                 </div>
+               `;
+           }
+         }).join('');
+     }
+
+     // Función para renderizar el cotizador AIM embebido (COPIA EXACTA de documentos.astro)
+     function setupQuoteCalculator() {
+       try {
+         const container = document.getElementById('quoteCalculatorContainer');
+         if (!container) {
+           console.error('❌ Contenedor no disponible para montar calculador');
+           return;
+         }
+
+         console.log('🎯 Configurando calculador de cotización...');
+         
+         // Crear estructura HTML del cotizador (IGUAL QUE documentos.astro)
+         const fieldName = 'quoteCalculatorData';
+         const quoteCalculatorHTML = `
+           <div class="aim-quote-calculator bg-white border border-gray-300 rounded-lg overflow-hidden" style="min-height: 600px;">
+             <!-- Header -->
+             <div class="bg-gradient-to-r from-teal-500 to-emerald-500 text-white p-6">
+               <h3 class="text-xl font-bold mb-2">Cotizador AIM Dinámico</h3>
+               <p class="text-teal-100">Configura agentes, planes y servicios para generar una cotización completa</p>
+             </div>
+
+             <!-- Progress indicator -->
+             <div class="p-3 bg-blue-50 border-b border-blue-200">
+               <div class="flex items-center justify-between text-sm mb-2">
+                 <span class="text-blue-700 font-medium" id="${fieldName}-progress-text">
+                   Paso 1 de 4: 🤖 Agentes
+                 </span>
+                 <span class="text-blue-600 text-xs" id="${fieldName}-progress-info">
+                   0 agente(s) | 0 planes | 0 servicio(s)
+                 </span>
+               </div>
+               <div class="w-full bg-blue-200 rounded-full h-1.5">
+                 <div 
+                   class="bg-blue-500 h-1.5 rounded-full transition-all duration-300"
+                   style="width: 25%"
+                   id="${fieldName}-progress-bar"
+                 ></div>
+               </div>
+             </div>
+             
+             <!-- Tabs Navigation -->
+             <div class="border-b border-gray-200">
+               <nav class="flex space-x-0" role="tablist">
+                 <button class="aim-tab flex-1 px-6 py-4 text-sm font-medium border-b-2 border-teal-500 text-teal-600 bg-teal-50" 
+                         data-tab="agents" onclick="switchAIMTab('${fieldName}', 'agents', event); return false;">
+                   🤖 Agentes
+                 </button>
+                 <button class="aim-tab flex-1 px-6 py-4 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" 
+                         data-tab="plans" onclick="switchAIMTab('${fieldName}', 'plans', event); return false;">
+                   💼 Planes
+                 </button>
+                 <button class="aim-tab flex-1 px-6 py-4 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" 
+                         data-tab="services" onclick="switchAIMTab('${fieldName}', 'services', event); return false;">
+                   ⚙️ Servicios
+                 </button>
+                 <button class="aim-tab flex-1 px-6 py-4 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" 
+                         data-tab="summary" onclick="switchAIMTab('${fieldName}', 'summary', event); return false;">
+                   📊 Resumen
+                 </button>
+               </nav>
+             </div>
+             
+             <!-- Tab Content -->
+             <div class="p-6">
+               <!-- Agentes Tab -->
+               <div id="${fieldName}-agents-tab" class="aim-tab-content">
+                 <h4 class="text-lg font-semibold mb-4">Selecciona Agentes de Automatización</h4>
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="${fieldName}-agents-grid">
+                   <!-- Los agentes se cargarán dinámicamente -->
+                 </div>
+                 
+                 <!-- Botón de avance para agentes -->
+                 <div class="flex justify-center mt-6">
+                   <button 
+                     type="button"
+                     onclick="console.log('🔥 BOTÓN CONTINUAR AGENTES CLICKEADO'); goToNextAIMTab('${fieldName}'); return false;"
+                     class="px-8 py-3 rounded-lg font-medium bg-teal-600 text-white hover:bg-teal-700 transition-colors"
+                     id="${fieldName}-agents-continue"
+                   >
+                     Continuar a Planes →
+                   </button>
+                 </div>
+               </div>
+               
+               <!-- Planes Tab -->
+               <div id="${fieldName}-plans-tab" class="aim-tab-content hidden">
+                 <h4 class="text-lg font-semibold mb-4">Selecciona Plan de Suscripción</h4>
+                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="${fieldName}-plans-grid">
+                   <!-- Los planes se cargarán dinámicamente -->
+                 </div>
+                 
+                 <!-- Botón de avance para planes -->
+                 <div class="flex justify-center mt-6">
+                   <button 
+                     type="button"
+                     onclick="console.log('🔥 BOTÓN CONTINUAR PLANES CLICKEADO'); goToNextAIMTab('${fieldName}'); return false;"
+                     class="px-8 py-3 rounded-lg font-medium bg-teal-600 text-white hover:bg-teal-700 transition-colors"
+                     id="${fieldName}-plans-continue"
+                   >
+                     Continuar a Servicios →
+                   </button>
+                 </div>
+               </div>
+               
+               <!-- Servicios Tab -->
+               <div id="${fieldName}-services-tab" class="aim-tab-content hidden">
+                 <h4 class="text-lg font-semibold mb-4">Servicios Adicionales</h4>
+                 <div class="space-y-3" id="${fieldName}-services-list">
+                   <!-- Los servicios se cargarán dinámicamente -->
+                 </div>
+                 
+                 <!-- Botón de avance para servicios -->
+                 <div class="flex justify-center mt-6">
+                   <button 
+                     type="button"
+                     onclick="console.log('🔥 BOTÓN CONTINUAR SERVICIOS CLICKEADO'); goToNextAIMTab('${fieldName}'); return false;"
+                     class="px-8 py-3 rounded-lg font-medium bg-teal-600 text-white hover:bg-teal-700 transition-colors"
+                     id="${fieldName}-services-continue"
+                   >
+                     Ver Resumen Final →
+                   </button>
+                 </div>
+               </div>
+               
+               <!-- Resumen Tab -->
+               <div id="${fieldName}-summary-tab" class="aim-tab-content hidden">
+                 <h4 class="text-lg font-semibold mb-4">Resumen de Cotización</h4>
+                 <div id="${fieldName}-summary-content">
+                   <div class="text-center text-gray-500 py-8">
+                     <p>Selecciona agentes y planes para ver el resumen</p>
+                   </div>
+                 </div>
+               </div>
+
+               <!-- Navigation buttons -->
+               <div class="flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
+                 <button
+                   type="button"
+                   onclick="goToPrevAIMTab('${fieldName}'); return false;"
+                   class="px-6 py-2 rounded-lg font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors"
+                   id="${fieldName}-prev-btn"
+                 >
+                   ← Anterior
+                 </button>
+
+                 <div class="flex space-x-2">
+                   <button type="button" onclick="switchAIMTab('${fieldName}', 'agents', event); return false;" 
+                           class="w-3 h-3 rounded-full bg-teal-500 transition-colors" title="Ir a Agentes"></button>
+                   <button type="button" onclick="switchAIMTab('${fieldName}', 'plans', event); return false;" 
+                           class="w-3 h-3 rounded-full bg-gray-300 hover:bg-gray-400 transition-colors" title="Ir a Planes"></button>
+                   <button type="button" onclick="switchAIMTab('${fieldName}', 'services', event); return false;" 
+                           class="w-3 h-3 rounded-full bg-gray-300 hover:bg-gray-400 transition-colors" title="Ir a Servicios"></button>
+                   <button type="button" onclick="switchAIMTab('${fieldName}', 'summary', event); return false;" 
+                           class="w-3 h-3 rounded-full bg-gray-300 hover:bg-gray-400 transition-colors" title="Ir a Resumen"></button>
+                 </div>
+
+                 <button
+                   type="button"
+                   onclick="goToNextAIMTab('${fieldName}'); return false;"
+                   class="px-6 py-2 rounded-lg font-medium bg-teal-500 text-white hover:bg-teal-600 transition-colors"
+                   id="${fieldName}-next-btn"
+                 >
+                   Siguiente →
+                 </button>
+               </div>
+             </div>
+             
+             <!-- Hidden input para el formulario -->
+             <input type="hidden" id="${fieldName}" name="${fieldName}" value="" />
+           </div>
+         `;
+         
+         container.innerHTML = quoteCalculatorHTML;
+         
+         // Inicializar datos del cotizador
+         if (!window.aimQuoteData) {
+           window.aimQuoteData = {};
+         }
+         
+         window.aimQuoteData[fieldName] = {
+           selectedAgents: [],
+           selectedPlan: null,
+           selectedServices: [],
+           totals: {
+             implementation: 0,
+             monthly: 0,
+             setup: 0,
+             total: 0
+           }
+         };
+         
+         // Inicializar el campo hidden con datos por defecto
+         const hiddenInput = document.getElementById(fieldName);
+         if (hiddenInput) {
+           hiddenInput.value = JSON.stringify(window.aimQuoteData[fieldName]);
+           console.log(`💾 Datos iniciales guardados en campo hidden ${fieldName}`);
+         }
+         
+         // Cargar contenido inicial
+         loadAIMAgents(fieldName);
+         loadAIMPlans(fieldName);
+         loadAIMServices(fieldName);
+         
+         // Inicializar indicador de progreso
+         updateProgressIndicator(fieldName, 'agents');
+         
+         console.log(`✅ Cotizador AIM inicializado para ${fieldName}`);
+
+       } catch (error) {
+         console.error('❌ Error configurando calculador:', error);
+         showError('Error configurando el calculador de cotización');
+       }
+     }
+
+     // Función global para actualizar datos de cotización (fallback)
+     window.updateQuoteData = function(field, value) {
+       const hiddenField = document.getElementById('quoteCalculatorData');
+       if (hiddenField) {
+         let data = {};
+         try {
+           data = JSON.parse(hiddenField.value || '{}');
+         } catch (e) {
+           data = {};
+         }
+         
+         data[field] = parseFloat(value) || 0;
+         hiddenField.value = JSON.stringify(data);
+       }
+     };
+
+     async function handleFormSubmit(event) {
+       event.preventDefault();
+       
+       const form = event.target; // Definir form fuera del try para que esté disponible en finally
+       
+       try {
+         const formData = new FormData(form);
+         
+         console.log('📋 Datos del formulario:', Array.from(formData.entries()));
+         
+         // Validar que tenemos una orden seleccionada
+         if (!selectedOrder || !selectedOrder.id) {
+           showError('No hay orden seleccionada para crear la cotización');
+           return;
+         }
+         
+         // Validar que tenemos un tipo de documento seleccionado
+         if (!selectedDocumentType || !selectedDocumentType.id) {
+           showError('No hay tipo de documento seleccionado');
+           return;
+         }
+         
+         // Validar título del documento
+         const title = formData.get('title');
+         if (!title || title.trim() === '') {
+           showError('El título del documento es requerido');
+           return;
+         }
+         
+         // Obtener y validar datos del calculador
+         const quoteData = formData.get('quoteCalculatorData');
+         console.log('🔍 Datos del calculador obtenidos:', quoteData);
+         
+         // Validar que el calculador tenga datos
+         let parsedQuoteData = null;
+         if (quoteData && quoteData !== '' && quoteData !== '{}') {
+           try {
+             parsedQuoteData = JSON.parse(quoteData);
+             console.log('✅ Datos del calculador parseados:', parsedQuoteData);
+           } catch (e) {
+             console.error('❌ Error parseando datos del calculador:', e);
+           }
+         }
+         
+         // Si no hay datos del calculador, usar datos por defecto
+         if (!parsedQuoteData || !parsedQuoteData.totals) {
+           console.warn('⚠️ No hay datos del calculador, usando datos por defecto');
+           parsedQuoteData = {
+             selectedAgents: [],
+             selectedPlan: null,
+             selectedServices: [],
+             totals: { implementation: 0, monthly: 0, setup: 0, total: 0 }
+           };
+         }
+
+         // Preparar datos del documento con validación completa
+         const documentData = {
+           orderId: selectedOrder.id,
+           documentTypeId: selectedDocumentType.id,
+           title: title.trim(),
+           description: formData.get('description') || '',
+           sharedData: {
+             // Datos compartidos de la orden y cliente
+             orderNumber: selectedOrder.orderNumber || '',
+             orderTitle: selectedOrder.title || '',
+             orderDescription: selectedOrder.description || '',
+             clientId: selectedOrder.clientId || '',
+             clientCompanyName: selectedOrder.clientCompanyName || selectedOrder.client?.companyName || '',
+             clientIndustry: selectedOrder.clientIndustry || selectedOrder.client?.industry || '',
+             contactName: selectedOrder.contactName || '',
+             contactEmail: selectedOrder.contactEmail || '',
+             contactPhone: selectedOrder.contactPhone || '',
+             requestedDeliveryDate: selectedOrder.requestedDeliveryDate || null,
+             estimatedBudget: selectedOrder.estimatedBudget || null,
+             priority: selectedOrder.priority || 'MEDIUM',
+             type: selectedOrder.type || 'AUTOMATION',
+             createdAt: new Date().toISOString(),
+             // Información del documento
+             documentType: 'COTIZACION',
+             documentPhase: selectedDocumentType.phase || 'Fase 2'
+           },
+           specificData: {
+             // ✅ DATOS PRINCIPALES DEL CALCULADOR - ESTOS SON LOS IMPORTANTES
+             quoteCalculatorData: parsedQuoteData,
+             
+             // También guardar como string para compatibilidad
+             quoteCalculatorDataString: JSON.stringify(parsedQuoteData),
+             
+             // Resumen rápido para búsquedas
+             quoteSummary: {
+               totalAgents: parsedQuoteData.selectedAgents?.length || 0,
+               totalImplementationCost: parsedQuoteData.totals?.implementation || parsedQuoteData.totals?.baseTotal || 0,
+               totalMonthlyCost: parsedQuoteData.totals?.monthly || parsedQuoteData.totals?.monthlyTotal || 0,
+               totalFirstYearCost: parsedQuoteData.totals?.total || parsedQuoteData.totals?.firstYearTotal || 0,
+               selectedPlan: parsedQuoteData.selectedPlan?.name || null,
+               currency: 'MXN',
+               validityDays: 30,
+               createdFromPage: 'cotizaciones'
+             },
+             
+             // Datos detallados para el PDF/HTML
+             agentsDetail: parsedQuoteData.selectedAgents || [],
+             planDetail: parsedQuoteData.selectedPlan || null,
+             servicesDetail: parsedQuoteData.selectedServices || [],
+             calculationsDetail: parsedQuoteData.totals || parsedQuoteData.calculations || {},
+             
+             // Información adicional del formulario
+             projectScope: selectedOrder.projectScope || '',
+             projectReferences: selectedOrder.projectReferences || '',
+             specialRequirements: formData.get('specialRequirements') || '',
+             deliveryNotes: formData.get('deliveryNotes') || '',
+             
+             // Configuración de la cotización
+             paymentTerms: formData.get('paymentTerms') || '50-50',
+             warranty: formData.get('warranty') || '3-meses',
+             validityPeriod: formData.get('validityPeriod') || 30,
+             quotationDate: new Date().toISOString()
+           }
+         };
+         
+         console.log('📋 Datos finales del documento preparados:', documentData);
+
+         // Agregar todos los campos específicos del formulario
+         for (const [key, value] of formData.entries()) {
+           if (key !== 'title' && key !== 'description' && key !== 'quoteCalculatorData') {
+             documentData.specificData[key] = value;
+           }
+         }
+
+         console.log('📤 Enviando datos de cotización completos:', documentData);
+
+         // Deshabilitar botón de envío
+         const submitButton = form.querySelector('button[type="submit"]');
+         if (!submitButton) {
+           console.error('❌ No se encontró botón de envío');
+           return;
+         }
+         
+         const originalText = submitButton.innerHTML;
+         submitButton.innerHTML = '<svg class="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Creando...';
+         submitButton.disabled = true;
+
+         // Verificar que tenemos la API de documentos disponible
+         if (!window.documentsApi) {
+           throw new Error('API de documentos no disponible');
+         }
+
+         // Crear documento a través de la API
+         const response = await window.documentsApi.createDocument(documentData);
+         
+         console.log('📨 Respuesta del servidor:', response);
+         
+         if (response && response.success && response.document) {
+           showSuccess('Cotización creada exitosamente');
+           
+           // Cerrar modal
+           const modal = document.getElementById('modalCrearCotizacion');
+           if (modal) {
+             modal.classList.add('hidden');
+           }
+           
+           // Actualizar datos locales
+           if (Array.isArray(documents)) {
+             documents.push(response.document);
+           }
+           
+           // Actualizar lista de cotizaciones
+           if (typeof quotes !== 'undefined') {
+             quotes = documents.filter(doc => isQuoteDocument(doc));
+           }
+           
+           // Refrescar interfaz
+           if (typeof renderQuoteStats === 'function') {
+             renderQuoteStats();
+           }
+           if (typeof renderOrdersQuoteTable === 'function') {
+             renderOrdersQuoteTable();
+           }
+           
+           // Limpiar formulario
+           form.reset();
+           
+         } else {
+           console.error('❌ Respuesta inesperada del servidor:', response);
+           let errorMessage = 'Error al crear la cotización';
+           
+           // Intentar extraer mensaje de error de diferentes formatos
+           if (response?.message) {
+             errorMessage += ': ' + response.message;
+           } else if (response?.error) {
+             errorMessage += ': ' + response.error;
+           } else if (response?.errors && Array.isArray(response.errors)) {
+             errorMessage += ': ' + response.errors.join(', ');
+           } else if (typeof response === 'string') {
+             errorMessage += ': ' + response;
+           } else {
+             errorMessage += ': Respuesta inesperada del servidor';
+           }
+           
+           throw new Error(errorMessage);
+         }
+
+       } catch (error) {
+         console.error('❌ Error creando cotización:', error);
+         let errorMessage = 'Error al crear la cotización';
+         
+         if (error.message) {
+           errorMessage += ': ' + error.message;
+         }
+         
+         showError(errorMessage);
+       } finally {
+         // Restaurar botón
+         try {
+           const submitButton = form?.querySelector('button[type="submit"]') || document.querySelector('#formCotizacion button[type="submit"]');
+           if (submitButton) {
+             submitButton.innerHTML = `
+               <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+               </svg>
+               Crear Cotización
+             `;
+             submitButton.disabled = false;
+           }
+         } catch (restoreError) {
+           console.error('❌ Error restaurando botón:', restoreError);
+         }
+       }
+     }
+
+     // Configurar el event listener del formulario cuando se cree
+     function setupFormEventListener() {
+       const form = document.getElementById('formCotizacion');
+       if (form) {
+         // Remover listeners previos para evitar duplicados
+         form.removeEventListener('submit', handleFormSubmit);
+         // Agregar nuevo listener
+         form.addEventListener('submit', handleFormSubmit);
+         console.log('✅ Event listener del formulario configurado');
+       } else {
+         console.warn('⚠️ Formulario no encontrado para configurar event listener');
+       }
+     }
+
+     function mostrarVistaPrevia(quote) {
+       console.log('👁️ Mostrando vista previa de cotización:', quote);
+       
+       const modal = document.getElementById('modalVistaPrevia');
+       const contenido = document.getElementById('contenidoModalPrevia');
+       
+       // Mostrar loading mientras se genera el contenido
+       contenido.innerHTML = `
+         <div class="flex items-center justify-center min-h-[400px]">
+           <div class="text-center">
+             <div class="animate-spin rounded-full h-32 w-32 border-b-2 border-teal-600 mx-auto mb-4"></div>
+             <p class="text-gray-600">Generando vista previa de la cotización...</p>
+           </div>
+         </div>
+       `;
+       
+       modal.classList.remove('hidden');
+       
+       // Generar contenido de la cotización
+       generateQuotePreview(quote).then(previewHTML => {
+         contenido.innerHTML = previewHTML;
+       }).catch(error => {
+         console.error('Error generando vista previa:', error);
+         contenido.innerHTML = `
+           <div class="text-center py-8 text-red-500">
+             <p>Error generando vista previa de la cotización</p>
+             <button onclick="document.getElementById('modalVistaPrevia').classList.add('hidden')" 
+                     class="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg">
+               Cerrar
+             </button>
+           </div>
+         `;
+       });
+     }
+
+     async function generateQuotePreview(quote) {
+       try {
+         // Intentar obtener contenido generado del backend
+         let htmlContent = '';
+         try {
+           const generatedContent = await window.documentsApi.generateDocument(quote.id, { format: 'html' });
+           if (generatedContent.content) {
+             htmlContent = generatedContent.content;
+           } else if (generatedContent.url) {
+             const response = await fetch(generatedContent.url);
+             if (response.ok) {
+               htmlContent = await response.text();
+             }
+           }
+         } catch (backendError) {
+           console.warn('⚠️ Error obteniendo contenido del backend, usando fallback:', backendError);
+         }
+
+         // Si no hay contenido del backend, generar fallback
+         if (!htmlContent) {
+           htmlContent = generateQuoteFallbackContent(quote);
+         }
+
+         return `
+           <div class="space-y-6">
+             <!-- Header de la cotización -->
+             <div class="bg-gradient-to-r from-teal-500 to-emerald-500 text-white p-6 rounded-lg">
+               <div class="flex items-center justify-between">
+                 <div>
+                   <h3 class="text-xl font-bold">${quote.title}</h3>
+                   <p class="text-teal-100 mt-1">Cotización de Servicios AIM</p>
+                   <div class="flex items-center space-x-4 mt-2 text-sm">
+                     <span class="flex items-center">
+                       <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                       </svg>
+                       ${quote.documentNumber}
+                     </span>
+                     <span class="flex items-center">
+                       <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                       </svg>
+                       ${formatDate(quote.createdAt)}
+                     </span>
+                   </div>
+                 </div>
+                 <div class="text-right">
+                   <span class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-sm font-medium">
+                     ${getQuoteStatusBadge(quote.status).replace(/bg-\w+-100 text-\w+-800/, 'bg-white bg-opacity-20 text-white')}
+                   </span>
+                 </div>
+               </div>
+             </div>
+
+             <!-- Contenido de la cotización -->
+             <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+               <div class="document-content prose prose-sm max-w-none p-6">
+                 ${htmlContent}
+               </div>
+             </div>
+
+             <!-- Botones de acción -->
+             <div class="flex justify-center space-x-4">
+               <button 
+                 onclick="descargarCotizacion('${quote.id}', 'pdf')"
+                 class="flex items-center px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+               >
+                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                 </svg>
+                 Descargar PDF
+               </button>
+               
+               <button 
+                 onclick="finalizarCotizacion('${quote.id}')"
+                 class="flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+               >
+                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                 </svg>
+                 Finalizar Cotización
+               </button>
+             </div>
+           </div>
+         `;
+
+       } catch (error) {
+         console.error('Error generando vista previa:', error);
+         throw error;
+       }
+     }
+
+     function generateQuoteFallbackContent(quote) {
+       console.log('🎨 Generando contenido completo para cotización:', quote);
+       
+       // Extraer datos del calculador de múltiples fuentes con máxima compatibilidad
+       let quoteData = null;
+       
+       // Buscar en specificData con prioridades
+       if (quote.specificData) {
+         // 🥇 Prioridad 1: quoteCalculatorData (objeto directo)
+         if (quote.specificData.quoteCalculatorData && !quoteData) {
+           try {
+             if (typeof quote.specificData.quoteCalculatorData === 'string') {
+               quoteData = JSON.parse(quote.specificData.quoteCalculatorData);
+               console.log('✅ Datos encontrados en quoteCalculatorData (string)');
+             } else if (typeof quote.specificData.quoteCalculatorData === 'object') {
+               quoteData = quote.specificData.quoteCalculatorData;
+               console.log('✅ Datos encontrados en quoteCalculatorData (object)');
+             }
+           } catch (e) {
+             console.warn('❌ Error parseando quoteCalculatorData:', e);
+           }
+         }
+         
+         // 🥈 Prioridad 2: Campos detallados separados
+         if (!quoteData && (quote.specificData.agentsDetail || quote.specificData.planDetail)) {
+           quoteData = {
+             selectedAgents: quote.specificData.agentsDetail || [],
+             selectedPlan: quote.specificData.planDetail || null,
+             selectedServices: quote.specificData.servicesDetail || [],
+             totals: quote.specificData.calculationsDetail || {},
+             calculations: quote.specificData.calculationsDetail || {}
+           };
+           console.log('✅ Datos reconstruidos desde campos detallados');
+         }
+         
+         // 🥉 Prioridad 3: quoteCalculatorDataString
+         if (!quoteData && quote.specificData.quoteCalculatorDataString) {
+           try {
+             quoteData = JSON.parse(quote.specificData.quoteCalculatorDataString);
+             console.log('✅ Datos encontrados en quoteCalculatorDataString');
+           } catch (e) {
+             console.warn('❌ Error parseando quoteCalculatorDataString:', e);
+           }
+         }
+         
+         // 🏃 Prioridad 4: Buscar en TODOS los campos (fallback)
+         if (!quoteData) {
+           Object.entries(quote.specificData).forEach(([key, data]) => {
+             if (quoteData) return; // Ya encontró datos
+             
+             if (typeof data === 'string') {
+               try {
+                 const parsed = JSON.parse(data);
+                 if (parsed && (parsed.selectedAgents || parsed.selectedPlan || parsed.totals || parsed.calculations)) {
+                   quoteData = parsed;
+                   console.log(`✅ Datos encontrados parseando campo: ${key}`);
+                 }
+               } catch (e) {
+                 // No es JSON válido, continuar
+               }
+             } else if (data && typeof data === 'object' && (data.selectedAgents || data.selectedPlan || data.totals || data.calculations)) {
+               quoteData = data;
+               console.log(`✅ Datos encontrados en objeto campo: ${key}`);
+             }
+           });
+         }
+       }
+       
+       console.log('📊 Datos del calculador extraídos:', quoteData);
+       
+       // Si no hay datos del calculador, mostrar mensaje
+       if (!quoteData) {
+         return `
+           <div class="space-y-6">
+             <h2 class="text-2xl font-bold text-gray-900 text-center">Cotización de Servicios AIM</h2>
+             
+             <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+               <p class="text-yellow-800">⚠️ No se encontraron datos del calculador para esta cotización</p>
+               <p class="text-yellow-700 text-sm mt-2">Esta cotización fue creada pero no contiene información detallada del calculador AIM.</p>
+             </div>
+             
+             <div class="space-y-4">
+               <div>
+                 <h3 class="text-lg font-semibold text-gray-800 mb-3">Información del Documento</h3>
+                 <div class="space-y-2 text-sm">
+                   <p><strong>Título:</strong> ${quote.title}</p>
+                   <p><strong>Descripción:</strong> ${quote.description || 'No especificada'}</p>
+                   <p><strong>Estado:</strong> ${quote.status}</p>
+                   <p><strong>Fecha:</strong> ${formatDate(quote.createdAt)}</p>
+                 </div>
+               </div>
+             </div>
+           </div>
+         `;
+       }
+       
+       // Extraer totales (puede estar en totals o calculations)
+       const totals = quoteData.totals || quoteData.calculations || {};
+       const selectedAgents = quoteData.selectedAgents || [];
+       const selectedPlan = quoteData.selectedPlan;
+       const selectedServices = quoteData.selectedServices || [];
+       
+       return `
+         <div class="space-y-6">
+           <!-- Header de la cotización -->
+           <div class="text-center border-b border-gray-200 pb-6">
+             <h2 class="text-3xl font-bold text-gray-900 mb-2">Cotización de Servicios AIM</h2>
+             <p class="text-gray-600">Cotizador dinámico e interactivo con precios de agentes y planes de suscripción AIM</p>
+           </div>
+           
+           <!-- Sección: Detalles del Documento -->
+           <div class="bg-gray-50 rounded-lg p-6">
+             <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+               <span class="mr-2">📋</span> Detalles del Documento
+             </h3>
+             
+             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+               <div class="space-y-3">
+                 <div class="flex justify-between">
+                   <span class="font-medium text-gray-700">Título:</span>
+                   <span class="text-gray-900">${quote.title}</span>
+                 </div>
+                 <div class="flex justify-between">
+                   <span class="font-medium text-gray-700">Estado:</span>
+                   <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm">${quote.status}</span>
+                 </div>
+               </div>
+               
+               <div class="space-y-3">
+                 <div class="flex justify-between">
+                   <span class="font-medium text-gray-700">Fecha:</span>
+                   <span class="text-gray-900">${formatDate(quote.createdAt)}</span>
+                 </div>
+                 <div class="flex justify-between">
+                   <span class="font-medium text-gray-700">Válida por:</span>
+                   <span class="text-gray-900">30 días | Moneda: MXN</span>
+                 </div>
+               </div>
+             </div>
+           </div>
+           
+           <!-- Sección: Agentes Seleccionados -->
+           ${selectedAgents.length > 0 ? `
+             <div class="bg-teal-50 rounded-lg p-6 border border-teal-200">
+               <h3 class="text-lg font-semibold text-teal-800 mb-4 flex items-center">
+                 <span class="mr-2">🤖</span> Agentes Seleccionados (${selectedAgents.length})
+               </h3>
+               
+               <div class="space-y-4">
+                 ${selectedAgents.map(agent => `
+                   <div class="bg-white border border-teal-200 rounded-lg p-4">
+                     <div class="flex justify-between items-start mb-2">
+                       <h4 class="font-medium text-gray-900">${agent.name || agent.title || 'Agente'}</h4>
+                       <div class="text-right">
+                         <div class="text-lg font-bold text-teal-600">$${(agent.price || agent.basePrice || 0).toLocaleString()}</div>
+                         <div class="text-sm text-gray-600">+ $${(agent.monthlyPrice || 0).toLocaleString()}/mes</div>
+                       </div>
+                     </div>
+                     ${agent.description ? `<p class="text-sm text-gray-600">${agent.description}</p>` : ''}
+                     ${agent.complexity ? `<span class="inline-block mt-2 px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">${agent.complexity}</span>` : ''}
+                   </div>
+                 `).join('')}
+               </div>
+             </div>
+           ` : ''}
+           
+           <!-- Sección: Plan de Suscripción -->
+           ${selectedPlan ? `
+             <div class="bg-blue-50 rounded-lg p-6 border border-blue-200">
+               <h3 class="text-lg font-semibold text-blue-800 mb-4 flex items-center">
+                 <span class="mr-2">💼</span> Plan de Suscripción
+               </h3>
+               
+               <div class="bg-white border border-blue-200 rounded-lg p-4">
+                 <div class="flex justify-between items-start">
+                   <div>
+                     <h4 class="font-medium text-gray-900">${selectedPlan.name}</h4>
+                     <p class="text-sm text-gray-600 mt-1">${selectedPlan.subtitle || selectedPlan.description || ''}</p>
+                   </div>
+                   <div class="text-right">
+                     <div class="text-lg font-bold text-blue-600">$${(selectedPlan.price || 0).toLocaleString()}</div>
+                     <div class="text-sm text-gray-600">por mes</div>
+                   </div>
+                 </div>
+               </div>
+             </div>
+           ` : ''}
+           
+           <!-- Sección: Servicios Adicionales -->
+           ${selectedServices.length > 0 ? `
+             <div class="bg-purple-50 rounded-lg p-6 border border-purple-200">
+               <h3 class="text-lg font-semibold text-purple-800 mb-4 flex items-center">
+                 <span class="mr-2">⚙️</span> Servicios Adicionales (${selectedServices.length})
+               </h3>
+               
+               <div class="space-y-3">
+                 ${selectedServices.map(service => `
+                   <div class="bg-white border border-purple-200 rounded-lg p-3">
+                     <div class="flex justify-between items-start">
+                       <div>
+                         <h4 class="font-medium text-gray-900">${service.name}</h4>
+                         ${service.description ? `<p class="text-sm text-gray-600 mt-1">${service.description}</p>` : ''}
+                       </div>
+                       <div class="text-right">
+                         <div class="font-bold text-purple-600">$${(service.price || 0).toLocaleString()}</div>
+                         <div class="text-xs text-gray-500">una vez</div>
+                       </div>
+                     </div>
+                   </div>
+                 `).join('')}
+               </div>
+             </div>
+           ` : ''}
+           
+           <!-- Desglose de Costos -->
+           <div class="bg-white border border-gray-300 rounded-lg overflow-hidden">
+             <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+               <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                 <span class="mr-2">💰</span> Desglose de Costos
+               </h3>
+             </div>
+             
+             <div class="p-6 space-y-4">
+               <div class="space-y-3">
+                 <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                   <span class="text-gray-700">Agentes (implementación):</span>
+                   <span class="font-medium">${(totals.implementation || totals.baseTotal || 0).toLocaleString()} MXN</span>
+                 </div>
+                 
+                 <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                   <span class="text-gray-700">Configuración inicial:</span>
+                   <span class="font-medium">${(totals.setup || totals.setupTotal || 0).toLocaleString()} MXN</span>
+                 </div>
+                 
+                 ${totals.warrantyTotal && totals.warrantyTotal > 0 ? `
+                   <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                     <span class="text-gray-700">Garantía extendida:</span>
+                     <span class="font-medium">${totals.warrantyTotal.toLocaleString()} MXN</span>
+                   </div>
+                 ` : ''}
+                 
+                 <div class="flex justify-between items-center py-2 border-b-2 border-gray-300">
+                   <span class="text-gray-700">Costo mensual recurrente:</span>
+                   <span class="font-medium">${(totals.monthly || totals.monthlyTotal || 0).toLocaleString()} MXN/mes</span>
+                 </div>
+                 
+                 <div class="flex justify-between items-center py-3 bg-teal-50 rounded-lg px-4">
+                   <span class="text-lg font-semibold text-teal-900">Total Inicial:</span>
+                   <span class="text-xl font-bold text-teal-600">${(totals.total || totals.grandTotal || 0).toLocaleString()} MXN</span>
+                 </div>
+                 
+                 <div class="flex justify-between items-center py-3 bg-blue-50 rounded-lg px-4">
+                   <span class="text-lg font-semibold text-blue-900">Total Primer Año:</span>
+                   <span class="text-xl font-bold text-blue-600">${(totals.firstYearTotal || (totals.total || 0) + ((totals.monthly || 0) * 12)).toLocaleString()} MXN</span>
+                 </div>
+               </div>
+             </div>
+           </div>
+           
+           <!-- Términos de la Cotización -->
+           <div class="bg-gray-50 rounded-lg p-6">
+             <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+               <span class="mr-2">📋</span> Términos de la Cotización
+             </h3>
+             
+             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+               <div class="space-y-3">
+                 <div>
+                   <span class="font-medium text-gray-700">Términos de pago:</span>
+                   <p class="text-gray-900 mt-1">50% inicial, 30% entrega beta, 20% go-live</p>
+                 </div>
+               </div>
+               
+               <div class="space-y-3">
+                 <div>
+                   <span class="font-medium text-gray-700">Garantía:</span>
+                   <p class="text-gray-900 mt-1">12 meses garantía completa</p>
+                 </div>
+               </div>
+             </div>
+           </div>
+         </div>
+       `;
+     }
+
+     // Funciones globales para acciones de cotización
+     window.descargarCotizacion = async function(quoteId, format) {
+       try {
+         const url = await window.documentsApi.generateDocument(quoteId, { format });
+         if (url.url) {
+           const link = document.createElement('a');
+           link.href = url.url;
+           link.download = `cotizacion-${quoteId}.${format}`;
+           link.click();
+         }
+       } catch (error) {
+         console.error('Error descargando cotización:', error);
+         showError('Error al descargar la cotización');
+       }
+     };
+
+     window.finalizarCotizacion = async function(quoteId) {
+       try {
+         await window.documentsApi.changeDocumentStatus(quoteId, 'FINALIZED', 'Cotización finalizada');
+         
+         // Actualizar estado local
+         const quote = quotes.find(q => q.id === quoteId);
+         if (quote) {
+           quote.status = 'FINALIZED';
+         }
+         
+         showSuccess('Cotización finalizada exitosamente');
+         document.getElementById('modalVistaPrevia').classList.add('hidden');
+         
+         // Refrescar interfaz
+         renderQuoteStats();
+         renderOrdersQuoteTable();
+         
+       } catch (error) {
+         console.error('Error finalizando cotización:', error);
+         showError('Error al finalizar la cotización');
+       }
+     };
+
+     // ========== FUNCIONES COPIADAS EXACTAMENTE DE documentos.astro ==========
+
+     // Store para guardar los datos reales de agentes cargados desde la galería
+     window.aimAgentsData = {};
+     window.aimQuoteData = {};
+
+     // Cliente API para galería (necesario para cargar agentes reales)
+     class GalleryApiClient {
+       constructor() {
+         this.baseUrl = 'http://localhost:3001/api/gallery';
+       }
+
+       async request(endpoint, options = {}) {
+         const url = `${this.baseUrl}${endpoint}`;
+         
+         const defaultOptions = {
+           headers: {
+             'Content-Type': 'application/json',
+             ...options.headers
+           }
+         };
+
+         // Agregar token de autenticación si está disponible
+         const token = localStorage.getItem('access_token');
+         if (token) {
+           defaultOptions.headers.Authorization = `Bearer ${token}`;
+         }
+
+         const config = {
+           ...defaultOptions,
+           ...options
+         };
+
+         try {
+           const response = await fetch(url, config);
+           
+           if (!response.ok) {
+             const errorData = await response.json().catch(() => ({}));
+             throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+           }
+
+           return await response.json();
+         } catch (error) {
+           console.error('API request failed:', error);
+           throw error;
+         }
+       }
+
+       async getAgents(filters = {}) {
+         const queryParams = new URLSearchParams();
+         
+         Object.entries(filters).forEach(([key, value]) => {
+           if (value !== undefined && value !== null && value !== '') {
+             queryParams.append(key, value.toString());
+           }
+         });
+         
+         const queryString = queryParams.toString();
+         const endpoint = queryString ? `/agents?${queryString}` : '/agents';
+         
+         console.log(`🔍 Gallery API call: ${this.baseUrl}${endpoint}`);
+         return this.request(endpoint);
+       }
+     }
+
+     // Función para cargar agentes AIM desde la galería real
+     async function loadAIMAgents(fieldName) {
+       const agentsGrid = document.getElementById(`${fieldName}-agents-grid`);
+       if (!agentsGrid) return;
+
+       try {
+         // Mostrar loading
+         agentsGrid.innerHTML = `
+           <div class="col-span-full flex items-center justify-center py-8">
+             <div class="text-center">
+               <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mx-auto"></div>
+               <p class="mt-2 text-gray-600">Cargando agentes...</p>
+             </div>
+           </div>
+         `;
+
+         // Crear instancia del cliente de galería
+         const galleryClient = new GalleryApiClient();
+         
+         // Obtener agentes desde la API
+         const response = await galleryClient.getAgents({
+           isActive: true,
+           limit: 20,
+           sortBy: 'usageCount',
+           sortOrder: 'desc'
+         });
+
+         const agents = response.data?.items || [];
+         console.log('💰 Agentes cargados desde galería:', agents);
+
+         if (agents.length === 0) {
+           agentsGrid.innerHTML = `
+             <div class="col-span-full text-center py-8">
+               <p class="text-gray-500">No hay agentes disponibles en la galería</p>
+             </div>
+           `;
+           return;
+         }
+
+         // Mapear categorías de iconos
+         const getCategoryIcon = (categoryName) => {
+           const iconMap = {
+             'Finanzas': '💰',
+             'Contabilidad': '📊',
+             'Logística': '📦',
+             'Inventario': '📦',
+             'Ventas': '👥',
+             'CRM': '👥',
+             'Recursos Humanos': '🧑‍💼',
+             'RRHH': '🧑‍💼',
+             'Producción': '🏭',
+             'Calidad': '✅',
+             'Mantenimiento': '🔧',
+             'Compras': '🛒',
+             'Marketing': '📢',
+             'Servicio al Cliente': '📞',
+             'TI': '💻',
+             'Seguridad': '🔒'
+           };
+           return iconMap[categoryName] || '🤖';
+         };
+
+         // Convertir complejidad a español
+         const getComplexityLabel = (complexity) => {
+           const complexityMap = {
+             'basic': 'Básico',
+             'medium': 'Medio',
+             'advanced': 'Avanzado'
+           };
+           return complexityMap[complexity?.toLowerCase()] || 'Medio';
+         };
+
+         // Generar precios estimados basados en complejidad (en caso de que no estén en la API)
+         const getEstimatedPrice = (complexity) => {
+           const priceMap = {
+             'basic': { implementation: 25000, monthly: 4500 },
+             'medium': { implementation: 45000, monthly: 8000 },
+             'advanced': { implementation: 75000, monthly: 14000 }
+           };
+           const prices = priceMap[complexity?.toLowerCase()] || priceMap['medium'];
+           return {
+             implementation: prices.implementation + Math.floor(Math.random() * 10000) - 5000,
+             monthly: prices.monthly + Math.floor(Math.random() * 2000) - 1000
+           };
+         };
+
+         // Procesar y guardar datos de agentes reales con precios estimados
+         const processedAgents = agents.map(agent => {
+           const prices = getEstimatedPrice(agent.complexity);
+           return {
+             id: agent.id,
+             name: agent.title || agent.name,
+             title: agent.title || agent.name,
+             description: agent.shortDescription || agent.challenge || 'Agente de automatización inteligente',
+             complexity: agent.complexity,
+             category: agent.category?.name || 'General',
+             price: prices.implementation,
+             monthlyPrice: prices.monthly,
+             icon: getCategoryIcon(agent.category?.name)
+           };
+         });
+
+         // Almacenar en el store global para uso posterior
+         window.aimAgentsData[fieldName] = processedAgents;
+         
+         const agentsHTML = processedAgents.map(agent => {
+           const complexityLabel = getComplexityLabel(agent.complexity);
+           
+           return `
+             <div class="agent-card border-2 border-gray-200 rounded-lg p-4 hover:border-teal-300 transition-all cursor-pointer" 
+                  onclick="toggleAIMAgent('${fieldName}', '${agent.id}', event); return false;">
+               <div class="flex items-start justify-between mb-3">
+                 <div class="flex items-center space-x-3">
+                   <div class="text-2xl">${agent.icon}</div>
+                   <div>
+                     <h3 class="font-semibold text-gray-900">${agent.title}</h3>
+                     <span class="px-2 py-1 bg-${agent.complexity === 'basic' ? 'green' : agent.complexity === 'medium' ? 'yellow' : 'red'}-100 text-${agent.complexity === 'basic' ? 'green' : agent.complexity === 'medium' ? 'yellow' : 'red'}-800 rounded-full text-xs">
+                       ${complexityLabel}
+                     </span>
+                   </div>
+                 </div>
+                 <div class="text-right">
+                   <div class="text-lg font-bold text-teal-600">$${agent.price.toLocaleString()}</div>
+                   <div class="text-sm text-gray-600">+ $${agent.monthlyPrice.toLocaleString()}/mes</div>
+                 </div>
+               </div>
+               <p class="text-gray-700 text-sm">${agent.description}</p>
+               <div class="mt-3 text-center">
+                 <span class="select-indicator text-sm text-gray-500">Clic para seleccionar</span>
+               </div>
+             </div>
+           `;
+         }).join('');
+
+         agentsGrid.innerHTML = agentsHTML;
+         console.log('💰 Grid de agentes actualizado exitosamente');
+
+       } catch (error) {
+         console.error('💰 Error cargando agentes desde galería:', error);
+         
+         // Fallback a datos mock en caso de error
+         const fallbackAgents = [
+           {
+             id: 'ap-301',
+             name: 'Agente Cuentas por Pagar',
+             category: 'Finanzas',
+             complexity: 'medium',
+             price: 45000,
+             monthlyPrice: 8500,
+             description: 'Automatiza recepción, validación e ingreso de facturas con OCR avanzado',
+             icon: '💰'
+           },
+           {
+             id: 'inv-401',
+             name: 'Agente Control de Inventarios',
+             category: 'Logística',
+             complexity: 'medium',
+             price: 38000,
+             monthlyPrice: 7200,
+             description: 'Gestión automática de stock, alertas y reposición inteligente',
+             icon: '📦'
+           },
+           {
+             id: 'crm-501',
+             name: 'Agente CRM Automatizado',
+             category: 'Ventas',
+             complexity: 'advanced',
+             price: 65000,
+             monthlyPrice: 12000,
+             description: 'Gestión automática de leads, seguimiento y pipelines de ventas',
+             icon: '👥'
+           }
+         ];
+
+         const fallbackHTML = fallbackAgents.map(agent => `
+           <div class="agent-card border-2 border-gray-200 rounded-lg p-4 hover:border-teal-300 transition-all cursor-pointer" 
+                onclick="toggleAIMAgent('${fieldName}', '${agent.id}', event); return false;">
+             <div class="flex items-start justify-between mb-3">
+               <div class="flex items-center space-x-3">
+                 <div class="text-2xl">${agent.icon}</div>
+                 <div>
+                   <h3 class="font-semibold text-gray-900">${agent.name}</h3>
+                   <span class="px-2 py-1 bg-${agent.complexity === 'basic' ? 'green' : agent.complexity === 'medium' ? 'yellow' : 'red'}-100 text-${agent.complexity === 'basic' ? 'green' : agent.complexity === 'medium' ? 'yellow' : 'red'}-800 rounded-full text-xs">
+                     ${agent.complexity === 'basic' ? 'Básico' : agent.complexity === 'medium' ? 'Medio' : 'Avanzado'}
+                   </span>
+                 </div>
+               </div>
+               <div class="text-right">
+                 <div class="text-lg font-bold text-teal-600">$${agent.price.toLocaleString()}</div>
+                 <div class="text-sm text-gray-600">+ $${agent.monthlyPrice.toLocaleString()}/mes</div>
+               </div>
+             </div>
+             <p class="text-gray-700 text-sm">${agent.description}</p>
+             <div class="mt-3 text-center">
+               <span class="select-indicator text-sm text-gray-500">Clic para seleccionar</span>
+             </div>
+           </div>
+         `).join('');
+
+         agentsGrid.innerHTML = `
+           <div class="col-span-full bg-yellow-50 border border-yellow-200 rounded p-4 mb-4">
+             <p class="text-yellow-800 text-sm">⚠️ No se pudieron cargar los agentes desde la galería. Mostrando agentes de ejemplo.</p>
+           </div>
+           ${fallbackHTML}
+         `;
+       }
+     }
+
+     // Función para cargar planes AIM
+     function loadAIMPlans(fieldName) {
+       const plansGrid = document.getElementById(`${fieldName}-plans-grid`);
+       if (!plansGrid) return;
+
+       const mockPlans = [
+         {
+           id: 'starter',
+           name: 'Plan Starter',
+           price: 12000,
+           features: ['Hasta 3 agentes', 'Soporte básico', 'Dashboard estándar', 'Reportes mensuales'],
+           recommended: false,
+           icon: '🚀'
+         },
+         {
+           id: 'professional',
+           name: 'Plan Professional',
+           price: 25000,
+           features: ['Hasta 8 agentes', 'Soporte prioritario', 'Dashboard avanzado', 'Reportes semanales', 'Integraciones ilimitadas'],
+           recommended: true,
+           icon: '💼'
+         },
+         {
+           id: 'enterprise',
+           name: 'Plan Enterprise',
+           price: 45000,
+           features: ['Agentes ilimitados', 'Soporte 24/7', 'Dashboard personalizado', 'Reportes en tiempo real', 'Consultoría incluida'],
+           recommended: false,
+           icon: '🏢'
+         }
+       ];
+
+       const plansHTML = mockPlans.map(plan => `
+         <div class="plan-card border-2 ${plan.recommended ? 'border-teal-500 bg-teal-50' : 'border-gray-200'} rounded-lg p-4 hover:border-teal-300 transition-all cursor-pointer relative" 
+              onclick="console.log('🔥 PLAN CLICKEADO: ${plan.id}'); selectAIMPlan('${fieldName}', '${plan.id}', event); return false;"
+              data-plan-id="${plan.id}">
+           ${plan.recommended ? '<div class="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-teal-500 text-white text-xs px-3 py-1 rounded-full">Recomendado</div>' : ''}
+           <div class="text-center mb-4">
+             <div class="text-3xl mb-2">${plan.icon}</div>
+             <h3 class="font-bold text-lg text-gray-900">${plan.name}</h3>
+             <div class="text-2xl font-bold text-teal-600 mt-2">$${plan.price.toLocaleString()}</div>
+             <div class="text-sm text-gray-600">por mes</div>
+           </div>
+           <ul class="space-y-2 text-sm">
+             ${plan.features.map(feature => `
+               <li class="flex items-center">
+                 <svg class="w-4 h-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                 </svg>
+                 ${feature}
+               </li>
+             `).join('')}
+           </ul>
+           <div class="mt-4 text-center">
+             <span class="select-indicator text-sm text-gray-500">Clic para seleccionar</span>
+           </div>
+         </div>
+       `).join('');
+
+       plansGrid.innerHTML = plansHTML;
+     }
+
+     // Función para cargar servicios AIM
+     function loadAIMServices(fieldName) {
+       const servicesList = document.getElementById(`${fieldName}-services-list`);
+       if (!servicesList) return;
+
+       const mockServices = [
+         {
+           id: 'training',
+           name: 'Capacitación del Equipo',
+           price: 15000,
+           description: 'Entrenamiento completo para tu equipo en el uso de los agentes'
+         },
+         {
+           id: 'consulting',
+           name: 'Consultoría Especializada',
+           price: 25000,
+           description: 'Asesoría personalizada para optimizar tus procesos'
+         },
+         {
+           id: 'custom-dashboard',
+           name: 'Dashboard Personalizado',
+           price: 35000,
+           description: 'Dashboard a medida con KPIs específicos de tu negocio'
+         },
+         {
+           id: 'priority-support',
+           name: 'Soporte Prioritario',
+           price: 8500,
+           description: 'Soporte técnico con respuesta garantizada en 2 horas'
+         }
+       ];
+
+       const servicesHTML = mockServices.map(service => `
+         <div class="service-card border border-gray-200 rounded-lg p-4 hover:border-teal-300 transition-all cursor-pointer"
+              onclick="toggleAIMService('${fieldName}', '${service.id}', event); return false;">
+           <div class="flex justify-between items-start">
+             <div class="flex-1">
+               <h3 class="font-semibold text-gray-900">${service.name}</h3>
+               <p class="text-sm text-gray-600 mt-1">${service.description}</p>
+             </div>
+             <div class="text-right ml-4">
+               <div class="font-bold text-teal-600">$${service.price.toLocaleString()}</div>
+               <div class="text-xs text-gray-500">una vez</div>
+             </div>
+           </div>
+           <div class="mt-3 text-center">
+             <span class="select-indicator text-sm text-gray-500">Clic para seleccionar</span>
+           </div>
+         </div>
+       `).join('');
+
+       servicesList.innerHTML = servicesHTML;
+     }
+
+     // Función para seleccionar/deseleccionar agentes
+     function toggleAIMAgent(fieldName, agentId, event) {
+       // Prevenir propagación del evento para evitar conflictos
+       if (event) {
+         event.preventDefault();
+         event.stopPropagation();
+       }
+       
+       console.log(`💰 Toggle agente ${agentId} para campo ${fieldName}`);
+       
+       if (!window.aimQuoteData[fieldName]) {
+         window.aimQuoteData[fieldName] = { selectedAgents: [], selectedPlan: null, selectedServices: [] };
+       }
+       
+       const selectedAgents = window.aimQuoteData[fieldName].selectedAgents;
+       const agentIndex = selectedAgents.findIndex(a => a.id === agentId);
+       
+       // Buscar los datos del agente en el store de agentes reales
+       let agentData = null;
+       if (window.aimAgentsData[fieldName]) {
+         agentData = window.aimAgentsData[fieldName].find(agent => agent.id === agentId);
+       }
+       
+       // Fallback a datos mock si no se encuentran los datos reales
+       if (!agentData) {
+         const mockAgentsData = {
+           'ap-301': { id: 'ap-301', name: 'Agente Cuentas por Pagar', price: 45000, monthlyPrice: 8500 },
+           'inv-401': { id: 'inv-401', name: 'Agente Control de Inventarios', price: 38000, monthlyPrice: 7200 },
+           'crm-501': { id: 'crm-501', name: 'Agente CRM Automatizado', price: 65000, monthlyPrice: 12000 },
+           'hr-601': { id: 'hr-601', name: 'Agente Recursos Humanos', price: 28000, monthlyPrice: 5500 }
+         };
+         agentData = mockAgentsData[agentId];
+       }
+       
+       if (!agentData) {
+         console.error(`💰 No se encontraron datos para el agente ${agentId}`);
+         return false;
+       }
+       
+       if (agentIndex > -1) {
+         // Deseleccionar
+         selectedAgents.splice(agentIndex, 1);
+         console.log(`💰 Agente ${agentId} deseleccionado`);
+       } else {
+         // Seleccionar
+         selectedAgents.push(agentData);
+         console.log(`💰 Agente ${agentId} seleccionado:`, agentData);
+       }
+       
+       // Actualizar UI
+       updateAgentSelection(fieldName, agentId, agentIndex === -1);
+       updateAIMSummary(fieldName);
+       
+       return false; // Prevenir comportamiento por defecto
+     }
+
+     // Función para seleccionar plan
+     function selectAIMPlan(fieldName, planId, event) {
+       // Prevenir propagación del evento para evitar conflictos
+       if (event) {
+         event.preventDefault();
+         event.stopPropagation();
+       }
+       
+       console.log(`💰 Seleccionar plan ${planId} para campo ${fieldName}`);
+       
+       if (!window.aimQuoteData[fieldName]) {
+         window.aimQuoteData[fieldName] = { selectedAgents: [], selectedPlan: null, selectedServices: [] };
+       }
+       
+       // Datos de los planes
+       const plansData = {
+         'starter': { id: 'starter', name: 'Plan Starter', price: 12000 },
+         'professional': { id: 'professional', name: 'Plan Professional', price: 25000 },
+         'enterprise': { id: 'enterprise', name: 'Plan Enterprise', price: 45000 }
+       };
+       
+       window.aimQuoteData[fieldName].selectedPlan = plansData[planId];
+       
+       // Actualizar UI
+       updatePlanSelection(fieldName, planId);
+       updateAIMSummary(fieldName);
+       
+       console.log(`✅ Plan ${planId} seleccionado exitosamente para ${fieldName}`);
+       
+       return false; // Prevenir comportamiento por defecto
+     }
+
+     // Función para seleccionar/deseleccionar servicios
+     function toggleAIMService(fieldName, serviceId, event) {
+       // Prevenir propagación del evento para evitar conflictos
+       if (event) {
+         event.preventDefault();
+         event.stopPropagation();
+       }
+       
+       console.log(`💰 Toggle servicio ${serviceId} para campo ${fieldName}`);
+       
+       if (!window.aimQuoteData[fieldName]) {
+         window.aimQuoteData[fieldName] = { selectedAgents: [], selectedPlan: null, selectedServices: [] };
+       }
+       
+       const selectedServices = window.aimQuoteData[fieldName].selectedServices;
+       const serviceIndex = selectedServices.findIndex(s => s.id === serviceId);
+       
+       // Datos de servicios
+       const servicesData = {
+         'training': { id: 'training', name: 'Capacitación del Equipo', price: 15000 },
+         'consulting': { id: 'consulting', name: 'Consultoría Especializada', price: 25000 },
+         'custom-dashboard': { id: 'custom-dashboard', name: 'Dashboard Personalizado', price: 35000 },
+         'priority-support': { id: 'priority-support', name: 'Soporte Prioritario', price: 8500 }
+       };
+       
+       if (serviceIndex > -1) {
+         // Deseleccionar
+         selectedServices.splice(serviceIndex, 1);
+         console.log(`💰 Servicio ${serviceId} deseleccionado`);
+       } else {
+         // Seleccionar
+         selectedServices.push(servicesData[serviceId]);
+         console.log(`💰 Servicio ${serviceId} seleccionado`);
+       }
+       
+       updateAIMSummary(fieldName);
+       
+       return false; // Prevenir comportamiento por defecto
+     }
+
+     // Función para actualizar la selección visual de agentes
+     function updateAgentSelection(fieldName, agentId, isSelected) {
+       const agentCard = document.querySelector(`#${fieldName}-agents-grid .agent-card[onclick*="${agentId}"]`);
+       if (agentCard) {
+         if (isSelected) {
+           agentCard.classList.remove('border-gray-200');
+           agentCard.classList.add('border-teal-500', 'bg-teal-50');
+           agentCard.querySelector('.select-indicator').textContent = '✓ Seleccionado';
+         } else {
+           agentCard.classList.remove('border-teal-500', 'bg-teal-50');
+           agentCard.classList.add('border-gray-200');
+           agentCard.querySelector('.select-indicator').textContent = 'Clic para seleccionar';
+         }
+       }
+     }
+
+     // Función para actualizar la selección visual de planes
+     function updatePlanSelection(fieldName, selectedPlanId) {
+       const planCards = document.querySelectorAll(`#${fieldName}-plans-grid .plan-card`);
+       planCards.forEach(card => {
+         const cardOnClick = card.getAttribute('onclick');
+         if (cardOnClick && cardOnClick.includes(selectedPlanId)) {
+           card.classList.remove('border-gray-200');
+           card.classList.add('border-teal-500', 'bg-teal-50');
+           const indicator = card.querySelector('.select-indicator');
+           if (indicator) {
+             indicator.textContent = '✓ Seleccionado';
+           }
+         } else {
+           card.classList.remove('border-teal-500', 'bg-teal-50');
+           card.classList.add('border-gray-200');
+           const indicator = card.querySelector('.select-indicator');
+           if (indicator) {
+             indicator.textContent = 'Clic para seleccionar';
+           }
+         }
+       });
+     }
+
+     // Función para actualizar el resumen
+     function updateAIMSummary(fieldName) {
+       const data = window.aimQuoteData[fieldName];
+       if (!data) return;
+       
+       console.log(`💰 Resumen actualizado para ${fieldName}:`, data);
+       
+       // Calcular totales con validación de datos
+       const agentsTotal = data.selectedAgents?.reduce((sum, agent) => {
+         const price = agent?.price || 0;
+         return sum + price;
+       }, 0) || 0;
+       
+       const agentsMonthly = data.selectedAgents?.reduce((sum, agent) => {
+         const monthlyPrice = agent?.monthlyPrice || 0;
+         return sum + monthlyPrice;
+       }, 0) || 0;
+       
+       const planMonthly = data.selectedPlan?.price || 0;
+       
+       const servicesTotal = data.selectedServices?.reduce((sum, service) => {
+         const price = service?.price || 0;
+         return sum + price;
+       }, 0) || 0;
+       
+       const totalImplementation = agentsTotal + servicesTotal;
+       const totalMonthly = agentsMonthly + planMonthly;
+       const firstYearTotal = totalImplementation + (totalMonthly * 12);
+       
+       // Actualizar datos
+       data.totals = {
+         implementation: totalImplementation,
+         monthly: totalMonthly,
+         setup: servicesTotal,
+         total: firstYearTotal
+       };
+       
+       // Actualizar el campo hidden del formulario
+       const hiddenInput = document.getElementById(fieldName);
+       if (hiddenInput) {
+         hiddenInput.value = JSON.stringify(data);
+         console.log(`💾 Datos guardados en campo hidden ${fieldName}:`, JSON.stringify(data, null, 2));
+       } else {
+         console.warn(`⚠️ Campo hidden ${fieldName} no encontrado`);
+       }
+       
+       // Actualizar resumen visual
+       const summaryContent = document.getElementById(`${fieldName}-summary-content`);
+       if (summaryContent) {
+         summaryContent.innerHTML = `
+           <div class="space-y-6">
+             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+               <div class="bg-teal-50 border border-teal-200 rounded-lg p-4 text-center">
+                 <div class="text-2xl font-bold text-teal-600">$${totalImplementation.toLocaleString()}</div>
+                 <div class="text-sm text-teal-800">Implementación</div>
+               </div>
+               <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+                 <div class="text-2xl font-bold text-blue-600">$${totalMonthly.toLocaleString()}</div>
+                 <div class="text-sm text-blue-800">Mensual</div>
+               </div>
+               <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-4 text-center">
+                 <div class="text-2xl font-bold text-emerald-600">$${firstYearTotal.toLocaleString()}</div>
+                 <div class="text-sm text-emerald-800">Primer Año</div>
+               </div>
+             </div>
+             
+             <div class="space-y-4">
+               <div>
+                 <h5 class="font-semibold mb-2">Agentes Seleccionados (${data.selectedAgents?.length || 0})</h5>
+                 ${(data.selectedAgents?.length || 0) > 0 ? 
+                   data.selectedAgents.map(agent => `
+                     <div class="flex justify-between py-1">
+                       <span>${agent?.name || agent?.title || 'Agente'}</span>
+                       <span>$${(agent?.price || 0).toLocaleString()}</span>
+                     </div>
+                   `).join('') :
+                   '<p class="text-gray-500 text-sm">Ningún agente seleccionado</p>'
+                 }
+               </div>
+               
+               <div>
+                 <h5 class="font-semibold mb-2">Plan de Suscripción</h5>
+                 ${data.selectedPlan ? 
+                   `<div class="flex justify-between py-1">
+                     <span>${data.selectedPlan?.name || 'Plan'}</span>
+                     <span>$${(data.selectedPlan?.price || 0).toLocaleString()}/mes</span>
+                   </div>` :
+                   '<p class="text-gray-500 text-sm">Ningún plan seleccionado</p>'
+                 }
+               </div>
+               
+               <div>
+                 <h5 class="font-semibold mb-2">Servicios Adicionales (${data.selectedServices?.length || 0})</h5>
+                 ${(data.selectedServices?.length || 0) > 0 ? 
+                   data.selectedServices.map(service => `
+                     <div class="flex justify-between py-1">
+                       <span>${service?.name || 'Servicio'}</span>
+                       <span>$${(service?.price || 0).toLocaleString()}</span>
+                     </div>
+                   `).join('') :
+                   '<p class="text-gray-500 text-sm">Ningún servicio seleccionado</p>'
+                 }
+               </div>
+             </div>
+           </div>
+         `;
+       }
+       
+       console.log(`💰 Resumen actualizado para ${fieldName}:`, data);
+     }
+
+     // Función para actualizar el indicador de progreso
+     function updateProgressIndicator(fieldName, currentTab) {
+       const tabs = {
+         'agents': { step: 1, title: '🤖 Agentes', width: '25%' },
+         'plans': { step: 2, title: '💼 Planes', width: '50%' },
+         'services': { step: 3, title: '⚙️ Servicios', width: '75%' },
+         'summary': { step: 4, title: '📊 Resumen', width: '100%' }
+       };
+
+       const currentTabInfo = tabs[currentTab];
+       if (!currentTabInfo) return;
+
+       // Actualizar texto de progreso
+       const progressText = document.getElementById(`${fieldName}-progress-text`);
+       if (progressText) {
+         progressText.textContent = `Paso ${currentTabInfo.step} de 4: ${currentTabInfo.title}`;
+       }
+
+       // Actualizar barra de progreso
+       const progressBar = document.getElementById(`${fieldName}-progress-bar`);
+       if (progressBar) {
+         progressBar.style.width = currentTabInfo.width;
+       }
+
+       // Actualizar información de selecciones
+       const progressInfo = document.getElementById(`${fieldName}-progress-info`);
+       if (progressInfo && window.aimQuoteData && window.aimQuoteData[fieldName]) {
+         const data = window.aimQuoteData[fieldName];
+         const agentsCount = data.selectedAgents ? data.selectedAgents.length : 0;
+         const planCount = data.selectedPlan ? 1 : 0;
+         const servicesCount = data.selectedServices ? data.selectedServices.length : 0;
+         
+         progressInfo.textContent = `${agentsCount} agente(s) | ${planCount} plan(es) | ${servicesCount} servicio(s)`;
+       }
+
+       // Actualizar puntos de navegación
+       const dotButtons = document.querySelectorAll(`[data-field-name="${fieldName}"] .flex.space-x-2 button`);
+       dotButtons.forEach((button, index) => {
+         const tabNames = ['agents', 'plans', 'services', 'summary'];
+         if (tabNames[index] === currentTab) {
+           button.className = 'w-3 h-3 rounded-full bg-teal-500 transition-colors';
+         } else {
+           button.className = 'w-3 h-3 rounded-full bg-gray-300 hover:bg-gray-400 transition-colors';
+         }
+       });
+     }
+
+     // Función mejorada para cambiar tabs del cotizador AIM con botones de navegación
+     function switchAIMTab(fieldName, tabName, event) {
+       try {
+         // Prevenir propagación del evento para evitar conflictos
+         if (event) {
+           event.preventDefault();
+           event.stopPropagation();
+         }
+         
+         console.log(`🔄 FORZANDO CAMBIO DE TAB: ${tabName} para campo ${fieldName}`);
+         
+         // FORZAR ocultación de TODOS los tabs
+         const allTabs = document.querySelectorAll(`#${fieldName}-agents-tab, #${fieldName}-plans-tab, #${fieldName}-services-tab, #${fieldName}-summary-tab`);
+         console.log(`🔍 Encontrados ${allTabs.length} elementos de tab para ocultar`);
+         
+         allTabs.forEach((tab, index) => {
+           console.log(`🙈 Ocultando tab ${index}: ${tab.id}`);
+           tab.style.display = 'none';
+           tab.classList.add('hidden');
+         });
+         
+         // FORZAR mostrar el tab seleccionado
+         const selectedContent = document.getElementById(`${fieldName}-${tabName}-tab`);
+         console.log(`🔍 Buscando tab: ${fieldName}-${tabName}-tab`);
+         console.log(`🎯 Tab encontrado:`, selectedContent);
+         
+         if (selectedContent) {
+           console.log(`🚀 FORZANDO MOSTRAR TAB: ${selectedContent.id}`);
+           selectedContent.style.display = 'block';
+           selectedContent.classList.remove('hidden');
+           
+           // Verificar que realmente sea visible
+           setTimeout(() => {
+             const isVisible = selectedContent.offsetHeight > 0;
+             console.log(`✅ Tab ${selectedContent.id} es visible: ${isVisible}`);
+             if (!isVisible) {
+               console.error(`❌ CRÍTICO: Tab ${selectedContent.id} no es visible después del cambio!`);
+               selectedContent.style.display = 'block !important';
+               selectedContent.style.visibility = 'visible';
+               selectedContent.style.opacity = '1';
+             }
+           }, 50);
+           
+         } else {
+           console.error(`❌ CRÍTICO: No se encontró contenido para tab ${fieldName}-${tabName}-tab`);
+         }
+         
+         // FORZAR actualización de estilos de los botones de tabs
+         const tabButtons = document.querySelectorAll('.aim-tab');
+         console.log(`🎨 Actualizando estilos de ${tabButtons.length} botones de tab`);
+         
+         tabButtons.forEach(button => {
+           const buttonTab = button.getAttribute('data-tab');
+           console.log(`🔘 Botón tab: ${buttonTab}, objetivo: ${tabName}`);
+           
+           // Remover todas las clases primero
+           button.className = 'aim-tab flex-1 px-6 py-4 text-sm font-medium border-b-2';
+           
+           if (buttonTab === tabName) {
+             button.className += ' border-teal-500 text-teal-600 bg-teal-50';
+             console.log(`✅ Activando botón: ${buttonTab}`);
+           } else {
+             button.className += ' border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300';
+           }
+         });
+         
+         // Actualizar indicador de progreso
+         updateProgressIndicator(fieldName, tabName);
+         
+         console.log(`🎉 CAMBIO DE TAB COMPLETADO FORZOSAMENTE a ${tabName}`);
+         
+       } catch (error) {
+         console.error(`💥 Error CRÍTICO en switchAIMTab:`, error);
+         console.error(`💥 Stack:`, error.stack);
+       }
+       
+       return false; // Prevenir comportamiento por defecto
+     }
+
+     // Función para navegación con botones Anterior/Siguiente
+     window.goToNextAIMTab = function(fieldName) {
+       console.log(`🚀 INICIANDO goToNextAIMTab para campo: ${fieldName}`);
+       
+       const tabs = ['agents', 'plans', 'services', 'summary'];
+
+       // Encontrar tab activo actual
+       let currentIndex = 0;
+       const activeTab = document.querySelector('.aim-tab.border-teal-500');
+       if (activeTab) {
+         const currentTab = activeTab.getAttribute('data-tab');
+         currentIndex = tabs.indexOf(currentTab);
+         console.log(`📍 Tab actual encontrado: ${currentTab} (índice: ${currentIndex})`);
+       } else {
+         console.log(`⚠️ No se encontró tab activo, asumiendo agents (índice 0)`);
+       }
+
+       // Ir al siguiente tab si existe
+       if (currentIndex < tabs.length - 1) {
+         const nextTab = tabs[currentIndex + 1];
+         console.log(`▶️ Avanzando al siguiente tab: ${nextTab}`);
+         
+         // Forzar el cambio de tab INMEDIATAMENTE
+         switchAIMTab(fieldName, nextTab, null);
+       } else {
+         console.log(`ℹ️ Ya estás en el último tab (${tabs[currentIndex]})`);
+       }
+     };
+
+     window.goToPrevAIMTab = function(fieldName) {
+       const tabs = ['agents', 'plans', 'services', 'summary'];
+
+       // Encontrar tab activo actual
+       let currentIndex = 0;
+       const activeTab = document.querySelector('.aim-tab.border-teal-500');
+       if (activeTab) {
+         const currentTab = activeTab.getAttribute('data-tab');
+         currentIndex = tabs.indexOf(currentTab);
+       }
+
+       // Ir al tab anterior si existe
+       if (currentIndex > 0) {
+         const prevTab = tabs[currentIndex - 1];
+         console.log(`🔄 Retrocediendo al tab anterior: ${prevTab}`);
+         switchAIMTab(fieldName, prevTab);
+       }
+     };
+
+     // Hacer funciones globales
+     window.switchAIMTab = switchAIMTab;
+     window.loadAIMAgents = loadAIMAgents;
+     window.loadAIMPlans = loadAIMPlans;
+     window.loadAIMServices = loadAIMServices;
+     window.toggleAIMAgent = toggleAIMAgent;
+     window.selectAIMPlan = selectAIMPlan;
+     window.toggleAIMService = toggleAIMService;
+     window.updateAIMSummary = updateAIMSummary;
+     window.updateProgressIndicator = updateProgressIndicator;
+     window.GalleryApiClient = GalleryApiClient;
+
+  </script>
+</PortalLayoutSidebar> 

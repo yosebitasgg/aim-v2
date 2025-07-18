@@ -1,0 +1,54 @@
+# docker-compose.override.yml
+# Este archivo se aplica automáticamente en desarrollo junto con docker-compose.yml
+# Contiene configuraciones específicas para el entorno de desarrollo
+
+version: '3.8'
+
+services:
+  # Configuraciones específicas para desarrollo del backend
+  backend:
+    environment:
+      # Configuración más permisiva para desarrollo
+      RATE_LIMIT_MAX_REQUESTS: 10000
+      LOG_LEVEL: debug
+    volumes:
+      # Bind mounts para hot-reloading en desarrollo
+      - ./aim-backend:/app:delegated
+      - /app/node_modules
+      - /app/dist
+    # Comando específico para desarrollo
+    command: ["npm", "run", "dev"]
+
+  # Configuraciones específicas para desarrollo del frontend
+  frontend:
+    environment:
+      # Variables específicas para desarrollo
+      PUBLIC_API_URL: http://localhost:3001
+      ASTRO_TELEMETRY_DISABLED: 1
+    volumes:
+      # Bind mounts para hot-reloading en desarrollo
+      - ./aim-website:/app:delegated
+      - /app/node_modules
+      - /app/dist
+      - /app/.astro
+    ports:
+      # Puerto interno para desarrollo (Astro dev server)
+      - "4321:4321"
+    # Comando específico para desarrollo con host binding
+    command: ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "4321"]
+
+  # Configuraciones específicas para desarrollo de la base de datos
+  db:
+    # Puertos expuestos para conectar herramientas de desarrollo
+    ports:
+      - "5432:5432"
+    # Variables adicionales para desarrollo
+    environment:
+      # Configuración más permisiva para desarrollo
+      POSTGRES_HOST_AUTH_METHOD: trust
+    # Volumen adicional para scripts de desarrollo
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./aim-website/database-setup.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      # Directorio para scripts adicionales de desarrollo
+      - ./sql-scripts:/docker-entrypoint-initdb.d/scripts:ro 

@@ -1,0 +1,1307 @@
+---
+import PortalLayoutSidebar from '../../layouts/PortalLayoutSidebar.astro';
+---
+
+<PortalLayoutSidebar title="Usuarios - Portal AIM">
+  <!-- Auth Guard Container -->
+  <div id="auth-container">
+    <!-- Loading state -->
+    <div id="auth-loading" class="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div class="text-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
+        <p class="text-gray-600">Verificando autenticación...</p>
+      </div>
+    </div>
+
+    <!-- Main content -->
+    <div id="main-content" class="hidden">
+      <!-- Header con gradiente -->
+      <div class="mb-8">
+        <div class="bg-gradient-to-r from-teal-600 to-emerald-600 rounded-xl p-6 text-white">
+          <div class="flex items-center justify-between">
+            <div>
+              <h1 class="text-2xl font-bold mb-2">Gestión de Usuarios</h1>
+              <p class="text-teal-100">Administra usuarios, roles y permisos del sistema</p>
+            </div>
+            <div class="text-right">
+              <div class="text-teal-100 text-sm">Total usuarios</div>
+              <div class="text-3xl font-bold" id="header-total">-</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-500 mb-1">Total Usuarios</p>
+              <p class="text-2xl font-bold text-gray-900" id="stat-total">-</p>
+              <p class="text-sm text-teal-600 flex items-center mt-2">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+                Registrados
+              </p>
+            </div>
+            <div class="p-3 bg-teal-50 rounded-lg">
+              <svg class="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-500 mb-1">Activos</p>
+              <p class="text-2xl font-bold text-gray-900" id="stat-active">-</p>
+              <p class="text-sm text-green-600 flex items-center mt-2">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                En línea
+              </p>
+            </div>
+            <div class="p-3 bg-green-50 rounded-lg">
+              <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-500 mb-1">Administradores</p>
+              <p class="text-2xl font-bold text-gray-900" id="stat-admin">-</p>
+              <p class="text-sm text-purple-600 flex items-center mt-2">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                </svg>
+                Con privilegios
+              </p>
+            </div>
+            <div class="p-3 bg-purple-50 rounded-lg">
+              <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-500 mb-1">Roles Activos</p>
+              <p class="text-2xl font-bold text-gray-900" id="stat-roles">-</p>
+              <p class="text-sm text-blue-600 flex items-center mt-2">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+                Asignados
+              </p>
+            </div>
+            <div class="p-3 bg-blue-50 rounded-lg">
+              <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Acciones principales -->
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-xl font-semibold text-gray-900">Lista de Usuarios</h2>
+        <div class="flex space-x-3">
+          <button 
+            id="create-user-btn"
+            class="bg-gradient-to-r from-teal-600 to-emerald-600 text-white px-6 py-3 rounded-lg hover:from-teal-700 hover:to-emerald-700 transition-colors duration-200 flex items-center space-x-2 shadow-lg"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+            </svg>
+            <span>Nuevo Usuario</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 mb-6">
+        <div class="p-6 border-b border-gray-100">
+          <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.707A1 1 0 013 7V4z"/>
+            </svg>
+            Filtros de Búsqueda
+          </h3>
+        </div>
+        <div class="p-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Buscar</label>
+              <input 
+                type="text" 
+                id="search-input"
+                placeholder="Nombre o email..." 
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              >
+          </div>
+          <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Rol</label>
+            <select id="role-filter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+              <option value="">Todos los roles</option>
+              <option value="master">Master</option>
+                <option value="admin">Administrador</option>
+                <option value="manager">Gerente</option>
+              <option value="user">Usuario</option>
+            </select>
+          </div>
+          <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Departamento</label>
+              <select id="department-filter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                <option value="">Todos los departamentos</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Estado</label>
+            <select id="status-filter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+                <option value="">Todos los estados</option>
+              <option value="active">Activo</option>
+              <option value="inactive">Inactivo</option>
+            </select>
+          </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Users Table -->
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <!-- Loading State -->
+        <div id="table-loading" class="p-8 text-center">
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mx-auto mb-4"></div>
+          <p class="text-gray-600">Cargando usuarios...</p>
+        </div>
+
+        <!-- Table Content -->
+        <div id="table-content" class="hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usuario</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rol</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Departamento</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Último Login</th>
+                  <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+              </tr>
+            </thead>
+              <tbody id="users-table-body" class="bg-white divide-y divide-gray-200">
+                <!-- Usuarios se cargarán aquí -->
+            </tbody>
+          </table>
+          </div>
+        </div>
+        
+        <!-- Empty State -->
+        <div id="empty-state" class="hidden p-8 text-center">
+          <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+          </svg>
+          <h3 class="mt-2 text-sm font-medium text-gray-900" id="empty-title">No hay usuarios</h3>
+          <p class="mt-1 text-sm text-gray-500" id="empty-description">Comienza creando un nuevo usuario.</p>
+          <button onclick="clearAllFilters()" id="clear-filters-btn" class="hidden mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-teal-600 bg-teal-100 hover:bg-teal-200">
+            Limpiar filtros
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Auth Error -->
+    <div id="auth-error" class="hidden min-h-screen bg-gray-50 flex items-center justify-center">
+      <div class="text-center max-w-md mx-auto p-6">
+        <div class="mb-6">
+          <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+            <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+        </div>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">Acceso Denegado</h3>
+        <p class="text-gray-600 mb-6" id="auth-error-message">No tienes permisos para acceder a esta página.</p>
+        <button 
+          onclick="window.location.href = '/portal'" 
+          class="bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
+        >
+          Volver al Portal
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modals -->
+  
+  <!-- Role Assignment Modal -->
+  <div id="role-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+      <div class="mt-3">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-medium text-gray-900" id="role-modal-title">Asignar Rol</h3>
+          <button onclick="closeRoleModal()" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </button>
+      </div>
+        <div class="mb-4">
+          <p class="text-sm text-gray-600 mb-3">Usuario: <span class="font-medium" id="role-user-name"></span></p>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Seleccionar Rol</label>
+          <select id="role-select" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+            <option value="">Cargando roles...</option>
+          </select>
+            </div>
+        <div class="flex justify-end space-x-3">
+          <button onclick="closeRoleModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg">
+            Cancelar
+          </button>
+          <button onclick="confirmRoleAssignment()" class="px-4 py-2 text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 rounded-lg">
+            Asignar Rol
+          </button>
+            </div>
+          </div>
+          </div>
+        </div>
+
+  <!-- Department Assignment Modal -->
+  <div id="department-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+      <div class="mt-3">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-medium text-gray-900" id="department-modal-title">Asignar Departamento</h3>
+          <button onclick="closeDepartmentModal()" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+              </button>
+            </div>
+        <div class="mb-4">
+          <p class="text-sm text-gray-600 mb-3">Usuario: <span class="font-medium" id="department-user-name"></span></p>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Seleccionar Departamento</label>
+          <select id="department-select" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+            <option value="">Cargando departamentos...</option>
+              </select>
+            </div>
+        <div class="flex justify-end space-x-3">
+          <button onclick="closeDepartmentModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg">
+          Cancelar
+        </button>
+          <button onclick="confirmDepartmentAssignment()" class="px-4 py-2 text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 rounded-lg">
+            Asignar Departamento
+        </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit User Modal -->
+  <div id="edit-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
+      <div class="mt-3">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-medium text-gray-900">Editar Usuario</h3>
+          <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </button>
+      </div>
+        <form id="edit-form" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Nombre</label>
+            <input type="text" id="edit-name" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+            <input type="email" id="edit-email" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono</label>
+            <input type="text" id="edit-phone" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Estado</label>
+            <select id="edit-status" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+              <option value="active">Activo</option>
+              <option value="inactive">Inactivo</option>
+        </select>
+      </div>
+        </form>
+        <div class="flex justify-end space-x-3 mt-6">
+          <button onclick="closeEditModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg">
+          Cancelar
+        </button>
+          <button onclick="confirmEditUser()" class="px-4 py-2 text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 rounded-lg">
+            Guardar Cambios
+        </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create User Modal -->
+  <div id="create-user-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-lg shadow-lg rounded-md bg-white">
+      <div class="mt-3">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-medium text-gray-900">Crear Nuevo Usuario</h3>
+          <button onclick="closeCreateUserModal()" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        <form id="create-user-form" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Nombre *</label>
+            <input type="text" id="create-name" required 
+                   placeholder="Ej: Juan Pérez García" 
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+            <input type="email" id="create-email" required 
+                   placeholder="Ej: juan.perez@empresa.com" 
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Contraseña *</label>
+            <input type="password" id="create-password" required 
+                   placeholder="Mínimo 6 caracteres, incluye números y letras" 
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Confirmar Contraseña *</label>
+            <input type="password" id="create-confirm-password" required 
+                   placeholder="Repite la contraseña anterior" 
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono</label>
+            <input type="text" id="create-phone" 
+                   placeholder="Ej: +52 1 81 1234 5678" 
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Departamento</label>
+            <select id="create-department" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+              <option value="">Seleccionar departamento...</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Rol</label>
+            <select id="create-role" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+              <option value="">Seleccionar rol...</option>
+            </select>
+          </div>
+        </form>
+        <div class="flex justify-end space-x-3 mt-6">
+          <button onclick="closeCreateUserModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg">
+            Cancelar
+          </button>
+          <button onclick="confirmCreateUser()" class="px-4 py-2 text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 rounded-lg">
+            Crear Usuario
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Container -->
+  <div id="notification-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
+</PortalLayoutSidebar>
+
+<script>
+  import { initializePortalAuth } from '../../lib/portalAuthScript.js';
+
+  // Variables globales
+  let apiClient;
+  let currentUsers = [];
+  let filteredUsers = [];
+  let availableRoles = [];
+  let availableDepartments = [];
+  let selectedUser = null;
+  let currentFilters = {
+    search: '',
+    role: '',
+    department: '',
+    status: ''
+  };
+
+  // Función para mostrar el contenido principal
+  function showMainContent() {
+      const authLoading = document.getElementById('auth-loading');
+      const mainContent = document.getElementById('main-content');
+      
+      if (authLoading) authLoading.classList.add('hidden');
+      if (mainContent) mainContent.classList.remove('hidden');
+      
+      // Configurar event listeners
+      setupFilterListeners();
+      
+      // Cargar datos iniciales
+    loadInitialData();
+  }
+
+  // Función para mostrar error de autenticación
+  function showAuthError(message) {
+    const authLoading = document.getElementById('auth-loading');
+    const authError = document.getElementById('auth-error');
+    
+    if (authLoading) authLoading.classList.add('hidden');
+    if (authError) {
+      authError.classList.remove('hidden');
+      const errorMessage = document.getElementById('auth-error-message');
+      if (errorMessage) errorMessage.textContent = message;
+    }
+  }
+
+  // Función global para notificaciones
+  window.showNotification = function(message, type = 'success') {
+    const container = document.getElementById('notification-container');
+    if (!container) return;
+
+    const notification = document.createElement('div');
+    notification.className = `
+      px-4 py-3 rounded-lg shadow-lg border-l-4 max-w-sm
+      ${type === 'success' 
+        ? 'bg-green-50 border-green-400 text-green-700' 
+        : type === 'error'
+        ? 'bg-red-50 border-red-400 text-red-700'
+        : 'bg-blue-50 border-blue-400 text-blue-700'
+      }
+      transform transition-all duration-300 translate-x-full
+    `;
+    
+    const iconSvg = type === 'success' 
+      ? '<svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>'
+      : type === 'error'
+      ? '<svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>'
+      : '<svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>';
+    
+    notification.innerHTML = `
+      <div class="flex items-center">
+        <div class="flex-shrink-0">${iconSvg}</div>
+        <div class="ml-3 flex-1">
+          <p class="text-sm font-medium">${message}</p>
+        </div>
+        <div class="ml-4 flex-shrink-0">
+          <button onclick="this.parentElement.parentElement.parentElement.remove()" class="text-gray-400 hover:text-gray-600">
+            <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    `;
+
+    container.appendChild(notification);
+    setTimeout(() => notification.classList.remove('translate-x-full'), 100);
+    setTimeout(() => {
+      notification.classList.add('translate-x-full');
+      setTimeout(() => notification.remove(), 300);
+    }, 5000);
+  };
+
+  // Cargar datos iniciales
+  async function loadInitialData() {
+    try {
+      console.log('🔄 Cargando datos iniciales...');
+      
+      // Cargar datos en paralelo
+      const [usersResult, statsResult, rolesResult, deptResult] = await Promise.allSettled([
+        loadUsers(),
+        loadStats(),
+        loadRoles(),
+        loadDepartments()
+      ]);
+      
+      // Verificar resultados
+      if (usersResult.status === 'rejected') console.error('❌ Error cargando usuarios:', usersResult.reason);
+      if (statsResult.status === 'rejected') console.error('❌ Error cargando stats:', statsResult.reason);
+      if (rolesResult.status === 'rejected') console.error('❌ Error cargando roles:', rolesResult.reason);
+      if (deptResult.status === 'rejected') console.error('❌ Error cargando departamentos:', deptResult.reason);
+      
+      console.log('✅ Datos iniciales cargados');
+      console.log('📊 Status final:');
+      console.log('   Usuarios:', currentUsers.length);
+      console.log('   Roles:', availableRoles.length);
+      console.log('   Departamentos:', availableDepartments.length);
+      
+      } catch (error) {
+      console.error('❌ Error cargando datos iniciales:', error);
+      showNotification('Error al cargar los datos: ' + error.message, 'error');
+    }
+  }
+
+  // Cargar usuarios
+  async function loadUsers() {
+    try {
+      const tableLoading = document.getElementById('table-loading');
+      const tableContent = document.getElementById('table-content');
+      const emptyState = document.getElementById('empty-state');
+      
+      // Mostrar loading
+      if (tableContent) tableContent.classList.add('hidden');
+      if (emptyState) emptyState.classList.add('hidden');
+      if (tableLoading) tableLoading.classList.remove('hidden');
+
+      const response = await apiClient.getUsers({ limit: 50 });
+      
+      if (response.success && response.data.users) {
+        currentUsers = response.data.users;
+        
+        // Aplicar filtros actuales a los nuevos datos
+        applyFilters();
+        
+        if (tableLoading) tableLoading.classList.add('hidden');
+        } else {
+        throw new Error(response.message || 'Error al cargar usuarios');
+      }
+    } catch (error) {
+      console.error('❌ Error cargando usuarios:', error);
+      showNotification('Error al cargar usuarios: ' + error.message, 'error');
+      
+      // Mostrar estado vacío en caso de error
+      const tableLoading = document.getElementById('table-loading');
+      const emptyState = document.getElementById('empty-state');
+      if (tableLoading) tableLoading.classList.add('hidden');
+      if (emptyState) emptyState.classList.remove('hidden');
+    }
+  }
+
+  // Cargar roles disponibles
+  async function loadRoles() {
+    try {
+      const response = await apiClient.getRoles({ limit: 20 });
+      if (response.success && response.data.items) {
+        availableRoles = response.data.items;
+      }
+      } catch (error) {
+      console.error('❌ Error cargando roles:', error);
+    }
+  }
+
+  // Cargar departamentos disponibles
+  async function loadDepartments() {
+    try {
+      console.log('🔄 Cargando departamentos...');
+      const departmentData = await apiClient.getDepartments();
+      console.log('📦 Datos recibidos:', departmentData);
+      
+      // Manejar la respuesta igual que el hook useDepartments
+      if (departmentData && Array.isArray(departmentData)) {
+        availableDepartments = departmentData;
+        console.log('✅ Departamentos cargados (array directo):', departmentData.length);
+      } else if (departmentData && departmentData.data && Array.isArray(departmentData.data)) {
+        availableDepartments = departmentData.data;
+        console.log('✅ Departamentos cargados (estructura data):', departmentData.data.length);
+      } else if (departmentData && departmentData.success && departmentData.data && Array.isArray(departmentData.data)) {
+        availableDepartments = departmentData.data;
+        console.log('✅ Departamentos cargados (success + data):', departmentData.data.length);
+        } else {
+        console.error('❌ Estructura de datos inesperada:', departmentData);
+        availableDepartments = [];
+      }
+      
+      // Actualizar filtro de departamentos
+      const filter = document.getElementById('department-filter');
+      if (filter) {
+        filter.innerHTML = '<option value="">Todos los departamentos</option>';
+        availableDepartments.forEach(dept => {
+          if (dept.value && dept.label) {
+            filter.innerHTML += `<option value="${dept.value}">${dept.label}</option>`;
+          }
+        });
+        console.log('🔄 Filtro actualizado con', availableDepartments.length, 'departamentos');
+      }
+      } catch (error) {
+      console.error('❌ Error cargando departamentos:', error);
+      availableDepartments = [];
+    }
+  }
+
+  // Renderizar tabla de usuarios
+  function renderUsersTable(users) {
+    const tbody = document.getElementById('users-table-body');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+
+    users.forEach(user => {
+      const row = document.createElement('tr');
+      row.className = 'hover:bg-gray-50';
+      
+      const role = user.customRole?.name || user.role;
+      const department = user.department || 'Sin departamento';
+      const status = user.status || 'active';
+      const lastLogin = user.lastLoginAt 
+        ? new Date(user.lastLoginAt).toLocaleDateString('es-ES')
+        : 'Nunca';
+
+      row.innerHTML = `
+        <td class="px-6 py-4 whitespace-nowrap">
+          <div class="flex items-center">
+            <div class="h-10 w-10 flex-shrink-0">
+              <div class="h-10 w-10 rounded-full bg-gradient-to-r from-teal-400 to-emerald-400 flex items-center justify-center">
+                <span class="text-sm font-medium text-white">${user.name.substring(0, 2).toUpperCase()}</span>
+            </div>
+            </div>
+            <div class="ml-4">
+              <div class="text-sm font-medium text-gray-900">${user.name}</div>
+              <div class="text-sm text-gray-500">${user.email}</div>
+            </div>
+          </div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleBadgeClass(role)}">
+            ${role}
+          </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <span class="text-sm text-gray-900">${department}</span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeClass(status)}">
+            ${status === 'active' ? 'Activo' : 'Inactivo'}
+          </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+          ${lastLogin}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+          <div class="relative">
+            <button onclick="toggleActionsMenu('${user.id}')" class="inline-flex items-center px-3 py-2 text-sm leading-4 font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
+              Acciones
+              <svg class="ml-2 -mr-0.5 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+              </svg>
+            </button>
+            <div id="actions-menu-${user.id}" class="hidden absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
+              <div class="py-1">
+                <button onclick="openRoleModal('${user.id}')" class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                  <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+              </svg>
+                  Asignar Rol
+            </button>
+                <button onclick="openDepartmentModal('${user.id}')" class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                  <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+              </svg>
+                  Asignar Departamento
+            </button>
+                <button onclick="openEditModal('${user.id}')" class="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                  <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+              </svg>
+                  Editar Usuario
+                </button>
+                <button onclick="deleteUser('${user.id}')" class="flex items-center w-full px-4 py-2 text-sm text-red-700 hover:bg-red-50">
+                  <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                  </svg>
+                  Eliminar Usuario
+            </button>
+              </div>
+            </div>
+          </div>
+        </td>
+      `;
+
+      tbody.appendChild(row);
+    });
+  }
+
+  // Toggle del menú de acciones
+  window.toggleActionsMenu = function(userId) {
+    const menu = document.getElementById(`actions-menu-${userId}`);
+    if (!menu) return;
+    
+    // Cerrar otros menús
+    document.querySelectorAll('[id^="actions-menu-"]').forEach(m => {
+      if (m.id !== `actions-menu-${userId}`) {
+        m.classList.add('hidden');
+      }
+    });
+    
+    menu.classList.toggle('hidden');
+  };
+
+  // Cerrar menús al hacer click fuera
+  document.addEventListener('click', function(event) {
+    if (!event.target.closest('[onclick*="toggleActionsMenu"]') && !event.target.closest('[id^="actions-menu-"]')) {
+      document.querySelectorAll('[id^="actions-menu-"]').forEach(menu => {
+        menu.classList.add('hidden');
+      });
+    }
+  });
+
+  // Obtener clase CSS para badge de rol
+  function getRoleBadgeClass(role) {
+    const classes = {
+      master: 'bg-purple-100 text-purple-800',
+      admin: 'bg-blue-100 text-blue-800',
+      manager: 'bg-indigo-100 text-indigo-800',
+      user: 'bg-gray-100 text-gray-800'
+    };
+    return classes[role] || 'bg-gray-100 text-gray-800';
+  }
+
+  // Obtener clase CSS para badge de estado
+  function getStatusBadgeClass(status) {
+    return status === 'active' 
+      ? 'bg-green-100 text-green-800' 
+      : 'bg-red-100 text-red-800';
+  }
+
+  // Cargar estadísticas
+  async function loadStats() {
+    try {
+      const response = await apiClient.getUserStats();
+      
+      if (response.success) {
+        const stats = response.data;
+        
+        document.getElementById('stat-total').textContent = stats.total || 0;
+        document.getElementById('header-total').textContent = stats.total || 0;
+        document.getElementById('stat-active').textContent = stats.active || 0;
+        document.getElementById('stat-admin').textContent = (stats.byRole?.admin || 0) + (stats.byRole?.master || 0);
+        document.getElementById('stat-roles').textContent = Object.keys(stats.byRole || {}).length;
+      }
+    } catch (error) {
+      console.error('❌ Error cargando estadísticas:', error);
+    }
+  }
+
+  // Modals para asignar rol
+  window.openRoleModal = function(userId) {
+    selectedUser = currentUsers.find(u => u.id === userId);
+    if (!selectedUser) return;
+    
+    document.getElementById('role-user-name').textContent = selectedUser.name;
+    
+    // Cargar roles en el select
+    const select = document.getElementById('role-select');
+    select.innerHTML = '<option value="">Seleccionar rol...</option>';
+    availableRoles.forEach(role => {
+      const option = document.createElement('option');
+      option.value = role.id;
+      option.textContent = role.name;
+      if (selectedUser.roleId === role.id || selectedUser.role === role.name) {
+        option.selected = true;
+      }
+      select.appendChild(option);
+    });
+    
+    document.getElementById('role-modal').classList.remove('hidden');
+  };
+
+  window.closeRoleModal = function() {
+    document.getElementById('role-modal').classList.add('hidden');
+    selectedUser = null;
+  };
+
+  window.confirmRoleAssignment = async function() {
+    if (!selectedUser) return;
+    
+    const roleId = document.getElementById('role-select').value;
+    if (!roleId) {
+      showNotification('Selecciona un rol', 'error');
+      return;
+    }
+    
+    try {
+      const response = await apiClient.assignRole(selectedUser.id, roleId);
+      if (response.success) {
+        showNotification('Rol asignado exitosamente', 'success');
+        closeRoleModal();
+        await loadUsers(); // Recargar tabla
+      } else {
+        throw new Error(response.message || 'Error al asignar rol');
+      }
+    } catch (error) {
+      console.error('❌ Error asignando rol:', error);
+      showNotification('Error al asignar rol: ' + error.message, 'error');
+    }
+  };
+
+  // Modals para asignar departamento
+  window.openDepartmentModal = async function(userId) {
+    selectedUser = currentUsers.find(u => u.id === userId);
+    if (!selectedUser) return;
+    
+    console.log('🏢 Abriendo modal de departamento para:', selectedUser.name);
+    console.log('📋 Departamentos disponibles:', availableDepartments.length);
+    
+    // Si no hay departamentos, intentar cargarlos
+    if (availableDepartments.length === 0) {
+      console.log('🔄 No hay departamentos, recargando...');
+      await loadDepartments();
+    }
+    
+    document.getElementById('department-user-name').textContent = selectedUser.name;
+    
+    // Cargar departamentos en el select
+    const select = document.getElementById('department-select');
+    select.innerHTML = '<option value="">Seleccionar departamento...</option>';
+    
+    if (availableDepartments.length === 0) {
+      select.innerHTML += '<option disabled>No hay departamentos disponibles</option>';
+      console.log('⚠️ No hay departamentos disponibles para mostrar');
+        } else {
+      availableDepartments.forEach(dept => {
+        if (dept && dept.value && dept.label) {
+          const option = document.createElement('option');
+          option.value = dept.value;
+          option.textContent = dept.label;
+          if (selectedUser.department === dept.value) {
+            option.selected = true;
+          }
+          select.appendChild(option);
+      } else {
+          console.log('⚠️ Departamento inválido:', dept);
+        }
+      });
+      console.log('✅ Modal cargado con', availableDepartments.length, 'departamentos');
+    }
+    
+    document.getElementById('department-modal').classList.remove('hidden');
+  };
+
+  window.closeDepartmentModal = function() {
+    document.getElementById('department-modal').classList.add('hidden');
+    selectedUser = null;
+  };
+
+  window.confirmDepartmentAssignment = async function() {
+    if (!selectedUser) return;
+    
+    const department = document.getElementById('department-select').value;
+    if (!department) {
+      showNotification('Selecciona un departamento', 'error');
+      return;
+    }
+    
+    try {
+      const response = await apiClient.assignDepartment(selectedUser.id, department);
+      if (response.success) {
+        showNotification('Departamento asignado exitosamente', 'success');
+        closeDepartmentModal();
+        await loadUsers(); // Recargar tabla
+      } else {
+        throw new Error(response.message || 'Error al asignar departamento');
+      }
+    } catch (error) {
+      console.error('❌ Error asignando departamento:', error);
+      showNotification('Error al asignar departamento: ' + error.message, 'error');
+    }
+  };
+
+  // Modal para editar usuario
+  window.openEditModal = function(userId) {
+    selectedUser = currentUsers.find(u => u.id === userId);
+    if (!selectedUser) return;
+    
+    document.getElementById('edit-name').value = selectedUser.name || '';
+    document.getElementById('edit-email').value = selectedUser.email || '';
+    document.getElementById('edit-phone').value = selectedUser.phoneNumber || '';
+    document.getElementById('edit-status').value = selectedUser.status || 'active';
+    
+    document.getElementById('edit-modal').classList.remove('hidden');
+  };
+
+  window.closeEditModal = function() {
+    document.getElementById('edit-modal').classList.add('hidden');
+    selectedUser = null;
+  };
+
+  window.confirmEditUser = async function() {
+    if (!selectedUser) return;
+    
+    const userData = {
+      name: document.getElementById('edit-name').value,
+      email: document.getElementById('edit-email').value,
+      phoneNumber: document.getElementById('edit-phone').value,
+      status: document.getElementById('edit-status').value
+    };
+    
+    try {
+      const response = await apiClient.updateUser(selectedUser.id, userData);
+      if (response.success) {
+        showNotification('Usuario actualizado exitosamente', 'success');
+        closeEditModal();
+        await loadUsers(); // Recargar tabla
+        } else {
+        throw new Error(response.message || 'Error al actualizar usuario');
+      }
+      } catch (error) {
+      console.error('❌ Error actualizando usuario:', error);
+      showNotification('Error al actualizar usuario: ' + error.message, 'error');
+    }
+  };
+
+  // Función para eliminar usuario
+  window.deleteUser = async function(userId) {
+    const user = currentUsers.find(u => u.id === userId);
+    if (!user) return;
+    
+    if (!confirm(`¿Estás seguro de que deseas eliminar al usuario "${user.name}"?`)) {
+        return;
+      }
+      
+    try {
+      const response = await apiClient.deleteUser(userId);
+      if (response.success) {
+        showNotification('Usuario eliminado exitosamente', 'success');
+        await loadUsers(); // Recargar tabla
+      } else {
+        throw new Error(response.message || 'Error al eliminar usuario');
+      }
+    } catch (error) {
+      console.error('❌ Error eliminando usuario:', error);
+      showNotification('Error al eliminar usuario: ' + error.message, 'error');
+    }
+  };
+
+  // Verificar permisos específicos para usuarios
+  async function checkUserPermissions() {
+    try {
+      apiClient = (await import('../../lib/apiClient.js')).default;
+      
+      // Verificar autenticación básica
+      const user = await apiClient.getMe();
+      
+      // Usuarios master y admin tienen acceso automático
+      if (['master', 'admin'].includes(user.data.role)) {
+        return true;
+      }
+      
+      // Para otros roles, verificar permisos específicos
+      try {
+        const response = await apiClient.checkPermission('users', 'read');
+        return response.data?.hasPermission;
+      } catch (permError) {
+        console.warn('Error verificando permisos específicos:', permError);
+        return false;
+      }
+    } catch (error) {
+      console.error('Error verificando permisos:', error);
+      return false;
+    }
+  }
+
+  // Inicializar aplicación
+  async function initializeApp() {
+    try {
+      await initializePortalAuth(
+        async () => {
+          // Verificar permisos específicos
+          const hasPermission = await checkUserPermissions();
+          if (hasPermission) {
+            showMainContent();
+    } else {
+            showAuthError('No tienes permisos para gestionar usuarios');
+          }
+        },
+        (error) => {
+          showAuthError(error || 'Error de autenticación');
+        }
+      );
+    } catch (error) {
+      console.error('Error iniciializando app:', error);
+      showAuthError('Error al cargar la aplicación');
+    }
+  }
+
+  // Modal de crear usuario
+  window.openCreateUserModal = function() {
+    // Cargar departamentos en el select del modal
+    const departmentSelect = document.getElementById('create-department');
+    if (departmentSelect) {
+      departmentSelect.innerHTML = '<option value="">Seleccionar departamento...</option>';
+      availableDepartments.forEach(dept => {
+        if (dept && dept.value && dept.label) {
+          departmentSelect.innerHTML += `<option value="${dept.value}">${dept.label}</option>`;
+        }
+      });
+    }
+    
+    // Cargar todos los roles disponibles en el select del modal
+    const roleSelect = document.getElementById('create-role');
+    if (roleSelect) {
+      roleSelect.innerHTML = '<option value="">Seleccionar rol...</option>';
+      
+      // Si tenemos roles disponibles, cargarlos dinámicamente
+      if (availableRoles.length > 0) {
+        availableRoles.forEach(role => {
+          if (role && role.name) {
+            const option = document.createElement('option');
+            option.value = role.name;
+            option.textContent = role.name.charAt(0).toUpperCase() + role.name.slice(1);
+            roleSelect.appendChild(option);
+          }
+        });
+      } else {
+        // Fallback con roles básicos si no se han cargado aún
+        const defaultRoles = [
+          { name: 'user', label: 'Usuario' },
+          { name: 'manager', label: 'Gerente' },
+          { name: 'admin', label: 'Administrador' },
+          { name: 'master', label: 'Master' }
+        ];
+        
+        defaultRoles.forEach(role => {
+          const option = document.createElement('option');
+          option.value = role.name;
+          option.textContent = role.label;
+          roleSelect.appendChild(option);
+        });
+      }
+    }
+    
+    document.getElementById('create-user-modal').classList.remove('hidden');
+  };
+
+  window.closeCreateUserModal = function() {
+    document.getElementById('create-user-modal').classList.add('hidden');
+    document.getElementById('create-user-form').reset();
+  };
+
+  window.confirmCreateUser = async function() {
+    const name = document.getElementById('create-name').value.trim();
+    const email = document.getElementById('create-email').value.trim();
+    const password = document.getElementById('create-password').value;
+    const confirmPassword = document.getElementById('create-confirm-password').value;
+    const phone = document.getElementById('create-phone').value.trim();
+    const department = document.getElementById('create-department').value;
+    const role = document.getElementById('create-role').value;
+
+    // Validaciones
+    if (!name || !email || !password) {
+      showNotification('Por favor completa todos los campos requeridos', 'error');
+      return;
+    }
+
+    if (!role) {
+      showNotification('Por favor selecciona un rol para el usuario', 'error');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      showNotification('Las contraseñas no coinciden', 'error');
+      return;
+    }
+
+    if (password.length < 6) {
+      showNotification('La contraseña debe tener al menos 6 caracteres', 'error');
+      return;
+    }
+
+    // Validación del email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      showNotification('Por favor ingresa un email válido', 'error');
+      return;
+    }
+
+    try {
+      const userData = {
+        name,
+        email,
+        password,
+        phoneNumber: phone || undefined,
+        department: department || undefined,
+        role
+      };
+
+      const response = await apiClient.createUser(userData);
+      if (response.success) {
+        showNotification(`Usuario creado exitosamente con rol: ${role}`, 'success');
+        closeCreateUserModal();
+        await loadUsers();
+        await loadStats();
+      } else {
+        throw new Error(response.message || 'Error al crear usuario');
+      }
+    } catch (error) {
+      console.error('❌ Error creando usuario:', error);
+      showNotification('Error al crear usuario: ' + error.message, 'error');
+    }
+  };
+
+  // Sistema de filtrado
+  function applyFilters() {
+    if (!currentUsers.length) {
+      filteredUsers = [];
+      renderUsersTable(filteredUsers);
+      return;
+    }
+
+    filteredUsers = currentUsers.filter(user => {
+      // Filtro de búsqueda (nombre o email)
+      if (currentFilters.search) {
+        const searchTerm = currentFilters.search.toLowerCase();
+        const matchesSearch = 
+          user.name.toLowerCase().includes(searchTerm) ||
+          user.email.toLowerCase().includes(searchTerm);
+        if (!matchesSearch) return false;
+      }
+
+      // Filtro de rol
+      if (currentFilters.role) {
+        const userRole = user.customRole?.name || user.role;
+        if (userRole !== currentFilters.role) return false;
+      }
+
+      // Filtro de departamento
+      if (currentFilters.department) {
+        if (user.department !== currentFilters.department) return false;
+      }
+
+      // Filtro de estado
+      if (currentFilters.status) {
+        if (user.status !== currentFilters.status) return false;
+      }
+
+      return true;
+    });
+
+    renderUsersTable(filteredUsers);
+    updateTableVisibility();
+  }
+
+  function updateTableVisibility() {
+    const tableLoading = document.getElementById('table-loading');
+    const tableContent = document.getElementById('table-content');
+    const emptyState = document.getElementById('empty-state');
+    const emptyTitle = document.getElementById('empty-title');
+    const emptyDescription = document.getElementById('empty-description');
+    const clearFiltersBtn = document.getElementById('clear-filters-btn');
+
+    if (tableLoading) tableLoading.classList.add('hidden');
+
+    if (filteredUsers.length > 0) {
+      if (tableContent) tableContent.classList.remove('hidden');
+      if (emptyState) emptyState.classList.add('hidden');
+    } else {
+      if (tableContent) tableContent.classList.add('hidden');
+      if (emptyState) emptyState.classList.remove('hidden');
+      
+      // Verificar si hay filtros activos
+      const hasActiveFilters = currentFilters.search || currentFilters.role || currentFilters.department || currentFilters.status;
+      
+      if (hasActiveFilters && currentUsers.length > 0) {
+        // No hay resultados debido a filtros
+        if (emptyTitle) emptyTitle.textContent = 'No se encontraron usuarios';
+        if (emptyDescription) emptyDescription.textContent = 'No hay usuarios que coincidan con los filtros aplicados.';
+        if (clearFiltersBtn) clearFiltersBtn.classList.remove('hidden');
+      } else {
+        // No hay usuarios en absoluto
+        if (emptyTitle) emptyTitle.textContent = 'No hay usuarios';
+        if (emptyDescription) emptyDescription.textContent = 'Comienza creando un nuevo usuario.';
+        if (clearFiltersBtn) clearFiltersBtn.classList.add('hidden');
+      }
+    }
+  }
+
+  window.clearAllFilters = function() {
+    // Limpiar filtros
+    currentFilters = {
+      search: '',
+      role: '',
+      department: '',
+      status: ''
+    };
+    
+    // Limpiar inputs
+    const searchInput = document.getElementById('search-input');
+    const roleFilter = document.getElementById('role-filter');
+    const departmentFilter = document.getElementById('department-filter');
+    const statusFilter = document.getElementById('status-filter');
+    
+    if (searchInput) searchInput.value = '';
+    if (roleFilter) roleFilter.value = '';
+    if (departmentFilter) departmentFilter.value = '';
+    if (statusFilter) statusFilter.value = '';
+    
+    // Aplicar filtros (que ahora están vacíos)
+    applyFilters();
+  };
+
+  function setupFilterListeners() {
+    // Búsqueda en tiempo real
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+      searchInput.addEventListener('input', function() {
+        currentFilters.search = this.value;
+        applyFilters();
+      });
+    }
+
+    // Filtro de rol
+    const roleFilter = document.getElementById('role-filter');
+    if (roleFilter) {
+      roleFilter.addEventListener('change', function() {
+        currentFilters.role = this.value;
+        applyFilters();
+      });
+    }
+
+    // Filtro de departamento
+    const departmentFilter = document.getElementById('department-filter');
+    if (departmentFilter) {
+      departmentFilter.addEventListener('change', function() {
+        currentFilters.department = this.value;
+        applyFilters();
+      });
+    }
+
+    // Filtro de estado
+    const statusFilter = document.getElementById('status-filter');
+    if (statusFilter) {
+      statusFilter.addEventListener('change', function() {
+        currentFilters.status = this.value;
+        applyFilters();
+      });
+    }
+
+    // Botón de crear usuario
+    const createUserBtn = document.getElementById('create-user-btn');
+    if (createUserBtn) {
+      createUserBtn.addEventListener('click', openCreateUserModal);
+    }
+  }
+
+  // Inicializar cuando esté listo
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeApp);
+  } else {
+    initializeApp();
+  }
+</script>
+
+<style>
+  .animate-spin {
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+</style> 

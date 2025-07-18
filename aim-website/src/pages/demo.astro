@@ -1,0 +1,69 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { Icon } from 'astro-icon/components';
+---
+<BaseLayout
+  title="Solicitar una Demo Personalizada"
+  description="Ve en 15 minutos cómo un Agente Inteligente de AIM puede automatizar TUS procesos específicos y cuál sería tu ROI."
+>
+<div class="py-20 sm:py-24">
+    <div class="container mx-auto px-4">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+        <!-- Columna de Información Persuasiva -->
+        <div>
+          <h1 class="text-4xl md:text-5xl font-black text-teal-800 tracking-tighter">Ve el Futuro de tu Operación en Acción.</h1>
+          <p class="mt-6 text-xl text-gray-600">
+            Olvida las presentaciones aburridas. En 15 minutos, te mostraremos una demostración en vivo de cómo un Agente Inteligente puede:
+          </p>
+          <ul class="mt-8 space-y-4">
+            <li class="flex items-start">
+              <Icon name="tabler:player-play" class="w-6 h-6 text-teal-600 mr-3 flex-shrink-0" />
+              <span><strong>Automatizar un proceso tuyo:</strong> Analizaremos uno de TUS procesos, no un ejemplo genérico.</span>
+            </li>
+             <li class="flex items-start">
+              <Icon name="tabler:calculator" class="w-6 h-6 text-teal-600 mr-3 flex-shrink-0" />
+              <span><strong>Calcular tu ROI específico:</strong> Te daremos una estimación clara del ahorro y tiempo de recuperación de la inversión.</span>
+            </li>
+             <li class="flex items-start">
+              <Icon name="tabler:puzzle-2" class="w-6 h-6 text-teal-600 mr-3 flex-shrink-0" />
+              <span><strong>Resolver tus dudas técnicas:</strong> Hablarás directamente con un experto en automatización.</span>
+            </li>
+          </ul>
+           <div class="mt-12 pt-8 border-t">
+              <p class="text-lg font-semibold">"La demo fue reveladora. En 10 minutos entendí el impacto que tendría en nuestro flujo de facturación."</p>
+              <p class="text-sm text-gray-600 mt-2">- Director de Finanzas, Cliente Satisfecho</p>
+           </div>
+        </div>
+
+        <!-- Columna de Formulario -->
+        <div class="bg-white p-8 rounded-lg border border-slate-200 shadow-xl">
+            <h2 class="text-2xl font-bold text-teal-800 mb-6">Agenda tu Demo Estratégica</h2>
+            <form action="#" method="POST" class="space-y-6">
+                 <div>
+                    <label for="name" class="block text-sm font-medium text-gray-600">Nombre Completo*</label>
+                    <input type="text" name="name" id="name" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-600 focus:ring-teal-600">
+                </div>
+                 <div>
+                    <label for="email" class="block text-sm font-medium text-gray-600">Email de Trabajo*</label>
+                    <input type="email" name="email" id="email" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-600 focus:ring-teal-600">
+                </div>
+                <div>
+                    <label for="company" class="block text-sm font-medium text-gray-600">Empresa</label>
+                    <input type="text" name="company" id="company" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-600 focus:ring-teal-600">
+                </div>
+                 <div>
+                    <label for="message" class="block text-sm font-medium text-gray-600">¿Qué proceso es tu mayor dolor de cabeza actualmente?</label>
+                    <textarea name="message" id="message" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-600 focus:ring-teal-600"></textarea>
+                </div>
+                <div>
+                    <button type="submit" class="w-full bg-teal-600 text-white font-bold py-3 px-5 rounded-lg hover:bg-teal-500 transition-all duration-300 focus:ring-2 focus:ring-offset-2 focus:ring-teal-600">
+                        Quiero mi Demo
+                    </button>
+                    <p class="text-center text-xs text-gray-600 mt-2">Sin compromiso. Sin spam.</p>
+                </div>
+            </form>
+        </div>
+      </div>
+    </div>
+ </div>
+</BaseLayout> 

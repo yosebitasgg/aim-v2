@@ -1,0 +1,33 @@
+{
+  "name": "aim-v2",
+  "version": "1.0.0",
+  "description": "AIM - Automatización Industrial Mireles v2",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd aim-backend && npm run dev",
+    "dev:frontend": "cd aim-website && npm run dev",
+    "build": "npm run build:backend && npm run build:frontend",
+    "build:backend": "cd aim-backend && npm run build",
+    "build:frontend": "cd aim-website && npm run build",
+    "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
+    "start:backend": "cd aim-backend && npm start",
+    "start:frontend": "cd aim-website && npm start",
+    "install:all": "npm install && cd aim-backend && npm install && cd ../aim-website && npm install",
+    "clean": "cd aim-backend && npm run clean && cd ../aim-website && npm run clean",
+    "test": "cd aim-backend && npm test && cd ../aim-website && npm test"
+  },
+  "dependencies": {
+    "@react-three/drei": "^10.5.0",
+    "@react-three/fiber": "^9.2.0",
+    "chart.js": "^4.5.0",
+    "gsap": "^3.13.0",
+    "react-chartjs-2": "^5.3.0",
+    "three": "^0.178.0"
+  },
+  "devDependencies": {
+    "@iconify-json/tabler": "^1.2.19",
+    "@tailwindcss/typography": "^0.5.16",
+    "astro-icon": "^1.1.5",
+    "concurrently": "^8.2.2"
+  }
+}

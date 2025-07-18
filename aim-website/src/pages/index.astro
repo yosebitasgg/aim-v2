@@ -1,0 +1,23 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import HeroAnimated from '../components/homepage-v2/HeroAnimated.jsx';
+import ProblemSolution from '../components/homepage-v2/ProblemSolution.astro';
+import FeaturedClients from '../components/homepage-v2/FeaturedClients.jsx';
+import HowItWorks from '../components/homepage-v2/HowItWorks.astro';
+import CtaFinal from '../components/homepage-v2/CtaFinal.astro';
+
+// Necesitarás tener tu logo como un SVG para animarlo
+// Guarda el logo en `src/assets/logo.svg`
+---
+
+<BaseLayout
+  title="IA para la Eficiencia Industrial"
+  description="Integramos Agentes Inteligentes de IA para automatizar procesos, eliminar errores y transformar tu operación."
+  hideHeaderSpacer={true}
+>
+  <HeroAnimated client:load />
+  <ProblemSolution />
+  <FeaturedClients client:visible />
+  <HowItWorks />
+  <CtaFinal />
+</BaseLayout>

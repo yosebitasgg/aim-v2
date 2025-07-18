@@ -1,0 +1,948 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["aim_schema"]
+}
+
+model User {
+  id                String    @id @default(cuid()) @map("id") @db.VarChar(15)
+  email             String    @unique @map("email") @db.VarChar(255)
+  emailVerified     Boolean   @default(false) @map("email_verified")
+  name              String    @map("name") @db.VarChar(255)
+  status            String    @default("active") @map("status") @db.VarChar(20)
+  role              String    @default("user") @map("role") @db.VarChar(50)
+  roleId            String?   @map("role_id") @db.VarChar(15)
+  department        String?   @map("department") @db.VarChar(100)
+  phoneNumber       String?   @map("phone_number") @db.VarChar(20)
+  avatarUrl         String?   @map("avatar_url") @db.Text
+  lastLoginAt       DateTime? @map("last_login_at") @db.Timestamptz(6)
+  isFirstLogin      Boolean   @default(true) @map("is_first_login")
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy         String?   @map("created_by") @db.VarChar(15)
+  
+  // Relaciones
+  keys                     Key[]
+  sessions                 Session[]
+  userProfile              UserProfile?
+  activityLogs             UserActivityLog[]
+  passwordResetTokens      PasswordResetToken[]
+  loginAttempts            LoginAttempt[]
+  customRole               Role?     @relation(fields: [roleId], references: [id])
+  createdUsers             User[]    @relation("UserCreatedBy")
+  creator                  User?     @relation("UserCreatedBy", fields: [createdBy], references: [id])
+  createdDepartments       Department[] @relation("DepartmentCreatedBy")
+  createdClients           Client[]  @relation("ClientCreatedBy")
+  createdOrders            Order[]   @relation("OrderCreatedBy")
+  assignedOrders           Order[]   @relation("OrderAssignedTo")
+  orderStatusChanges       OrderStatusHistory[]
+  orderCommunications      OrderCommunication[]
+  createdDocuments         Document[]    @relation("DocumentCreatedBy")
+  lastModifiedDocuments    Document[]    @relation("DocumentLastModifiedBy")
+  documentVersions         DocumentVersion[] @relation("DocumentVersionCreatedBy")
+  documentActivities       DocumentActivity[] @relation("DocumentActivityUser")
+  createdAgents            CreatedAgent[] @relation("CreatedAgentCreatedBy")
+  assignedCreatedAgents    CreatedAgent[] @relation("CreatedAgentAssignedTo")
+  
+  @@map("user")
+  @@schema("aim_schema")
+}
+
+model Key {
+  id             String @id @map("id") @db.VarChar(255)
+  userId         String @map("user_id") @db.VarChar(15)
+  hashedPassword String? @map("hashed_password") @db.VarChar(255)
+  
+  // Relaciones
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("key")
+  @@schema("aim_schema")
+}
+
+model Session {
+  id            String @id @map("id") @db.VarChar(127)
+  userId        String @map("user_id") @db.VarChar(15)
+  activeExpires BigInt @map("active_expires")
+  idleExpires   BigInt @map("idle_expires")
+  
+  // Relaciones
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("session")
+  @@schema("aim_schema")
+}
+
+model Role {
+  id          String   @id @default(cuid()) @db.VarChar(15)
+  name        String   @unique @db.VarChar(50)
+  description String?  @db.Text
+  permissions Json     @default("{}") @db.JsonB
+  isDefault   Boolean  @default(false) @map("is_default")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  
+  // Relaciones
+  users User[]
+  
+  @@map("roles")
+  @@schema("aim_schema")
+}
+
+model UserProfile {
+  id           Int      @id @default(autoincrement())
+  userId       String   @unique @map("user_id") @db.VarChar(15)
+  bio          String?  @db.Text
+  timezone     String?  @db.VarChar(50)
+  locale       String   @default("es") @db.VarChar(10)
+  preferences  Json     @default("{}") @db.JsonB
+  restrictions Json     @default("{}") @db.JsonB
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  
+  // Relaciones
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("user_profiles")
+  @@schema("aim_schema")
+}
+
+model UserActivityLog {
+  id                    Int      @id @default(autoincrement())
+  userId                String   @map("user_id") @db.VarChar(15)
+  action                String   @db.VarChar(100)
+  module                String?  @db.VarChar(50)
+  details               Json?    @db.JsonB
+  ipAddress             String?  @map("ip_address") @db.Inet
+  userAgent             String?  @map("user_agent") @db.Text
+  severity              String   @default("low") @db.VarChar(20)
+  affectedResourceId    String?  @map("affected_resource_id") @db.VarChar(50)
+  affectedResourceType  String?  @map("affected_resource_type") @db.VarChar(50)
+  createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  
+  // Relaciones
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("user_activity_log")
+  @@schema("aim_schema")
+}
+
+model LoginAttempt {
+  id             Int      @id @default(autoincrement())
+  email          String   @db.VarChar(255)
+  ipAddress      String?  @map("ip_address") @db.Inet
+  success        Boolean  @default(false)
+  failureReason  String?  @map("failure_reason") @db.VarChar(100)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  
+  // Relaciones opcionales
+  user User? @relation(fields: [email], references: [email])
+  
+  @@map("login_attempts")
+  @@schema("aim_schema")
+}
+
+model PasswordResetToken {
+  id        Int      @id @default(autoincrement())
+  userId    String   @map("user_id") @db.VarChar(15)
+  token     String   @unique @db.VarChar(255)
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+  usedAt    DateTime? @map("used_at") @db.Timestamptz(6)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  
+  // Relaciones
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("password_reset_tokens")
+  @@schema("aim_schema")
+}
+
+model Department {
+  id          String   @id @default(cuid()) @db.VarChar(30)
+  name        String   @unique @db.VarChar(100)
+  code        String   @unique @db.VarChar(50)
+  description String?  @db.Text
+  color       String?  @db.VarChar(7)
+  isActive    Boolean  @default(true) @map("is_active")
+  isDefault   Boolean  @default(false) @map("is_default")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy   String?  @map("created_by") @db.VarChar(15)
+  
+  // Relaciones
+  creator User? @relation("DepartmentCreatedBy", fields: [createdBy], references: [id])
+  
+  @@map("departments")
+  @@schema("aim_schema")
+}
+
+model Client {
+  id                    String   @id @default(cuid()) @db.VarChar(30)
+  companyName           String   @map("company_name") @db.VarChar(255)
+  rfc                   String?  @unique @map("rfc") @db.VarChar(20)
+  industry              String   @map("industry") @db.VarChar(100)
+  companySize           String?  @map("company_size") @db.VarChar(50)
+  website               String?  @map("website") @db.VarChar(255)
+  status                String   @default("prospecto") @map("status") @db.VarChar(50) // prospecto, activo, inactivo
+  referenceSource       String?  @map("reference_source") @db.VarChar(100)
+  businessPotential     String?  @map("business_potential") @db.VarChar(50)
+  notes                 String?  @map("notes") @db.Text
+  totalValue            Decimal? @map("total_value") @db.Decimal(15, 2)
+  clientSince           DateTime? @map("client_since") @db.Timestamptz(6)
+  isActive              Boolean  @default(true) @map("is_active")
+  createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy             String?  @map("created_by") @db.VarChar(15)
+  
+  // Relaciones
+  creator               User?              @relation("ClientCreatedBy", fields: [createdBy], references: [id])
+  contacts              ClientContact[]
+  addresses             ClientAddress[]
+  orders                Order[]
+  
+  @@map("clients")
+  @@schema("aim_schema")
+}
+
+model ClientContact {
+  id                    String   @id @default(cuid()) @db.VarChar(30)
+  clientId              String   @map("client_id") @db.VarChar(30)
+  fullName              String   @map("full_name") @db.VarChar(255)
+  position              String?  @map("position") @db.VarChar(100)
+  email                 String   @map("email") @db.VarChar(255)
+  phone                 String   @map("phone") @db.VarChar(20)
+  alternativePhone      String?  @map("alternative_phone") @db.VarChar(20)
+  department            String?  @map("department") @db.VarChar(100)
+  isPrimary             Boolean  @default(false) @map("is_primary")
+  isActive              Boolean  @default(true) @map("is_active")
+  createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  
+  // Relaciones
+  client                Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  
+  @@map("client_contacts")
+  @@schema("aim_schema")
+}
+
+model ClientAddress {
+  id                    String   @id @default(cuid()) @db.VarChar(30)
+  clientId              String   @map("client_id") @db.VarChar(30)
+  type                  String   @map("type") @db.VarChar(50) // fisica, fiscal, envio
+  street                String   @map("street") @db.VarChar(255)
+  interiorNumber        String?  @map("interior_number") @db.VarChar(20)
+  neighborhood          String   @map("neighborhood") @db.VarChar(100)
+  postalCode            String   @map("postal_code") @db.VarChar(10)
+  city                  String   @map("city") @db.VarChar(100)
+  state                 String   @map("state") @db.VarChar(100)
+  country               String   @default("MX") @map("country") @db.VarChar(5)
+  isPrimary             Boolean  @default(false) @map("is_primary")
+  isActive              Boolean  @default(true) @map("is_active")
+  createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  
+  // Relaciones
+  client                Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  
+  @@map("client_addresses")
+  @@schema("aim_schema")
+}
+
+// ===== GALERÍA DE AGENTES =====
+
+model AgentCategory {
+  id          String   @id @default(cuid()) @db.VarChar(30)
+  name        String   @unique @db.VarChar(100)
+  slug        String   @unique @db.VarChar(100)
+  description String?  @db.Text
+  icon        String?  @db.VarChar(50)
+  color       String?  @db.VarChar(7)
+  sortOrder   Int      @default(0) @map("sort_order")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  
+  // Relaciones
+  agents      Agent[]
+  
+  @@map("agent_categories")
+  @@schema("aim_schema")
+}
+
+model ConnectionType {
+  id          String   @id @default(cuid()) @db.VarChar(30)
+  name        String   @unique @db.VarChar(100)
+  slug        String   @unique @db.VarChar(100)
+  title       String   @db.VarChar(150)
+  description String   @db.Text
+  icon        String   @db.VarChar(50)
+  advantages  Json     @db.JsonB // Array de ventajas
+  useCases    Json     @db.JsonB // Array de casos de uso
+  examples    Json     @db.JsonB // Array de ejemplos
+  sortOrder   Int      @default(0) @map("sort_order")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  
+  // Relaciones
+  templates   ConnectionTemplate[]
+  
+  @@map("connection_types")
+  @@schema("aim_schema")
+}
+
+model ConnectionTemplate {
+  id              String         @id @default(cuid()) @db.VarChar(30)
+  connectionTypeId String        @map("connection_type_id") @db.VarChar(30)
+  name            String         @db.VarChar(200)
+  slug            String         @unique @db.VarChar(150)
+  description     String         @db.Text
+  n8nWorkflow     Json           @map("n8n_workflow") @db.JsonB // El workflow completo de n8n
+  workflowNodes   Json           @map("workflow_nodes") @db.JsonB // Array de nodos principales
+  nodeDescription String         @map("node_description") @db.Text
+  recommendation  String?        @db.Text
+  version         String         @default("1.0.0") @db.VarChar(10)
+  isActive        Boolean        @default(true) @map("is_active")
+  downloadCount   Int            @default(0) @map("download_count")
+  createdAt       DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  
+  // Relaciones
+  connectionType  ConnectionType @relation(fields: [connectionTypeId], references: [id], onDelete: Cascade)
+  
+  @@map("connection_templates")
+  @@schema("aim_schema")
+}
+
+model Agent {
+  id                String        @id @default(cuid()) @db.VarChar(30)
+  categoryId        String        @map("category_id") @db.VarChar(30)
+  name              String        @db.VarChar(200)
+  slug              String        @unique @db.VarChar(150)
+  title             String        @db.VarChar(250)
+  shortDescription  String        @map("short_description") @db.Text
+  challenge         String        @db.Text
+  solution          String        @db.Text
+  features          Json          @db.JsonB // Array de características
+  icon              String?       @db.VarChar(50)
+  n8nWorkflow       Json          @map("n8n_workflow") @db.JsonB // El workflow completo de n8n
+  version           String        @default("1.0.0") @db.VarChar(10)
+  complexity        String        @default("medium") @db.VarChar(20) // basic, medium, advanced
+  estimatedTime     String?       @map("estimated_time") @db.VarChar(50) // "1-2 días"
+  requirements      Json?         @db.JsonB // Array de requerimientos técnicos
+  tags              Json?         @db.JsonB // Array de tags para búsqueda
+  isActive          Boolean       @default(true) @map("is_active")
+  isFeatured        Boolean       @default(false) @map("is_featured")
+  usageCount        Int           @default(0) @map("usage_count")
+  createdAt         DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  
+  // Relaciones
+  category          AgentCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  orders            Order[]
+  orderItems        OrderItem[]
+  createdAgents     CreatedAgent[]
+  
+  @@map("agents")
+  @@schema("aim_schema")
+}
+
+// ===== MÓDULO DE ÓRDENES =====
+
+enum OrderStatus {
+  DRAFT           @map("draft")           // Borrador
+  PENDING         @map("pending")         // Pendiente
+  IN_PROGRESS     @map("in_progress")     // En Proceso
+  IN_REVIEW       @map("in_review")       // En Revisión
+  COMPLETED       @map("completed")       // Completada
+  CANCELLED       @map("cancelled")       // Cancelada
+  ON_HOLD         @map("on_hold")         // En Espera
+  
+  @@schema("aim_schema")
+}
+
+enum OrderPriority {
+  LOW             @map("low")             // Baja - 30-45 días
+  MEDIUM          @map("medium")          // Media - 15-30 días
+  HIGH            @map("high")            // Alta - 7-15 días
+  CRITICAL        @map("critical")        // Crítica - 1-7 días
+  
+  @@schema("aim_schema")
+}
+
+enum OrderType {
+  AUTOMATION      @map("automation")      // Automatización
+  INTEGRATION     @map("integration")     // Integración
+  CONSULTATION    @map("consultation")    // Consultoría
+  MAINTENANCE     @map("maintenance")     // Mantenimiento
+  CUSTOM          @map("custom")          // Personalizado
+  
+  @@schema("aim_schema")
+}
+
+model Order {
+  id                    String        @id @default(cuid()) @db.VarChar(30)
+  orderNumber           String        @unique @map("order_number") @db.VarChar(50) // ORD-2024-001
+  
+  // Relaciones principales
+  clientId              String        @map("client_id") @db.VarChar(30)
+  agentId               String?       @map("agent_id") @db.VarChar(30)
+  createdById           String        @map("created_by_id") @db.VarChar(15)
+  assignedToId          String?       @map("assigned_to_id") @db.VarChar(15)
+  
+  // Información básica de la orden
+  title                 String        @db.VarChar(255)
+  description           String        @db.Text
+  requirements          String?       @db.Text
+  internalNotes         String?       @map("internal_notes") @db.Text
+  
+  // Estado y prioridad
+  status                OrderStatus   @default(PENDING)
+  priority              OrderPriority @default(MEDIUM)
+  type                  OrderType     @default(AUTOMATION)
+  
+  // Fechas importantes
+  requestedDeliveryDate DateTime?     @map("requested_delivery_date") @db.Timestamptz(6)
+  startDate             DateTime?     @map("start_date") @db.Timestamptz(6)
+  completedDate         DateTime?     @map("completed_date") @db.Timestamptz(6)
+  dueDate               DateTime?     @map("due_date") @db.Timestamptz(6)
+  
+  // Información financiera
+  estimatedBudget       Decimal?      @map("estimated_budget") @db.Decimal(15, 2)
+  finalAmount           Decimal?      @map("final_amount") @db.Decimal(15, 2)
+  currency              String        @default("MXN") @db.VarChar(5)
+  
+  // Información de contacto del cliente
+  contactName           String?       @map("contact_name") @db.VarChar(255)
+  contactEmail          String?       @map("contact_email") @db.VarChar(255)
+  contactPhone          String?       @map("contact_phone") @db.VarChar(20)
+  contactDepartment     String?       @map("contact_department") @db.VarChar(100)
+  
+  // Información del proyecto
+  projectScope          String?       @map("project_scope") @db.Text
+  deliverables          Json?         @db.JsonB // Array de entregables
+  milestones            Json?         @db.JsonB // Hitos del proyecto
+  
+  // Información del cliente (puede diferir del cliente registrado)
+  clientCompanyName     String?       @map("client_company_name") @db.VarChar(255)
+  clientRfc             String?       @map("client_rfc") @db.VarChar(20)
+  clientIndustry        String?       @map("client_industry") @db.VarChar(100)
+  clientSize            String?       @map("client_size") @db.VarChar(50)
+  clientWebsite         String?       @map("client_website") @db.VarChar(255)
+  
+  // Dirección del proyecto
+  projectStreet         String?       @map("project_street") @db.VarChar(255)
+  projectInteriorNumber String?       @map("project_interior_number") @db.VarChar(20)
+  projectNeighborhood   String?       @map("project_neighborhood") @db.VarChar(100)
+  projectPostalCode     String?       @map("project_postal_code") @db.VarChar(10)
+  projectCity           String?       @map("project_city") @db.VarChar(100)
+  projectState          String?       @map("project_state") @db.VarChar(100)
+  projectCountry        String        @default("MX") @map("project_country") @db.VarChar(5)
+  projectReferences     String?       @map("project_references") @db.Text
+  
+  // Metadatos de negocio
+  isExistingClient      Boolean       @default(false) @map("is_existing_client")
+  referenceSource       String?       @map("reference_source") @db.VarChar(100)
+  departmentRequesting  String?       @map("department_requesting") @db.VarChar(100)
+  
+  // Archivos y documentos
+  attachments           Json?         @db.JsonB // Array de archivos adjuntos
+  documentsData         Json?         @map("documents_data") @db.JsonB // Documentos del proyecto (legacy)
+  
+  // Seguimiento
+  progress              Int           @default(0) // Porcentaje de progreso 0-100
+  lastActivity          DateTime?     @map("last_activity") @db.Timestamptz(6)
+  nextFollowUp          DateTime?     @map("next_follow_up") @db.Timestamptz(6)
+  
+  // Timestamps
+  createdAt             DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  
+  // Relaciones
+  client                Client        @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  agent                 Agent?        @relation(fields: [agentId], references: [id], onDelete: SetNull)
+  createdBy             User          @relation("OrderCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  assignedTo            User?         @relation("OrderAssignedTo", fields: [assignedToId], references: [id], onDelete: SetNull)
+  orderItems            OrderItem[]
+  statusHistory         OrderStatusHistory[]
+  communications        OrderCommunication[]
+  documents             Document[]
+  createdAgents         CreatedAgent[]
+  
+  @@map("orders")
+  @@schema("aim_schema")
+  @@index([status])
+  @@index([priority])
+  @@index([clientId])
+  @@index([createdById])
+  @@index([assignedToId])
+  @@index([requestedDeliveryDate])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id                    String   @id @default(cuid()) @db.VarChar(30)
+  orderId               String   @map("order_id") @db.VarChar(30)
+  
+  name                  String   @db.VarChar(255)
+  description           String?  @db.Text
+  quantity              Int      @default(1)
+  unitPrice             Decimal? @map("unit_price") @db.Decimal(15, 2)
+  totalPrice            Decimal? @map("total_price") @db.Decimal(15, 2)
+  
+  // Información específica del item
+  agentId               String?  @map("agent_id") @db.VarChar(30)
+  estimatedHours        Int?     @map("estimated_hours")
+  complexity            String?  @db.VarChar(20) // basic, medium, advanced
+  requirements          Json?    @db.JsonB
+  
+  createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  
+  // Relaciones
+  order                 Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  agent                 Agent?   @relation(fields: [agentId], references: [id], onDelete: SetNull)
+  
+  @@map("order_items")
+  @@schema("aim_schema")
+}
+
+model OrderStatusHistory {
+  id                    String      @id @default(cuid()) @db.VarChar(30)
+  orderId               String      @map("order_id") @db.VarChar(30)
+  
+  previousStatus        OrderStatus? @map("previous_status")
+  newStatus             OrderStatus  @map("new_status")
+  reason                String?      @db.Text
+  notes                 String?      @db.Text
+  
+  changedById           String      @map("changed_by_id") @db.VarChar(15)
+  changedAt             DateTime    @default(now()) @map("changed_at") @db.Timestamptz(6)
+  
+  // Relaciones
+  order                 Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  changedBy             User        @relation(fields: [changedById], references: [id], onDelete: Restrict)
+  
+  @@map("order_status_history")
+  @@schema("aim_schema")
+  @@index([orderId])
+  @@index([changedAt])
+}
+
+model OrderCommunication {
+  id                    String   @id @default(cuid()) @db.VarChar(30)
+  orderId               String   @map("order_id") @db.VarChar(30)
+  
+  type                  String   @db.VarChar(50) // email, call, meeting, note, comment
+  subject               String?  @db.VarChar(255)
+  content               String   @db.Text
+  direction             String   @db.VarChar(20) // inbound, outbound, internal
+  
+  // Información de contacto
+  fromName              String?  @map("from_name") @db.VarChar(255)
+  fromEmail             String?  @map("from_email") @db.VarChar(255)
+  toName                String?  @map("to_name") @db.VarChar(255)
+  toEmail               String?  @map("to_email") @db.VarChar(255)
+  
+  // Archivos adjuntos
+  attachments           Json?    @db.JsonB
+  
+  // Metadatos
+  isImportant           Boolean  @default(false) @map("is_important")
+  requiresResponse      Boolean  @default(false) @map("requires_response")
+  responseByDate        DateTime? @map("response_by_date") @db.Timestamptz(6)
+  
+  createdById           String   @map("created_by_id") @db.VarChar(15)
+  createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  
+  // Relaciones
+  order                 Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  createdBy             User     @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  
+  @@map("order_communications")
+  @@schema("aim_schema")
+  @@index([orderId])
+  @@index([createdAt])
+}
+
+// ===== MÓDULO DE DOCUMENTOS =====
+
+enum DocumentStatus {
+  DRAFT           @map("draft")           // Borrador
+  FINALIZED       @map("finalized")       // Finalizado
+  SENT            @map("sent")            // Enviado
+  REVIEWED        @map("reviewed")        // Revisado
+  APPROVED        @map("approved")        // Aprobado
+  REJECTED        @map("rejected")        // Rechazado
+  ARCHIVED        @map("archived")        // Archivado
+  
+  @@schema("aim_schema")
+}
+
+model DocumentType {
+  id              String   @id @default(cuid()) @db.VarChar(30)
+  name            String   @unique @db.VarChar(100)
+  slug            String   @unique @db.VarChar(100)
+  description     String   @db.Text
+  phase           String   @db.VarChar(20) // Fase del flujo de trabajo
+  icon            String   @db.VarChar(50)
+  color           String   @db.VarChar(7)
+  estimatedTime   String   @db.VarChar(50) // "1-2 días"
+  
+  // Configuración del formulario (estructura dinámica)
+  formSchema      Json     @map("form_schema") @db.JsonB
+  
+  // Configuración de la plantilla
+  templateConfig  Json     @map("template_config") @db.JsonB
+  
+  // Configuración de exportación
+  exportConfig    Json     @map("export_config") @db.JsonB
+  
+  // Metadatos
+  isActive        Boolean  @default(true) @map("is_active")
+  sortOrder       Int      @default(0) @map("sort_order")
+  
+  // Timestamps
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  
+  // Relaciones
+  documents       Document[]
+  
+  @@map("document_types")
+  @@schema("aim_schema")
+  @@index([phase])
+  @@index([isActive])
+  @@index([sortOrder])
+}
+
+model Document {
+  id                    String        @id @default(cuid()) @db.VarChar(30)
+  documentNumber        String        @unique @map("document_number") @db.VarChar(50) // DOC-ORD-001-DIAG
+  
+  // Relaciones principales
+  orderId               String        @map("order_id") @db.VarChar(30)
+  documentTypeId        String        @map("document_type_id") @db.VarChar(30)
+  createdById           String        @map("created_by_id") @db.VarChar(15)
+  lastModifiedById      String        @map("last_modified_by_id") @db.VarChar(15)
+  
+  // Información básica
+  title                 String        @db.VarChar(255)
+  description           String?       @db.Text
+  
+  // Estado y versión
+  status                DocumentStatus @default(DRAFT)
+  version               String        @default("1.0") @db.VarChar(10)
+  isCurrentVersion      Boolean       @default(true) @map("is_current_version")
+  
+  // Datos del documento
+  sharedData            Json          @map("shared_data") @db.JsonB    // Datos compartidos (cliente, orden, etc.)
+  specificData          Json          @map("specific_data") @db.JsonB  // Datos específicos del tipo
+  
+  // Archivos generados
+  generatedFiles        Json?         @map("generated_files") @db.JsonB // URLs de PDF, JPG, etc.
+  
+  // Metadatos del documento
+  metadata              Json?         @db.JsonB // Configuración, opciones de exportación, etc.
+  
+  // Información de aprobación
+  approvalData          Json?         @map("approval_data") @db.JsonB // Datos de aprobación/rechazo
+  
+  // Estadísticas
+  downloadCount         Int           @default(0) @map("download_count")
+  emailSentCount        Int           @default(0) @map("email_sent_count")
+  
+  // Fechas importantes
+  finalizedAt           DateTime?     @map("finalized_at") @db.Timestamptz(6)
+  sentAt                DateTime?     @map("sent_at") @db.Timestamptz(6)
+  approvedAt            DateTime?     @map("approved_at") @db.Timestamptz(6)
+  
+  // Timestamps
+  createdAt             DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  
+  // Relaciones
+  order                 Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  documentType          DocumentType  @relation(fields: [documentTypeId], references: [id], onDelete: Restrict)
+  createdBy             User          @relation("DocumentCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  lastModifiedBy        User          @relation("DocumentLastModifiedBy", fields: [lastModifiedById], references: [id], onDelete: Restrict)
+  
+  // Versiones y actividad
+  versions              DocumentVersion[]
+  activities            DocumentActivity[]
+  
+  @@map("documents")
+  @@schema("aim_schema")
+  @@index([orderId])
+  @@index([documentTypeId])
+  @@index([status])
+  @@index([createdById])
+  @@index([documentNumber])
+  @@index([createdAt])
+  @@index([isCurrentVersion])
+}
+
+model DocumentVersion {
+  id                    String        @id @default(cuid()) @db.VarChar(30)
+  documentId            String        @map("document_id") @db.VarChar(30)
+  
+  // Información de la versión
+  version               String        @db.VarChar(10)
+  title                 String        @db.VarChar(255)
+  description           String?       @db.Text
+  
+  // Datos de la versión
+  sharedData            Json          @map("shared_data") @db.JsonB
+  specificData          Json          @map("specific_data") @db.JsonB
+  
+  // Archivos de esta versión
+  generatedFiles        Json?         @map("generated_files") @db.JsonB
+  
+  // Metadatos
+  changeLog             String?       @map("change_log") @db.Text
+  metadata              Json?         @db.JsonB
+  
+  // Información de creación
+  createdById           String        @map("created_by_id") @db.VarChar(15)
+  createdAt             DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  
+  // Relaciones
+  document              Document      @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  createdBy             User          @relation("DocumentVersionCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  
+  @@map("document_versions")
+  @@schema("aim_schema")
+  @@index([documentId])
+  @@index([version])
+  @@index([createdAt])
+  @@unique([documentId, version])
+}
+
+model DocumentActivity {
+  id                    String        @id @default(cuid()) @db.VarChar(30)
+  documentId            String        @map("document_id") @db.VarChar(30)
+  
+  // Información de la actividad
+  action                String        @db.VarChar(50) // created, updated, finalized, sent, downloaded, etc.
+  description           String?       @db.Text
+  
+  // Datos de la actividad
+  activityData          Json?         @map("activity_data") @db.JsonB
+  
+  // Información de usuario
+  userId                String        @map("user_id") @db.VarChar(15)
+  
+  // Información de contexto
+  ipAddress             String?       @map("ip_address") @db.Inet
+  userAgent             String?       @map("user_agent") @db.Text
+  
+  // Timestamp
+  createdAt             DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  
+  // Relaciones
+  document              Document      @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  user                  User          @relation("DocumentActivityUser", fields: [userId], references: [id], onDelete: Restrict)
+  
+  @@map("document_activities")
+  @@schema("aim_schema")
+  @@index([documentId])
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+// ===== MÓDULO DE AGENTES CREADOS =====
+
+enum CreatedAgentStatus {
+  DRAFT           @map("draft")           // Borrador - En configuración
+  IN_DEVELOPMENT  @map("in_development")  // En Desarrollo - Configurando flujo
+  TESTING         @map("testing")         // Testing - Probando funcionalidad
+  ACTIVE          @map("active")          // Activo - En producción
+  INACTIVE        @map("inactive")        // Inactivo - Pausado temporalmente
+  ARCHIVED        @map("archived")        // Archivado - Fuera de uso
+  ERROR           @map("error")           // Error - Problemas técnicos
+  
+  @@schema("aim_schema")
+}
+
+enum AgentConnectionType {
+  API             @map("api")             // Integración vía API
+  RPA             @map("rpa")             // Automatización RPA
+  WEBSCRAPING     @map("webscraping")     // Extracción Web
+  FILE            @map("file")            // Procesamiento de Archivos
+  DATABASE        @map("database")        // Integración BD
+  IOT_SENSORS     @map("iot_sensors")     // Conectividad IoT
+  
+  @@schema("aim_schema")
+}
+
+model CreatedAgent {
+  id                    String            @id @default(cuid()) @db.VarChar(30)
+  agentNumber           String            @unique @map("agent_number") @db.VarChar(50) // AGT-2024-001
+  
+  // Relaciones principales
+  orderId               String            @map("order_id") @db.VarChar(30)
+  templateAgentId       String?           @map("template_agent_id") @db.VarChar(30) // Agente de la galería usado como base
+  createdById           String            @map("created_by_id") @db.VarChar(15)
+  assignedToId          String?           @map("assigned_to_id") @db.VarChar(15)
+  
+  // Información básica del agente creado
+  name                  String            @db.VarChar(255)
+  description           String            @db.Text
+  purpose               String            @db.Text // Propósito específico del agente
+  
+  // Estado y configuración
+  status                CreatedAgentStatus @default(DRAFT)
+  connectionType        AgentConnectionType    // Tipo de conexión principal
+  
+  // Información técnica
+  estimatedHours        Int?              @map("estimated_hours") // Horas estimadas de desarrollo
+  actualHours           Int?              @map("actual_hours") // Horas reales invertidas
+  complexity            String            @default("medium") @db.VarChar(20) // basic, medium, advanced
+  version               String            @default("1.0.0") @db.VarChar(10)
+  
+  // Notas y observaciones
+  developmentNotes      String?           @map("development_notes") @db.Text
+  testingNotes          String?           @map("testing_notes") @db.Text
+  deploymentNotes       String?           @map("deployment_notes") @db.Text
+  
+  // Fechas importantes
+  startedAt             DateTime?         @map("started_at") @db.Timestamptz(6)
+  finishedAt            DateTime?         @map("finished_at") @db.Timestamptz(6)
+  lastTestDate          DateTime?         @map("last_test_date") @db.Timestamptz(6)
+  deployedAt            DateTime?         @map("deployed_at") @db.Timestamptz(6)
+  
+  // Métricas de rendimiento
+  successRate           Float?            @map("success_rate") @db.Real // Porcentaje de éxito
+  averageExecutionTime  Int?              @map("average_execution_time") // Tiempo promedio en ms
+  totalExecutions       Int               @default(0) @map("total_executions")
+  errorCount            Int               @default(0) @map("error_count")
+  
+  // Timestamps
+  createdAt             DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  
+  // Relaciones
+  order                 Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  templateAgent         Agent?            @relation(fields: [templateAgentId], references: [id], onDelete: SetNull)
+  createdBy             User              @relation("CreatedAgentCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  assignedTo            User?             @relation("CreatedAgentAssignedTo", fields: [assignedToId], references: [id], onDelete: SetNull)
+  
+  // Configuraciones y workflows
+  configurations        AgentConfiguration[]
+  workflows             AgentWorkflow[]
+  
+  @@map("created_agents")
+  @@schema("aim_schema")
+  @@index([orderId])
+  @@index([status])
+  @@index([createdById])
+  @@index([templateAgentId])
+  @@index([connectionType])
+  @@index([createdAt])
+}
+
+model AgentConfiguration {
+  id                    String        @id @default(cuid()) @db.VarChar(30)
+  createdAgentId        String        @map("created_agent_id") @db.VarChar(30)
+  
+  // Información de la configuración
+  configName            String        @map("config_name") @db.VarChar(100) // Nombre de la configuración
+  configType            String        @map("config_type") @db.VarChar(50)  // connection, authentication, scheduling, etc.
+  
+  // Datos de configuración
+  configData            Json          @map("config_data") @db.JsonB // Configuración específica
+  
+  // Configuraciones específicas por tipo de conexión
+  connectionSettings    Json?         @map("connection_settings") @db.JsonB // URLs, endpoints, etc.
+  authenticationData    Json?         @map("authentication_data") @db.JsonB // Tokens, credenciales (encriptadas)
+  schedulingConfig      Json?         @map("scheduling_config") @db.JsonB // Horarios, frecuencias
+  errorHandling         Json?         @map("error_handling") @db.JsonB // Manejo de errores
+  notificationSettings  Json?         @map("notification_settings") @db.JsonB // Configuración de alertas
+  
+  // Nodos seleccionados para implementar
+  selectedNodes         Json?         @map("selected_nodes") @db.JsonB // Array de nodos de n8n
+  customNodes           Json?         @map("custom_nodes") @db.JsonB // Nodos personalizados
+  
+  // Metadatos
+  isActive              Boolean       @default(true) @map("is_active")
+  version               String        @default("1.0.0") @db.VarChar(10)
+  
+  // Timestamps
+  createdAt             DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  
+  // Relaciones
+  createdAgent          CreatedAgent  @relation(fields: [createdAgentId], references: [id], onDelete: Cascade)
+  
+  @@map("agent_configurations")
+  @@schema("aim_schema")
+  @@index([createdAgentId])
+  @@index([configType])
+  @@index([isActive])
+}
+
+model AgentWorkflow {
+  id                    String        @id @default(cuid()) @db.VarChar(30)
+  createdAgentId        String        @map("created_agent_id") @db.VarChar(30)
+  
+  // Información del workflow
+  workflowName          String        @map("workflow_name") @db.VarChar(255)
+  workflowType          String        @map("workflow_type") @db.VarChar(50) // original, modified, final
+  description           String?       @db.Text
+  
+  // Datos del workflow n8n
+  n8nWorkflow           Json          @map("n8n_workflow") @db.JsonB // JSON completo del workflow
+  workflowNodes         Json          @map("workflow_nodes") @db.JsonB // Array de nodos principales
+  
+  // Información técnica
+  nodeCount             Int?          @map("node_count") // Número de nodos
+  connectionCount       Int?          @map("connection_count") // Número de conexiones
+  complexity            String?       @default("medium") @db.VarChar(20) // basic, medium, advanced
+  
+  // Control de versiones
+  version               String        @default("1.0.0") @db.VarChar(10)
+  isCurrentVersion      Boolean       @default(true) @map("is_current_version")
+  parentWorkflowId      String?       @map("parent_workflow_id") @db.VarChar(30) // ID del workflow padre
+  
+  // Metadatos de desarrollo
+  changeLog             String?       @map("change_log") @db.Text // Registro de cambios
+  developmentNotes      String?       @map("development_notes") @db.Text
+  
+  // Estado del workflow
+  isActive              Boolean       @default(true) @map("is_active")
+  isTested              Boolean       @default(false) @map("is_tested")
+  isDeployed            Boolean       @default(false) @map("is_deployed")
+  
+  // Información de testing
+  lastTestDate          DateTime?     @map("last_test_date") @db.Timestamptz(6)
+  testResults           Json?         @map("test_results") @db.JsonB // Resultados de pruebas
+  
+  // Timestamps
+  createdAt             DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  
+  // Relaciones
+  createdAgent          CreatedAgent  @relation(fields: [createdAgentId], references: [id], onDelete: Cascade)
+  parentWorkflow        AgentWorkflow? @relation("WorkflowVersions", fields: [parentWorkflowId], references: [id])
+  childWorkflows        AgentWorkflow[] @relation("WorkflowVersions")
+  
+  @@map("agent_workflows")
+  @@schema("aim_schema")
+  @@index([createdAgentId])
+  @@index([workflowType])
+  @@index([isCurrentVersion])
+  @@index([isActive])
+  @@index([version])
+}
+
+// Agregar relaciones a modelos existentes
+// Se agregan automáticamente por las relaciones definidas arriba

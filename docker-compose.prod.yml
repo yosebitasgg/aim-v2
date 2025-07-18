@@ -1,0 +1,139 @@
+# docker-compose.prod.yml
+# Configuración específica para entornos de producción
+# Uso: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+version: '3.8'
+
+services:
+  # Configuraciones de producción para la base de datos
+  db:
+    # Configuración de recursos más estricta
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.50'
+        reservations:
+          memory: 512M
+          cpus: '0.25'
+    # Sin exposición de puertos en producción
+    ports: []
+    # Variables específicas de producción
+    environment:
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C --auth-host=scram-sha-256"
+    # Configuración de respaldo automático
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backups:/backups
+    # Health check más estricto
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Configuraciones de producción para el backend
+  backend:
+    # Construir imagen de producción
+    build:
+      target: production
+      args:
+        NODE_ENV: production
+    # Sin bind mounts en producción
+    volumes: []
+    # Variables específicas de producción
+    environment:
+      NODE_ENV: production
+      LOG_LEVEL: warn
+      RATE_LIMIT_MAX_REQUESTS: 1000
+    # Configuración de recursos
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.50'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+      # Configuración de reinicio y réplicas
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    # Health check más frecuente
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3001/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  # Configuraciones de producción para el frontend
+  frontend:
+    # Construir imagen de producción con NGINX
+    build:
+      target: production
+      args:
+        NODE_ENV: production
+    # Sin bind mounts en producción
+    volumes: []
+    # Variables específicas de producción
+    environment:
+      NODE_ENV: production
+    # Puerto estándar para producción
+    ports:
+      - "80:80"
+      # Para HTTPS:
+      # - "443:443"
+    # Configuración de recursos
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.25'
+        reservations:
+          memory: 128M
+          cpus: '0.10'
+      # Configuración de reinicio
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    # Health check específico para NGINX
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+# Configuración de red para producción
+networks:
+  aim-network:
+    driver: bridge
+    # Configuración de red más segura para producción
+    driver_opts:
+      com.docker.network.bridge.name: aim-bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.20.0.0/16
+
+# Configuraciones adicionales para producción
+volumes:
+  postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_PATH:-./data}/postgres
+  # Volumen para backups
+  postgres_backups:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${BACKUP_PATH:-./backups}/postgres 

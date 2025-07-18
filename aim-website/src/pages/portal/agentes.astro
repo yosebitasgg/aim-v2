@@ -1,0 +1,1472 @@
+---
+import PortalLayoutSidebar from '../../layouts/PortalLayoutSidebar.astro';
+import PortalAuthGuard from '../../components/PortalAuthGuard.jsx';
+import { Icon } from 'astro-icon/components';
+
+// Los datos se cargarán dinámicamente desde el cliente
+// para evitar problemas con la API en tiempo de build
+---
+
+<PortalLayoutSidebar title="Mis Agentes - Portal AIM">
+  <PortalAuthGuard client:load>
+    <!-- Header con estadísticas -->
+  <div class="mb-8">
+    <div class="bg-gradient-to-r from-teal-600 to-emerald-600 rounded-xl p-6 text-white">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold mb-2">Mis Agentes</h1>
+          <p class="text-teal-100">Monitorea y controla tus agentes de automatización en tiempo real</p>
+        </div>
+        <div class="text-right">
+          <div class="text-teal-100 text-sm">Agentes activos</div>
+          <div class="text-3xl font-bold" id="activeAgentsCount">0</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+      <div class="flex items-center">
+        <div class="p-3 bg-green-50 rounded-lg mr-4">
+          <Icon name="tabler:robot" class="w-6 h-6 text-green-600" />
+        </div>
+        <div>
+          <p class="text-sm text-gray-500 mb-1">Agentes Activos</p>
+          <p class="text-2xl font-bold text-gray-900" id="totalActiveAgents">0</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+      <div class="flex items-center">
+        <div class="p-3 bg-teal-50 rounded-lg mr-4">
+                                  <Icon name="tabler:bolt" class="w-6 h-6 text-teal-600" />
+        </div>
+        <div>
+          <p class="text-sm text-gray-500 mb-1">Ejecuciones Hoy</p>
+          <p class="text-2xl font-bold text-gray-900" id="executionsToday">0</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+      <div class="flex items-center">
+        <div class="p-3 bg-blue-50 rounded-lg mr-4">
+          <Icon name="tabler:chart-line" class="w-6 h-6 text-blue-600" />
+        </div>
+        <div>
+          <p class="text-sm text-gray-500 mb-1">Eficiencia Promedio</p>
+          <p class="text-2xl font-bold text-gray-900" id="averageEfficiency">0%</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Acciones principales -->
+  <div class="flex justify-between items-center mb-6">
+    <h2 class="text-xl font-semibold text-gray-900">Panel de Control</h2>
+    <button class="bg-gradient-to-r from-teal-600 to-emerald-600 text-white px-6 py-3 rounded-lg hover:from-teal-700 hover:to-emerald-700 transition-colors duration-200 flex items-center space-x-2 shadow-lg">
+      <Icon name="tabler:plus" class="w-5 h-5" />
+      <span>Nuevo Agente</span>
+    </button>
+  </div>
+
+  <!-- Tabla de Agentes Creados -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-8">
+    <div class="bg-gradient-to-r from-teal-500 to-emerald-500 p-6 text-white">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="text-xl font-semibold">Historial de Agentes Creados</h3>
+          <p class="text-teal-100 mt-1">Gestión completa de agentes personalizados</p>
+        </div>
+        <div class="text-right">
+          <div class="text-teal-100 text-sm">Total Agentes</div>
+          <div class="text-lg font-semibold" id="totalAgentsHeader">0</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Loading state -->
+    <div id="agents-loading" class="flex justify-center items-center py-12">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
+      <span class="ml-2 text-gray-600">Cargando agentes...</span>
+    </div>
+    
+    <!-- Table container -->
+    <div id="agents-table-container" class="hidden overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="text-left py-3 px-6 font-medium text-gray-900">Agente</th>
+            <th class="text-left py-3 px-6 font-medium text-gray-900">Orden/Cliente</th>
+            <th class="text-left py-3 px-6 font-medium text-gray-900">Estado</th>
+            <th class="text-left py-3 px-6 font-medium text-gray-900">Tipo Conexión</th>
+            <th class="text-left py-3 px-6 font-medium text-gray-900">Rendimiento</th>
+            <th class="text-left py-3 px-6 font-medium text-gray-900">Creado</th>
+            <th class="text-left py-3 px-6 font-medium text-gray-900">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="agents-table-body" class="divide-y divide-gray-200">
+          <!-- Los datos se llenarán dinámicamente -->
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- Empty state -->
+    <div id="agents-empty-state" class="hidden text-center py-12">
+      <div class="text-gray-500 mb-4">
+        <Icon name="tabler:robot" class="w-16 h-16 mx-auto mb-4 text-gray-300" />
+        <p class="text-lg font-semibold">No hay agentes creados</p>
+        <p class="text-sm mt-1">Crea tu primer agente desde la página "Crear Agente"</p>
+      </div>
+      <a href="/portal/crear-agente" class="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700">
+        Crear Agente
+      </a>
+    </div>
+    
+    <!-- Error state -->
+    <div id="agents-error-state" class="hidden text-center py-12">
+      <div class="text-red-500 mb-4">
+        <Icon name="tabler:alert-circle" class="w-12 h-12 mx-auto mb-2" />
+        <p class="text-lg font-semibold">Error al cargar los agentes</p>
+        <p class="text-sm text-gray-600 mt-1">Por favor, inténtalo de nuevo más tarde</p>
+      </div>
+      <button id="retry-agents" class="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700">
+        Reintentar
+      </button>
+    </div>
+  </div>
+
+  <!-- Sección de ayuda -->
+  <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+    <div class="flex items-start">
+      <div class="p-2 bg-teal-50 rounded-lg mr-4">
+        <Icon name="tabler:bulb" class="w-6 h-6 text-teal-600" />
+      </div>
+      <div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Controla tus Agentes</h3>
+        <p class="text-gray-600 mb-4">
+          Desde aquí puedes monitorear el rendimiento de cada agente, ver métricas detalladas, 
+          configurar parámetros y generar reportes de ejecución.
+        </p>
+        <ul class="space-y-2 text-sm text-gray-600">
+          <li class="flex items-center">
+            <Icon name="tabler:check" class="w-4 h-4 text-green-500 mr-2" />
+            <strong>Métricas: </strong>  Visualiza gráficos de rendimiento y estadísticas detalladas
+          </li>
+          <li class="flex items-center">
+            <Icon name="tabler:check" class="w-4 h-4 text-green-500 mr-2" />
+            <strong>Configurar: </strong>  Revisa los parámetros actuales del agente
+          </li>
+          <li class="flex items-center">
+            <Icon name="tabler:check" class="w-4 h-4 text-green-500 mr-2" />
+            <strong>Reporte: </strong>  Genera y descarga reportes en PDF
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modales -->
+  
+  <!-- Modal Ver Agente -->
+  <div id="modalVerAgente" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl max-w-4xl w-full max-h-screen overflow-y-auto">
+      <div class="p-6">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-xl font-semibold text-gray-900">Detalles del Agente</h3>
+          <button id="cerrarModalVer" class="text-gray-400 hover:text-gray-600">
+            <Icon name="tabler:x" class="w-6 h-6" />
+          </button>
+        </div>
+        <div id="contenidoModalVer">
+          <!-- El contenido se llenará dinámicamente -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Editar Agente -->
+  <div id="modalEditarAgente" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl max-w-2xl w-full max-h-screen overflow-y-auto">
+      <div class="p-6">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-xl font-semibold text-gray-900">Editar Agente</h3>
+          <button id="cerrarModalEditar" class="text-gray-400 hover:text-gray-600">
+            <Icon name="tabler:x" class="w-6 h-6" />
+          </button>
+        </div>
+        <div id="contenidoModalEditar">
+          <!-- El contenido se llenará dinámicamente -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Editar n8n -->
+  <div id="modalEditarN8n" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl max-w-6xl w-full max-h-screen overflow-y-auto">
+      <div class="p-6">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-xl font-semibold text-gray-900">Editar Workflow n8n</h3>
+          <button id="cerrarModalN8n" class="text-gray-400 hover:text-gray-600">
+            <Icon name="tabler:x" class="w-6 h-6" />
+          </button>
+        </div>
+        <div id="contenidoModalN8n">
+          <!-- El contenido se llenará dinámicamente -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  </PortalAuthGuard>
+</PortalLayoutSidebar>
+
+<script is:inline>
+  // Estado global de la aplicación
+  let appState = {
+    agents: [],
+    stats: {},
+    selectedAgent: null,
+    loading: false,
+    error: null
+  };
+
+  // Referencias a los clientes API
+  let agentsApiClient = null;
+  let portalAuth = null;
+
+  // Elementos del DOM
+  const elements = {};
+
+  // Inicializar elementos del DOM con espera
+  async function initializeElements() {
+    // Esperar a que React termine de renderizar
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // Buscar elementos con reintentos
+    const maxRetries = 10;
+    let retries = 0;
+    
+    while (retries < maxRetries) {
+      elements.activeAgentsCount = document.getElementById('activeAgentsCount');
+      elements.totalActiveAgents = document.getElementById('totalActiveAgents');
+      elements.executionsToday = document.getElementById('executionsToday');
+      elements.averageEfficiency = document.getElementById('averageEfficiency');
+      elements.totalAgentsHeader = document.getElementById('totalAgentsHeader');
+      elements.agentsLoading = document.getElementById('agents-loading');
+      elements.agentsTableContainer = document.getElementById('agents-table-container');
+      elements.agentsTableBody = document.getElementById('agents-table-body');
+      elements.agentsEmptyState = document.getElementById('agents-empty-state');
+      elements.agentsErrorState = document.getElementById('agents-error-state');
+      elements.retryAgents = document.getElementById('retry-agents');
+      elements.modalVerAgente = document.getElementById('modalVerAgente');
+      elements.modalEditarAgente = document.getElementById('modalEditarAgente');
+      elements.modalEditarN8n = document.getElementById('modalEditarN8n');
+      
+      // Verificar elementos críticos
+      if (elements.agentsLoading && elements.agentsTableContainer && elements.agentsTableBody) {
+        if (retries > 0) {
+          console.log('✅ Elementos encontrados después de', retries, 'reintentos');
+        }
+        break;
+      }
+      
+      retries++;
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    
+    if (retries >= maxRetries) {
+      console.warn('⚠️ Algunos elementos no se encontraron después de', maxRetries, 'reintentos');
+    }
+  }
+
+  // Cargar dependencias
+  async function loadDependencies() {
+    try {
+      const agentsModule = await import('/src/lib/agentsApiClient.js');
+      agentsApiClient = agentsModule.default;
+      
+      const authModule = await import('/src/lib/portalAuthScript.js');
+      portalAuth = authModule.initializePortalAuth;
+      
+      return true;
+    } catch (error) {
+      console.error('Error cargando dependencias:', error);
+      return false;
+    }
+  }
+
+  // Funciones de autenticación
+  function showMainContent() {
+    // El contenido ya está visible por el PortalAuthGuard
+  }
+
+  function showAuthError(message) {
+    console.error('Auth error:', message);
+  }
+
+  async function initializeApp() {
+    try {
+      // Inicializar elementos (ahora es async)
+      await initializeElements();
+      
+      // Cargar dependencias
+      const depsLoaded = await loadDependencies();
+      if (!depsLoaded) {
+        throw new Error('No se pudieron cargar las dependencias');
+      }
+
+      // Inicializar autenticación
+      await portalAuth(
+        async () => {
+          await loadAgentsData();
+          setupEventListeners();
+        },
+        (error) => {
+          showAuthError(error || 'Error de autenticación');
+        }
+      );
+    } catch (error) {
+      console.error('Error inicializando app:', error);
+      showAuthError('Error al cargar la aplicación');
+    }
+  }
+
+  // Cargar datos de agentes
+  async function loadAgentsData() {
+    try {
+      showLoading();
+      
+      if (!agentsApiClient) {
+        throw new Error('agentsApiClient no está disponible');
+      }
+      
+      const [agentsResponse, statsResponse] = await Promise.all([
+        agentsApiClient.getCreatedAgents({ limit: 100 }),
+        agentsApiClient.getAgentsStats()
+      ]);
+      
+      if (agentsResponse.success) {
+        appState.agents = agentsResponse.data.items || [];
+        
+        if (appState.agents.length === 0) {
+          showEmptyState();
+        } else {
+          renderAgentsTable();
+          showTable();
+        }
+      } else {
+        throw new Error('Error al cargar agentes');
+      }
+      
+      if (statsResponse.success) {
+        appState.stats = statsResponse.data;
+        updateStatsCards();
+      }
+      
+    } catch (error) {
+      console.error('Error cargando agentes:', error);
+      showError();
+    }
+  }
+
+  // Mostrar estados de la UI
+  function showLoading() {
+    elements.agentsLoading?.classList.remove('hidden');
+    elements.agentsTableContainer?.classList.add('hidden');
+    elements.agentsEmptyState?.classList.add('hidden');
+    elements.agentsErrorState?.classList.add('hidden');
+  }
+
+  function showTable() {
+    elements.agentsLoading?.classList.add('hidden');
+    elements.agentsTableContainer?.classList.remove('hidden');
+    elements.agentsEmptyState?.classList.add('hidden');
+    elements.agentsErrorState?.classList.add('hidden');
+  }
+
+  function showEmptyState() {
+    elements.agentsLoading?.classList.add('hidden');
+    elements.agentsTableContainer?.classList.add('hidden');
+    elements.agentsEmptyState?.classList.remove('hidden');
+    elements.agentsErrorState?.classList.add('hidden');
+  }
+
+  function showError() {
+    elements.agentsLoading?.classList.add('hidden');
+    elements.agentsTableContainer?.classList.add('hidden');
+    elements.agentsEmptyState?.classList.add('hidden');
+    elements.agentsErrorState?.classList.remove('hidden');
+  }
+
+  // Actualizar cards de estadísticas
+  function updateStatsCards() {
+    const stats = appState.stats.overview || {};
+    const activeAgents = appState.agents.filter(a => a.status === 'active');
+    
+    if (elements.activeAgentsCount) {
+      elements.activeAgentsCount.textContent = activeAgents.length;
+    }
+    
+    if (elements.totalActiveAgents) {
+      elements.totalActiveAgents.textContent = activeAgents.length;
+    }
+    
+    if (elements.executionsToday) {
+      const totalExecutions = appState.agents.reduce((sum, agent) => sum + (agent.totalExecutions || 0), 0);
+      elements.executionsToday.textContent = totalExecutions;
+    }
+    
+    if (elements.averageEfficiency) {
+      elements.averageEfficiency.textContent = `${Math.round(stats.successRate || 0)}%`;
+    }
+    
+    if (elements.totalAgentsHeader) {
+      elements.totalAgentsHeader.textContent = appState.agents.length;
+    }
+  }
+
+  // Renderizar tabla de agentes
+  function renderAgentsTable() {
+    if (!elements.agentsTableBody) return;
+    
+    elements.agentsTableBody.innerHTML = '';
+    
+    // Función para obtener el estado correcto del agente
+    const getStatusDisplay = (status) => {
+      const statusMap = {
+        'COMPLETED': { label: 'Agente Terminado', color: 'bg-green-100 text-green-800' },
+        'ACTIVE': { label: 'Agente Activo', color: 'bg-blue-100 text-blue-800' },
+        'IN_DEVELOPMENT': { label: 'En Desarrollo', color: 'bg-yellow-100 text-yellow-800' },
+        'INACTIVE': { label: 'Inactivo', color: 'bg-gray-100 text-gray-800' },
+        'ERROR': { label: 'Error', color: 'bg-red-100 text-red-800' },
+        'READY_FOR_INTEGRATION': { label: 'Listo para Integración', color: 'bg-purple-100 text-purple-800' }
+      };
+      return statusMap[status] || { label: status, color: 'bg-gray-100 text-gray-800' };
+    };
+    
+    appState.agents.forEach(agent => {
+      const statusDisplay = getStatusDisplay(agent.status);
+      
+      const row = document.createElement('tr');
+      row.className = 'hover:bg-gray-50';
+      row.innerHTML = `
+        <td class="py-4 px-6">
+          <div>
+            <div class="font-medium text-gray-900">${agent.name}</div>
+            <div class="text-sm text-gray-500">${agent.agentNumber}</div>
+          </div>
+        </td>
+        <td class="py-4 px-6">
+          <div>
+            <div class="font-medium text-gray-900">${agent.order?.orderNumber || 'N/A'}</div>
+            <div class="text-sm text-gray-500">${agent.order?.client?.companyName || 'N/A'}</div>
+          </div>
+        </td>
+        <td class="py-4 px-6">
+          <span class="px-3 py-1 rounded-full text-xs font-medium ${statusDisplay.color}">
+            ${statusDisplay.label}
+          </span>
+        </td>
+        <td class="py-4 px-6">
+          <span class="text-sm text-gray-900">
+            ${agentsApiClient?.getConnectionTypeLabel?.(agent.connectionType) || agent.connectionType}
+          </span>
+        </td>
+        <td class="py-4 px-6">
+          <div class="flex items-center space-x-2">
+            <div class="flex-1 bg-gray-200 rounded-full h-2">
+              <div class="bg-teal-600 h-2 rounded-full" style="width: ${agent.successRate || 0}%"></div>
+            </div>
+            <span class="text-sm font-medium">${Math.round(agent.successRate || 0)}%</span>
+          </div>
+        </td>
+        <td class="py-4 px-6">
+          <span class="text-sm text-gray-500">
+            ${agentsApiClient?.formatDate?.(agent.createdAt) || new Date(agent.createdAt).toLocaleDateString()}
+          </span>
+        </td>
+        <td class="py-4 px-6">
+          <div class="flex space-x-2">
+            <button onclick="verAgente('${agent.id}')" class="bg-teal-100 text-teal-700 px-3 py-1 rounded text-sm hover:bg-teal-200 transition-colors">
+              Ver
+            </button>
+            <button onclick="editarAgente('${agent.id}')" class="bg-blue-100 text-blue-700 px-3 py-1 rounded text-sm hover:bg-blue-200 transition-colors">
+              Editar
+            </button>
+            <button onclick="editarN8n('${agent.id}')" class="bg-purple-100 text-purple-700 px-3 py-1 rounded text-sm hover:bg-purple-200 transition-colors">
+              n8n
+            </button>
+          </div>
+        </td>
+      `;
+      elements.agentsTableBody.appendChild(row);
+    });
+  }
+
+  // Event listeners
+  function setupEventListeners() {
+    // Reintentar cargar agentes
+    elements.retryAgents?.addEventListener('click', loadAgentsData);
+    
+    // Cerrar modales
+    document.getElementById('cerrarModalVer')?.addEventListener('click', () => {
+      elements.modalVerAgente?.classList.add('hidden');
+    });
+    
+    document.getElementById('cerrarModalEditar')?.addEventListener('click', () => {
+      elements.modalEditarAgente?.classList.add('hidden');
+    });
+    
+    document.getElementById('cerrarModalN8n')?.addEventListener('click', () => {
+      elements.modalEditarN8n?.classList.add('hidden');
+    });
+  }
+
+  // Funciones globales para los botones
+  window.verAgente = async function(agentId) {
+    try {
+      if (!agentsApiClient) {
+        console.error('agentsApiClient no está disponible');
+        return;
+      }
+      const response = await agentsApiClient.getCreatedAgentById(agentId);
+      if (response.success) {
+        mostrarDetallesAgente(response.data);
+      }
+    } catch (error) {
+      console.error('Error al cargar detalles del agente:', error);
+      if (agentsApiClient && agentsApiClient.showNotification) {
+        agentsApiClient.showNotification('Error al cargar detalles del agente', 'error');
+      }
+    }
+  };
+
+  window.editarAgente = async function(agentId) {
+    try {
+      if (!agentsApiClient) {
+        console.error('agentsApiClient no está disponible');
+        return;
+      }
+      const response = await agentsApiClient.getCreatedAgentById(agentId);
+      if (response.success) {
+        mostrarFormularioEdicion(response.data);
+      }
+    } catch (error) {
+      console.error('Error al cargar agente para edición:', error);
+      if (agentsApiClient && agentsApiClient.showNotification) {
+        agentsApiClient.showNotification('Error al cargar agente para edición', 'error');
+      }
+    }
+  };
+
+  window.editarN8n = async function(agentId) {
+    try {
+      if (!agentsApiClient) {
+        console.error('agentsApiClient no está disponible');
+        return;
+      }
+      const response = await agentsApiClient.getCreatedAgentById(agentId);
+      if (response.success) {
+        mostrarEditorN8n(response.data);
+      }
+    } catch (error) {
+      console.error('Error al cargar workflows del agente:', error);
+      if (agentsApiClient && agentsApiClient.showNotification) {
+        agentsApiClient.showNotification('Error al cargar workflows del agente', 'error');
+      }
+    }
+  };
+
+  function mostrarDetallesAgente(agent) {
+    const modal = elements.modalVerAgente;
+    const contenido = document.getElementById('contenidoModalVer');
+    
+    if (contenido) {
+      // Determinar el estado correcto del agente
+      const getStatusDisplay = (status) => {
+        const statusMap = {
+          'COMPLETED': { label: 'Agente Terminado', color: 'bg-green-100 text-green-800' },
+          'ACTIVE': { label: 'Agente Activo', color: 'bg-blue-100 text-blue-800' },
+          'IN_DEVELOPMENT': { label: 'En Desarrollo', color: 'bg-yellow-100 text-yellow-800' },
+          'INACTIVE': { label: 'Inactivo', color: 'bg-gray-100 text-gray-800' },
+          'ERROR': { label: 'Error', color: 'bg-red-100 text-red-800' }
+        };
+        return statusMap[status] || { label: status, color: 'bg-gray-100 text-gray-800' };
+      };
+      
+      const statusDisplay = getStatusDisplay(agent.status);
+      
+      contenido.innerHTML = `
+        <div class="space-y-6">
+          <!-- Estado destacado -->
+          <div class="bg-gradient-to-r from-teal-50 to-emerald-50 rounded-lg p-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <h4 class="text-lg font-semibold text-teal-900">${agent.name}</h4>
+                <p class="text-sm text-teal-700">${agent.agentNumber}</p>
+              </div>
+              <span class="px-3 py-2 rounded-full text-sm font-medium ${statusDisplay.color}">
+                ${statusDisplay.label}
+              </span>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h4 class="font-semibold text-gray-900 mb-3">Información General</h4>
+              <dl class="space-y-3">
+                <div class="flex justify-between">
+                  <dt class="font-medium text-gray-600">Nombre:</dt>
+                  <dd class="text-gray-900">${agent.name}</dd>
+                </div>
+                <div class="flex justify-between">
+                  <dt class="font-medium text-gray-600">Número:</dt>
+                  <dd class="text-gray-900">${agent.agentNumber}</dd>
+                </div>
+                <div class="flex justify-between">
+                  <dt class="font-medium text-gray-600">Tipo de Conexión:</dt>
+                  <dd class="text-gray-900">${agentsApiClient?.getConnectionTypeLabel?.(agent.connectionType) || agent.connectionType}</dd>
+                </div>
+                <div class="flex justify-between">
+                  <dt class="font-medium text-gray-600">Complejidad:</dt>
+                  <dd class="text-gray-900">${agentsApiClient?.getComplexityLabel?.(agent.complexity) || agent.complexity}</dd>
+                </div>
+                <div class="flex justify-between">
+                  <dt class="font-medium text-gray-600">Horas Estimadas:</dt>
+                  <dd class="text-gray-900">${agent.estimatedHours || 'N/A'} hrs</dd>
+                </div>
+                <div class="flex justify-between">
+                  <dt class="font-medium text-gray-600">Creado:</dt>
+                  <dd class="text-gray-900">${agentsApiClient?.formatDate?.(agent.createdAt) || new Date(agent.createdAt).toLocaleDateString()}</dd>
+                </div>
+                ${agent.completedAt ? `
+                  <div class="flex justify-between">
+                    <dt class="font-medium text-gray-600">Completado:</dt>
+                    <dd class="text-gray-900">${agentsApiClient?.formatDate?.(agent.completedAt) || new Date(agent.completedAt).toLocaleDateString()}</dd>
+                  </div>
+                ` : ''}
+              </dl>
+            </div>
+            
+            <div>
+              <h4 class="font-semibold text-gray-900 mb-3">Orden Asociada</h4>
+              <dl class="space-y-3">
+                <div class="flex justify-between">
+                  <dt class="font-medium text-gray-600">Orden:</dt>
+                  <dd class="text-gray-900">${agent.order?.orderNumber || 'N/A'}</dd>
+                </div>
+                <div class="flex justify-between">
+                  <dt class="font-medium text-gray-600">Cliente:</dt>
+                  <dd class="text-gray-900">${agent.order?.client?.companyName || 'N/A'}</dd>
+                </div>
+                <div class="flex justify-between">
+                  <dt class="font-medium text-gray-600">Proyecto:</dt>
+                  <dd class="text-gray-900">${agent.order?.title || 'N/A'}</dd>
+                </div>
+                <div class="flex justify-between">
+                  <dt class="font-medium text-gray-600">Valor Orden:</dt>
+                  <dd class="text-gray-900">${agent.order?.estimatedBudget ? new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(agent.order.estimatedBudget) : 'N/A'}</dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+          
+          <div>
+            <h4 class="font-semibold text-gray-900 mb-3">Descripción</h4>
+            <div class="bg-gray-50 rounded-lg p-3">
+              <p class="text-gray-700">${agent.description || 'Sin descripción disponible'}</p>
+            </div>
+          </div>
+          
+          <div>
+            <h4 class="font-semibold text-gray-900 mb-3">Propósito</h4>
+            <div class="bg-gray-50 rounded-lg p-3">
+              <p class="text-gray-700">${agent.purpose || 'Sin propósito definido'}</p>
+            </div>
+          </div>
+          
+          <!-- Métricas de rendimiento -->
+          ${agent.totalExecutions !== undefined || agent.successRate !== undefined ? `
+            <div>
+              <h4 class="font-semibold text-gray-900 mb-3">Métricas de Rendimiento</h4>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-blue-50 rounded-lg p-3 text-center">
+                  <div class="text-2xl font-bold text-blue-600">${agent.totalExecutions || 0}</div>
+                  <div class="text-sm text-blue-700">Ejecuciones</div>
+                </div>
+                <div class="bg-green-50 rounded-lg p-3 text-center">
+                  <div class="text-2xl font-bold text-green-600">${Math.round(agent.successRate || 0)}%</div>
+                  <div class="text-sm text-green-700">Éxito</div>
+                </div>
+                <div class="bg-orange-50 rounded-lg p-3 text-center">
+                  <div class="text-2xl font-bold text-orange-600">${Math.round((agent.totalExecutions || 0) * (1 - (agent.successRate || 0) / 100))}</div>
+                  <div class="text-sm text-orange-700">Errores</div>
+                </div>
+              </div>
+            </div>
+          ` : ''}
+          
+          <!-- Workflows -->
+          ${agent.workflows && agent.workflows.length > 0 ? `
+            <div>
+              <h4 class="font-semibold text-gray-900 mb-3">Workflows (${agent.workflows.length})</h4>
+              <div class="space-y-3">
+                ${agent.workflows.map(workflow => `
+                  <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="flex justify-between items-start mb-2">
+                      <div>
+                        <span class="font-medium text-gray-900">${workflow.workflowName}</span>
+                        <p class="text-sm text-gray-600">${workflow.description || 'Sin descripción'}</p>
+                      </div>
+                      <span class="text-sm px-2 py-1 rounded ${workflow.isCurrentVersion ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
+                        ${workflow.isCurrentVersion ? 'Actual' : 'Histórico'}
+                      </span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4 text-sm text-gray-600">
+                      <div>Nodos: ${workflow.nodeCount || 0}</div>
+                      <div>Conexiones: ${workflow.connectionCount || 0}</div>
+                      <div>Complejidad: ${workflow.complexity || 'N/A'}</div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          ` : ''}
+          
+          <!-- Botones de acción -->
+          <div class="flex space-x-3 pt-4 border-t border-gray-200">
+            <button onclick="editarAgente('${agent.id}')" class="bg-blue-100 text-blue-700 px-4 py-2 rounded-lg font-medium hover:bg-blue-200 transition-colors">
+              <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+              </svg>
+              Editar Agente
+            </button>
+            <button onclick="editarN8n('${agent.id}')" class="bg-purple-100 text-purple-700 px-4 py-2 rounded-lg font-medium hover:bg-purple-200 transition-colors">
+              <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+              </svg>
+              Ver Workflow n8n
+            </button>
+          </div>
+        </div>
+      `;
+    }
+    
+    modal?.classList.remove('hidden');
+  }
+
+  function mostrarFormularioEdicion(agent) {
+    const modal = elements.modalEditarAgente;
+    const contenido = document.getElementById('contenidoModalEditar');
+    
+    if (!modal || !contenido) {
+      console.warn('Modal de edición no encontrado');
+      return;
+    }
+    
+    // Crear formulario de edición con datos precargados
+    contenido.innerHTML = `
+      <div class="space-y-6">
+        <div class="bg-blue-50 rounded-lg p-4">
+          <h4 class="font-medium text-blue-900 mb-2">Editando Agente</h4>
+          <p class="text-sm text-blue-800">Modifica la información del agente y su workflow.</p>
+        </div>
+        
+        <form id="editAgentForm" class="space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Nombre del Agente</label>
+              <input type="text" id="editAgentName" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500" 
+                     value="${agent.name}" required />
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Estado</label>
+              <select id="editAgentStatus" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500">
+                <option value="IN_DEVELOPMENT" ${agent.status === 'IN_DEVELOPMENT' ? 'selected' : ''}>En Desarrollo</option>
+                <option value="COMPLETED" ${agent.status === 'COMPLETED' ? 'selected' : ''}>Completado</option>
+                <option value="ACTIVE" ${agent.status === 'ACTIVE' ? 'selected' : ''}>Activo</option>
+                <option value="INACTIVE" ${agent.status === 'INACTIVE' ? 'selected' : ''}>Inactivo</option>
+                <option value="ERROR" ${agent.status === 'ERROR' ? 'selected' : ''}>Error</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Conexión</label>
+              <select id="editConnectionType" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500">
+                <option value="API" ${agent.connectionType === 'API' ? 'selected' : ''}>API</option>
+                <option value="RPA" ${agent.connectionType === 'RPA' ? 'selected' : ''}>RPA</option>
+                <option value="DATABASE" ${agent.connectionType === 'DATABASE' ? 'selected' : ''}>Base de Datos</option>
+                <option value="FILE_SYSTEM" ${agent.connectionType === 'FILE_SYSTEM' ? 'selected' : ''}>Sistema de Archivos</option>
+                <option value="WEB_SCRAPING" ${agent.connectionType === 'WEB_SCRAPING' ? 'selected' : ''}>Web Scraping</option>
+                <option value="EMAIL" ${agent.connectionType === 'EMAIL' ? 'selected' : ''}>Email</option>
+              </select>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Complejidad</label>
+              <select id="editComplexity" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500">
+                <option value="low" ${agent.complexity === 'low' ? 'selected' : ''}>Baja</option>
+                <option value="medium" ${agent.complexity === 'medium' ? 'selected' : ''}>Media</option>
+                <option value="high" ${agent.complexity === 'high' ? 'selected' : ''}>Alta</option>
+              </select>
+            </div>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Descripción</label>
+            <textarea id="editAgentDescription" rows="3" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500">${agent.description || ''}</textarea>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Propósito</label>
+            <textarea id="editAgentPurpose" rows="3" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500">${agent.purpose || ''}</textarea>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Horas Estimadas</label>
+            <input type="number" id="editEstimatedHours" min="1" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500" 
+                   value="${agent.estimatedHours || 8}" />
+          </div>
+          
+          <!-- Sección de Workflow -->
+          ${agent.workflows && agent.workflows.length > 0 ? `
+            <div class="border-t border-gray-200 pt-6">
+              <h4 class="font-medium text-gray-900 mb-4">Workflow Principal</h4>
+              <div class="bg-gray-50 rounded-lg p-4">
+                <div class="flex items-center justify-between mb-3">
+                  <span class="font-medium">${agent.workflows[0].workflowName}</span>
+                  <button type="button" onclick="editWorkflowForAgent('${agent.id}')" class="bg-purple-100 text-purple-700 px-3 py-1 rounded text-sm hover:bg-purple-200">
+                    Editar Workflow
+                  </button>
+                </div>
+                <div class="grid grid-cols-3 gap-4 text-sm text-gray-600">
+                  <div>Nodos: ${agent.workflows[0].nodeCount || 0}</div>
+                  <div>Conexiones: ${agent.workflows[0].connectionCount || 0}</div>
+                  <div>Complejidad: ${agent.workflows[0].complexity || 'N/A'}</div>
+                </div>
+              </div>
+            </div>
+          ` : ''}
+        </form>
+        
+        <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+          <button type="button" onclick="cerrarModalEditar()" class="bg-gray-100 text-gray-700 px-6 py-2 rounded-lg font-medium hover:bg-gray-200">
+            Cancelar
+          </button>
+          <button type="button" onclick="guardarCambiosAgente('${agent.id}')" class="bg-gradient-to-r from-teal-600 to-emerald-600 text-white px-6 py-2 rounded-lg font-medium hover:from-teal-700 hover:to-emerald-700">
+            Guardar Cambios
+          </button>
+        </div>
+      </div>
+    `;
+    
+    modal.classList.remove('hidden');
+  }
+
+  // Función para cerrar modal de edición
+  function cerrarModalEditar() {
+    const modal = elements.modalEditarAgente;
+    modal?.classList.add('hidden');
+  }
+
+  // Función para guardar cambios del agente
+  async function guardarCambiosAgente(agentId) {
+    try {
+      if (!agentsApiClient) {
+        throw new Error('agentsApiClient no está disponible');
+      }
+      
+      // Obtener datos del formulario
+      const updatedData = {
+        name: document.getElementById('editAgentName')?.value,
+        status: document.getElementById('editAgentStatus')?.value,
+        connectionType: document.getElementById('editConnectionType')?.value,
+        complexity: document.getElementById('editComplexity')?.value,
+        description: document.getElementById('editAgentDescription')?.value,
+        purpose: document.getElementById('editAgentPurpose')?.value,
+        estimatedHours: parseInt(document.getElementById('editEstimatedHours')?.value) || 8
+      };
+      
+      // Validar datos requeridos
+      if (!updatedData.name || updatedData.name.trim().length === 0) {
+        if (agentsApiClient.showNotification) {
+          agentsApiClient.showNotification('El nombre del agente es requerido', 'error');
+        }
+        return;
+      }
+      
+      // Actualizar agente
+      const response = await agentsApiClient.updateCreatedAgent(agentId, updatedData);
+      
+      if (response.success) {
+        if (agentsApiClient.showNotification) {
+          agentsApiClient.showNotification('Agente actualizado exitosamente', 'success');
+        }
+        
+        // Cerrar modal
+        cerrarModalEditar();
+        
+        // Recargar datos
+        await loadAgentsData();
+      } else {
+        throw new Error(response.message || 'Error al actualizar el agente');
+      }
+      
+    } catch (error) {
+      console.error('Error actualizando agente:', error);
+      if (agentsApiClient && agentsApiClient.showNotification) {
+        agentsApiClient.showNotification(`Error: ${error.message}`, 'error');
+      }
+    }
+  }
+
+  // Función global para editar workflow
+  window.editWorkflowForAgent = function(agentId) {
+    // Cerrar modal de edición y abrir modal n8n
+    cerrarModalEditar();
+    setTimeout(() => editarN8n(agentId), 300);
+  };
+
+  // Función global para cerrar modal de edición
+  window.cerrarModalEditar = function() {
+    const modal = elements.modalEditarAgente;
+    modal?.classList.add('hidden');
+  };
+
+  // Función global para guardar cambios del agente
+  window.guardarCambiosAgente = async function(agentId) {
+    try {
+      if (!agentsApiClient) {
+        throw new Error('agentsApiClient no está disponible');
+      }
+      
+      // Obtener datos del formulario
+      const updatedData = {
+        name: document.getElementById('editAgentName')?.value,
+        status: document.getElementById('editAgentStatus')?.value,
+        connectionType: document.getElementById('editConnectionType')?.value,
+        complexity: document.getElementById('editComplexity')?.value,
+        description: document.getElementById('editAgentDescription')?.value,
+        purpose: document.getElementById('editAgentPurpose')?.value,
+        estimatedHours: parseInt(document.getElementById('editEstimatedHours')?.value) || 8
+      };
+      
+      // Validar datos requeridos
+      if (!updatedData.name || updatedData.name.trim().length === 0) {
+        if (agentsApiClient.showNotification) {
+          agentsApiClient.showNotification('El nombre del agente es requerido', 'error');
+        }
+        return;
+      }
+      
+      // Actualizar agente
+      const response = await agentsApiClient.updateCreatedAgent(agentId, updatedData);
+      
+      if (response.success) {
+        if (agentsApiClient.showNotification) {
+          agentsApiClient.showNotification('Agente actualizado exitosamente', 'success');
+        }
+        
+        // Cerrar modal
+        window.cerrarModalEditar();
+        
+        // Recargar datos
+        await loadAgentsData();
+      } else {
+        throw new Error(response.message || 'Error al actualizar el agente');
+      }
+      
+    } catch (error) {
+      console.error('Error actualizando agente:', error);
+      if (agentsApiClient && agentsApiClient.showNotification) {
+        agentsApiClient.showNotification(`Error: ${error.message}`, 'error');
+      }
+    }
+  };
+
+  function mostrarEditorN8n(agent) {
+    const modal = elements.modalEditarN8n;
+    const contenido = document.getElementById('contenidoModalN8n');
+    
+    if (!modal || !contenido) {
+      console.warn('Modal de n8n no encontrado');
+      return;
+    }
+    
+    // Buscar el workflow actual del agente
+    const currentWorkflow = agent.workflows?.find(w => w.isCurrentVersion) || agent.workflows?.[0];
+    
+    if (!currentWorkflow) {
+      if (agentsApiClient && agentsApiClient.showNotification) {
+        agentsApiClient.showNotification('Este agente no tiene workflows configurados', 'warning');
+      }
+      return;
+    }
+    
+    contenido.innerHTML = `
+      <div class="space-y-6">
+        <div class="bg-purple-50 rounded-lg p-4">
+          <h4 class="font-medium text-purple-900 mb-2">Workflow n8n: ${currentWorkflow.workflowName}</h4>
+          <p class="text-sm text-purple-800">Visualiza y edita el flujo de trabajo del agente</p>
+        </div>
+        
+        <!-- Información del Workflow -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="bg-blue-50 rounded-lg p-3 text-center">
+            <div class="text-lg font-bold text-blue-600">${currentWorkflow.nodeCount || 0}</div>
+            <div class="text-sm text-blue-700">Nodos</div>
+          </div>
+          <div class="bg-green-50 rounded-lg p-3 text-center">
+            <div class="text-lg font-bold text-green-600">${currentWorkflow.connectionCount || 0}</div>
+            <div class="text-sm text-green-700">Conexiones</div>
+          </div>
+          <div class="bg-orange-50 rounded-lg p-3 text-center">
+            <div class="text-lg font-bold text-orange-600">${currentWorkflow.complexity || 'N/A'}</div>
+            <div class="text-sm text-orange-700">Complejidad</div>
+          </div>
+          <div class="bg-teal-50 rounded-lg p-3 text-center">
+            <div class="text-lg font-bold text-teal-600">${currentWorkflow.isActive ? 'Activo' : 'Inactivo'}</div>
+            <div class="text-sm text-teal-700">Estado</div>
+          </div>
+        </div>
+        
+        <!-- Tabs de contenido -->
+        <div class="border-b border-gray-200">
+          <nav class="-mb-px flex space-x-8">
+            <button onclick="showN8nTab('visual')" id="tab-visual" class="border-b-2 border-purple-500 py-2 px-1 text-sm font-medium text-purple-600">
+              Vista Visual
+            </button>
+            <button onclick="showN8nTab('json')" id="tab-json" class="border-b-2 border-transparent py-2 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+              JSON del Workflow
+            </button>
+            <button onclick="showN8nTab('editor')" id="tab-editor" class="border-b-2 border-transparent py-2 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+              Editor Avanzado
+            </button>
+          </nav>
+        </div>
+        
+        <!-- Vista Visual -->
+        <div id="n8n-visual-tab" class="tab-content">
+          <div class="bg-gray-50 rounded-lg p-6 min-h-[400px]">
+            <div class="text-center mb-4">
+              <h5 class="font-medium text-gray-900 mb-2">Flujo de Trabajo</h5>
+              <p class="text-sm text-gray-600">Representación visual del workflow n8n</p>
+            </div>
+            
+            <div id="workflowVisualization" class="space-y-4">
+              ${currentWorkflow.n8nWorkflow?.nodes ? currentWorkflow.n8nWorkflow.nodes.map((node, index) => `
+                <div class="flex items-center justify-between bg-white rounded-lg p-4 border border-gray-200">
+                  <div class="flex items-center">
+                    <div class="w-8 h-8 bg-purple-100 text-purple-700 rounded-full flex items-center justify-center text-sm font-bold mr-3">
+                      ${index + 1}
+                    </div>
+                    <div>
+                      <div class="font-medium text-gray-900">${node.name}</div>
+                      <div class="text-sm text-gray-500">${node.type?.split('.').pop() || 'node'}</div>
+                    </div>
+                  </div>
+                  <div class="text-sm text-gray-400">
+                    ${node.position ? `Pos: ${node.position[0]}, ${node.position[1]}` : ''}
+                  </div>
+                </div>
+              `).join('') : '<p class="text-gray-500 text-center py-8">No hay nodos definidos</p>'}
+            </div>
+          </div>
+        </div>
+        
+        <!-- Vista JSON -->
+        <div id="n8n-json-tab" class="tab-content hidden">
+          <div class="border border-gray-300 rounded-lg">
+            <div class="bg-gray-50 px-4 py-2 border-b border-gray-300 flex items-center justify-between">
+              <span class="text-sm font-medium text-gray-700">Workflow JSON</span>
+              <div class="flex space-x-2">
+                <button onclick="formatWorkflowJson()" class="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded hover:bg-gray-300">
+                  Formatear
+                </button>
+                <button onclick="copyWorkflowJson()" class="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded hover:bg-purple-200">
+                  Copiar
+                </button>
+              </div>
+            </div>
+            <div class="p-4 bg-gray-900 text-gray-100 font-mono text-sm overflow-x-auto" style="max-height: 400px;">
+              <pre id="workflowJsonDisplay">${JSON.stringify(currentWorkflow.n8nWorkflow, null, 2)}</pre>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Editor Avanzado -->
+        <div id="n8n-editor-tab" class="tab-content hidden">
+          <div class="space-y-4">
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div class="flex items-center">
+                <svg class="w-5 h-5 text-yellow-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 19.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                </svg>
+                <div>
+                  <p class="text-yellow-800 font-medium">Edición Avanzada</p>
+                  <p class="text-yellow-700 text-sm">Modifica el workflow JSON directamente. Ten cuidado con los cambios.</p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="border border-gray-300 rounded-lg">
+              <div class="bg-gray-50 px-4 py-2 border-b border-gray-300 flex items-center justify-between">
+                <span class="text-sm font-medium text-gray-700">Editor JSON</span>
+                <div class="flex space-x-2">
+                  <button onclick="validateWorkflowJsonEditor()" class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200">
+                    Validar
+                  </button>
+                  <button onclick="resetWorkflowEditor()" class="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded hover:bg-gray-300">
+                    Restablecer
+                  </button>
+                </div>
+              </div>
+              <textarea id="workflowJsonEditor" rows="15" class="w-full p-4 font-mono text-sm border-0 focus:outline-none focus:ring-2 focus:ring-purple-500 rounded-b-lg resize-none">${JSON.stringify(currentWorkflow.n8nWorkflow, null, 2)}</textarea>
+            </div>
+            
+            <div id="editorValidationResult" class="hidden">
+              <!-- Resultado de validación se mostrará aquí -->
+            </div>
+            
+            <div class="flex justify-end space-x-3">
+              <button onclick="guardarWorkflowEditado('${agent.id}', '${currentWorkflow.id}')" class="bg-gradient-to-r from-purple-600 to-purple-700 text-white px-6 py-2 rounded-lg font-medium hover:from-purple-700 hover:to-purple-800">
+                Guardar Cambios en Workflow
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Información adicional del workflow -->
+        <div class="bg-gray-50 rounded-lg p-4">
+          <h5 class="font-medium text-gray-900 mb-2">Información del Workflow</h5>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div>
+              <span class="font-medium text-gray-600">Tipo:</span>
+              <span class="ml-2">${currentWorkflow.workflowType || 'N/A'}</span>
+            </div>
+            <div>
+              <span class="font-medium text-gray-600">Versión Actual:</span>
+              <span class="ml-2">${currentWorkflow.isCurrentVersion ? 'Sí' : 'No'}</span>
+            </div>
+            <div>
+              <span class="font-medium text-gray-600">Descripción:</span>
+              <span class="ml-2">${currentWorkflow.description || 'Sin descripción'}</span>
+            </div>
+            <div>
+              <span class="font-medium text-gray-600">Último Cambio:</span>
+              <span class="ml-2">${currentWorkflow.changeLog || 'Sin registro'}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    modal.classList.remove('hidden');
+  }
+
+  // Funciones para el modal n8n
+  window.showN8nTab = function(tabName) {
+    // Ocultar todas las pestañas
+    document.querySelectorAll('.tab-content').forEach(tab => {
+      tab.classList.add('hidden');
+    });
+    
+    // Remover clases activas de los botones
+    document.querySelectorAll('[id^="tab-"]').forEach(btn => {
+      btn.className = 'border-b-2 border-transparent py-2 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300';
+    });
+    
+    // Mostrar pestaña seleccionada
+    const selectedTab = document.getElementById(`n8n-${tabName}-tab`);
+    const selectedBtn = document.getElementById(`tab-${tabName}`);
+    
+    if (selectedTab) selectedTab.classList.remove('hidden');
+    if (selectedBtn) {
+      selectedBtn.className = 'border-b-2 border-purple-500 py-2 px-1 text-sm font-medium text-purple-600';
+    }
+  };
+
+  window.formatWorkflowJson = function() {
+    const display = document.getElementById('workflowJsonDisplay');
+    if (display) {
+      try {
+        const parsed = JSON.parse(display.textContent);
+        display.textContent = JSON.stringify(parsed, null, 2);
+      } catch (error) {
+        console.error('Error formateando JSON:', error);
+      }
+    }
+  };
+
+  window.copyWorkflowJson = function() {
+    const display = document.getElementById('workflowJsonDisplay');
+    if (display) {
+      navigator.clipboard.writeText(display.textContent)
+        .then(() => {
+          if (agentsApiClient && agentsApiClient.showNotification) {
+            agentsApiClient.showNotification('JSON copiado al portapapeles', 'success');
+          }
+        })
+        .catch(err => {
+          console.error('Error al copiar:', err);
+        });
+    }
+  };
+
+  window.validateWorkflowJsonEditor = function() {
+    const editor = document.getElementById('workflowJsonEditor');
+    const resultDiv = document.getElementById('editorValidationResult');
+    
+    if (!editor || !resultDiv) return;
+    
+    const jsonContent = editor.value;
+    
+    try {
+      JSON.parse(jsonContent);
+      resultDiv.className = 'bg-green-50 border border-green-200 rounded-lg p-3';
+      resultDiv.innerHTML = `
+        <div class="flex items-center text-green-800">
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+          JSON válido - El workflow puede ser guardado
+        </div>
+      `;
+      resultDiv.classList.remove('hidden');
+    } catch (error) {
+      resultDiv.className = 'bg-red-50 border border-red-200 rounded-lg p-3';
+      resultDiv.innerHTML = `
+        <div class="text-red-800">
+          <div class="flex items-center mb-1">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            JSON inválido
+          </div>
+          <p class="text-sm">${error.message}</p>
+        </div>
+      `;
+      resultDiv.classList.remove('hidden');
+    }
+  };
+
+  window.resetWorkflowEditor = function() {
+    // Restablecer al JSON original
+    const editor = document.getElementById('workflowJsonEditor');
+    const originalData = document.getElementById('workflowJsonDisplay')?.textContent;
+    
+    if (editor && originalData) {
+      editor.value = originalData;
+      document.getElementById('editorValidationResult')?.classList.add('hidden');
+    }
+  };
+
+  window.guardarWorkflowEditado = async function(agentId, workflowId) {
+    try {
+      if (!agentsApiClient) {
+        throw new Error('agentsApiClient no está disponible');
+      }
+      
+      const editor = document.getElementById('workflowJsonEditor');
+      if (!editor) return;
+      
+      const newWorkflowJson = editor.value;
+      
+      // Validar JSON
+      let parsedWorkflow;
+      try {
+        parsedWorkflow = JSON.parse(newWorkflowJson);
+      } catch (error) {
+        throw new Error('JSON del workflow inválido');
+      }
+      
+      // Actualizar workflow
+      const updateData = {
+        n8nWorkflow: parsedWorkflow,
+        workflowNodes: parsedWorkflow.nodes?.map(node => node.name) || [],
+        nodeCount: parsedWorkflow.nodes?.length || 0,
+        connectionCount: Object.keys(parsedWorkflow.connections || {}).length,
+        changeLog: `Actualización manual del workflow - ${new Date().toLocaleString()}`
+      };
+      
+      const response = await agentsApiClient.updateAgentWorkflow(workflowId, updateData);
+      
+      if (response.success) {
+        if (agentsApiClient.showNotification) {
+          agentsApiClient.showNotification('Workflow actualizado exitosamente', 'success');
+        }
+        
+        // Recargar datos del agente
+        await loadAgentsData();
+        
+        // Cerrar modal
+        elements.modalEditarN8n?.classList.add('hidden');
+      } else {
+        throw new Error(response.message || 'Error al actualizar el workflow');
+      }
+      
+    } catch (error) {
+      console.error('Error guardando workflow:', error);
+      if (agentsApiClient && agentsApiClient.showNotification) {
+        agentsApiClient.showNotification(`Error: ${error.message}`, 'error');
+      }
+    }
+  };
+
+  // Función para manejar errores de inicialización
+  function handleInitializationError(error) {
+    console.error('Error de inicialización:', error);
+    showError();
+  }
+  
+  // Función para cargar en modo básico sin autenticación
+  async function attemptBasicLoad() {
+    try {
+      showLoading();
+      await loadDependencies();
+      
+      if (agentsApiClient) {
+        const token = localStorage.getItem('access_token');
+        if (token) {
+          await loadAgentsData();
+        } else {
+          loadDemoData();
+        }
+      } else {
+        throw new Error('No se pudo cargar agentsApiClient');
+      }
+      
+      setupEventListeners();
+    } catch (error) {
+      console.error('Error en modo básico:', error);
+      loadDemoData();
+    }
+  }
+
+  // Función para cargar datos de demostración
+  function loadDemoData() {
+    appState.agents = [
+      {
+        id: 'demo-1',
+        name: 'Agente de Demostración 1',
+        agentNumber: 'AGT-DEMO-001',
+        status: 'ACTIVE',
+        connectionType: 'API',
+        successRate: 95,
+        totalExecutions: 150,
+        createdAt: new Date().toISOString(),
+        order: {
+          orderNumber: 'ORD-DEMO-001',
+          client: {
+            companyName: 'Cliente Demostración'
+          }
+        }
+      },
+      {
+        id: 'demo-2',
+        name: 'Agente de Demostración 2',
+        agentNumber: 'AGT-DEMO-002',
+        status: 'IN_DEVELOPMENT',
+        connectionType: 'RPA',
+        successRate: 87,
+        totalExecutions: 75,
+        createdAt: new Date().toISOString(),
+        order: {
+          orderNumber: 'ORD-DEMO-002',
+          client: {
+            companyName: 'Empresa Ejemplo'
+          }
+        }
+      }
+    ];
+    
+    appState.stats = {
+      overview: {
+        successRate: 91,
+        totalAgents: 2,
+        activeAgents: 1
+      }
+    };
+    
+    // Mostrar mensaje informativo
+    const demoNotice = document.createElement('div');
+    demoNotice.className = 'bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6';
+    demoNotice.innerHTML = `
+      <div class="flex items-center">
+        <svg class="w-5 h-5 text-yellow-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 19.5c-.77.833.192 2.5 1.732 2.5z"></path>
+        </svg>
+        <div>
+          <p class="text-yellow-800 font-medium">Modo Demostración</p>
+          <p class="text-yellow-700 text-sm">Mostrando datos de ejemplo. Para ver tus agentes reales, verifica la conexión al servidor.</p>
+        </div>
+      </div>
+    `;
+    
+    // Insertar el aviso antes del contenido principal
+    const mainContent = document.querySelector('.bg-gradient-to-r.from-teal-600');
+    if (mainContent && mainContent.parentNode) {
+      mainContent.parentNode.insertBefore(demoNotice, mainContent);
+    }
+    
+    // Renderizar la interfaz
+    renderAgentsTable();
+    updateStatsCards();
+    showTable();
+  }
+
+  // Inicializar cuando esté listo
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      initializeApp().catch(handleInitializationError);
+    });
+  } else {
+    // Pequeño delay para asegurar que todo esté listo
+    setTimeout(() => {
+      initializeApp().catch(handleInitializationError);
+    }, 100);
+  }
+
+  /*
+  ===============================
+  FUNCIONALIDADES IMPLEMENTADAS
+  ===============================
+  
+  1. ESTADO DE AGENTES MEJORADO:
+     - Los agentes ahora se marcan como "COMPLETED" al finalizar el flujo de creación
+     - Estados visuales: "Agente Terminado", "Agente Activo", "En Desarrollo", etc.
+     - Actualización automática en ambas páginas (Mis Agentes y Crear Agente)
+  
+  2. BOTÓN "VER" COMPLETAMENTE FUNCIONAL:
+     - Muestra información detallada del agente
+     - Incluye métricas de rendimiento
+     - Muestra workflows asociados
+     - Información de la orden relacionada
+  
+  3. BOTÓN "EDITAR" COMPLETAMENTE FUNCIONAL:
+     - Formulario precargado con datos actuales del agente
+     - Permite editar todos los campos principales
+     - Actualización en tiempo real
+     - Integración con el sistema de workflows
+  
+  4. BOTÓN "N8N" COMPLETAMENTE FUNCIONAL:
+     - Vista visual del workflow n8n
+     - Visualización del JSON completo
+     - Editor avanzado para modificar workflows
+     - Validación y guardado de cambios
+  
+  5. INTEGRACIÓN COMPLETA:
+     - Estados sincronizados entre páginas
+     - Notificaciones de éxito/error
+     - Recarga automática de datos
+     - Transiciones suaves entre modales
+  */
+</script> 

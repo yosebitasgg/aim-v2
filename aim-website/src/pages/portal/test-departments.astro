@@ -1,0 +1,16 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import DepartmentTest from '../../components/DepartmentTest.jsx';
+---
+
+<BaseLayout title="Test de Departamentos - AIM">
+  <main class="container mx-auto px-4 py-8">
+    <div class="max-w-6xl mx-auto">
+      <h1 class="text-3xl font-bold text-gray-900 mb-8">
+        Test de Departamentos
+      </h1>
+      
+      <DepartmentTest client:load />
+    </div>
+  </main>
+</BaseLayout> 

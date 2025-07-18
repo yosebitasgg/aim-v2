@@ -1,0 +1,41 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { Icon } from 'astro-icon/components';
+---
+<BaseLayout
+  title="Recursos para la Industria 4.0"
+  description="Explora nuestros artículos, análisis y casos de estudio para liderar la transformación digital en tu empresa."
+>
+  <!-- Hero Section -->
+  <div class="bg-teal-50">
+    <div class="container mx-auto px-4 pt-20 pb-16 text-center">
+       <h1 class="text-4xl md:text-5xl font-black text-teal-800 tracking-tighter">Conocimiento para la Industria 4.0</h1>
+        <p class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
+         Desde análisis de la industria hasta guías prácticas de automatización, aquí encontrarás el conocimiento para tomar mejores decisiones.
+        </p>
+    </div>
+  </div>
+
+  <!-- Resource Links Section -->
+  <div class="py-20 sm:py-24">
+    <div class="container mx-auto px-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <!-- Tarjeta para el Blog -->
+        <a href="/recursos/blog" class="block bg-white p-8 rounded-lg border border-slate-200 hover:border-teal-600 hover:shadow-lg transition-all">
+          <Icon name="tabler:notebook" class="w-10 h-10 text-teal-600 mb-4" />
+          <h2 class="text-2xl font-bold text-teal-800">Blog de la Industria</h2>
+          <p class="mt-2 text-gray-600">Insights, tendencias y guías prácticas sobre automatización e inteligencia artificial en el sector industrial.</p>
+          <span class="font-bold text-teal-600 text-sm mt-4 inline-block">Leer artículos →</span>
+        </a>
+
+        <!-- Tarjeta para Casos de Éxito -->
+         <a href="/casos-de-exito" class="block bg-white p-8 rounded-lg border border-slate-200 hover:border-teal-600 hover:shadow-lg transition-all">
+          <Icon name="tabler:report-analytics" class="w-10 h-10 text-teal-600 mb-4" />
+          <h2 class="text-2xl font-bold text-teal-800">Casos de Éxito</h2>
+          <p class="mt-2 text-gray-600">Descubre en detalle cómo hemos ayudado a empresas a lograr un ROI medible de hasta 450% en el primer año.</p>
+          <span class="font-bold text-teal-600 text-sm mt-4 inline-block">Ver casos reales →</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</BaseLayout> 

@@ -1,0 +1,61 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { Icon } from 'astro-icon/components';
+
+const plans = [
+    { 
+        name: 'AIM-Gestionado', 
+        description: 'Solución "llave en mano". Nosotros alojamos, gestionamos y mantenemos la automatización.',
+        features: ['Alojamiento en nuestra nube', 'Soporte Proactivo 24/7 Incluido', 'Mantenimiento y Actualizaciones', 'Ideal para delegar complejidad'],
+        cta: 'Cotizar Plan Gestionado',
+        primary: true,
+    },
+    { 
+        name: 'AIM-Local', 
+        description: 'Máximo control. Instalamos la automatización en su propia infraestructura (On-Premise).',
+        features: ['Alojamiento en tus servidores', 'Tu equipo de TI gestiona', 'Soporte 24/7 Opcional', 'Ideal para políticas de seguridad estrictas'],
+        cta: 'Cotizar Plan Local',
+        primary: false,
+    },
+    { 
+        name: 'AIM-Híbrido', 
+        description: 'Flexibilidad total. Usamos una plataforma externa (ej. n8n) y tú mantienes el control de la cuenta.',
+        features: ['Alojamiento en plataforma de terceros', 'Control total sobre tu cuenta', 'Soporte 24/7 Opcional', 'Balance entre control y gestión'],
+        cta: 'Cotizar Plan Híbrido',
+        primary: false,
+    },
+]
+---
+<BaseLayout
+  title="Planes y Modelo de Negocio"
+  description="Un modelo de negocio claro y adaptable a tus necesidades técnicas y de presupuesto."
+>
+ <!-- Hero -->
+ <div class="bg-brand-light py-20 text-center">
+    <h1 class="text-4xl md:text-5xl font-black text-brand-dark tracking-tighter">Planes Flexibles para tu Transformación</h1>
+    <p class="mt-4 text-lg text-brand-gray max-w-2xl mx-auto">Elige el plan que mejor se ajuste a tu estrategia técnica y de seguridad.</p>
+ </div>
+
+  <!-- Tabla de Precios -->
+  <div class="py-20 sm:py-24">
+    <div class="container mx-auto px-4">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start max-w-6xl mx-auto">
+            {plans.map(plan => (
+                <div class:list={['border rounded-xl p-8 flex flex-col h-full', { 'bg-brand-dark text-white border-brand-primary ring-2 ring-brand-primary': plan.primary, 'bg-white': !plan.primary }]}>
+                    <h3 class="text-2xl font-bold">{plan.name}</h3>
+                    <p class:list={['mt-2 h-20', { 'text-slate-300': plan.primary, 'text-slate-500': !plan.primary}]}>{plan.description}</p>
+                    <ul class="mt-8 space-y-4 text-sm flex-grow">
+                        {plan.features.map(feature => (
+                           <li class="flex items-start">
+                             <Icon name="tabler:check" class:list={['w-5 h-5 flex-shrink-0 mr-3 mt-1', { 'text-brand-secondary': plan.primary, 'text-brand-primary': !plan.primary}]} />
+                             <span>{feature}</span>
+                           </li>
+                        ))}
+                    </ul>
+                     <a href="/contacto" class:list={['w-full text-center font-bold py-3 px-5 rounded-lg transition-all duration-300 mt-8 block', { 'bg-brand-primary hover:bg-brand-secondary text-white': plan.primary, 'bg-slate-100 hover:bg-slate-200 text-brand-dark': !plan.primary}]}>{plan.cta}</a>
+                </div>
+            ))}
+        </div>
+    </div>
+  </div>
+</BaseLayout> 

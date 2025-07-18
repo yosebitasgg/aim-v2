@@ -1,0 +1,27 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { Icon } from 'astro-icon/components';
+import { industriesData } from '../../data/industries.js'; // <-- Importamos los datos
+---
+<BaseLayout
+  title="Soluciones por Industria"
+  description="Entendemos los KPIs y desafíos únicos de tu sector. Descubre soluciones de IA a tu medida."
+>
+  <div class="bg-brand-light py-20 text-center">
+    <h1 class="text-4xl md:text-5xl font-black text-brand-dark tracking-tighter">Soluciones de IA a la Medida de tu Industria</h1>
+    <p class="mt-4 text-lg text-brand-gray max-w-2xl mx-auto">No ofrecemos soluciones genéricas. Hablamos tu idioma y entendemos tus KPIs, desde OEE hasta Fill Rate.</p>
+  </div>
+  <div class="py-20 sm:py-24">
+    <div class="container mx-auto px-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        {industriesData.map(industry => (
+          <a href={`/industrias/${industry.slug}`} class="block text-center bg-white p-8 rounded-lg border border-slate-200 hover:border-brand-primary hover:shadow-xl transition-all">
+            <span class="inline-block bg-brand-light p-4 rounded-xl"><Icon name={industry.icon} class="w-10 h-10 text-brand-primary" /></span>
+            <h2 class="mt-6 text-xl font-bold text-brand-dark">{industry.name}</h2>
+            <p class="mt-2 text-sm text-brand-gray">{industry.short_description}</p>
+          </a>
+        ))}
+      </div>
+    </div>
+  </div>
+</BaseLayout> 

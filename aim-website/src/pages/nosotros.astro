@@ -1,0 +1,176 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { Icon } from 'astro-icon/components';
+import ProfileCard from '../components/ProfileCard.jsx';
+
+const teamMembers = [
+    { 
+      name: 'Yoseba Mireles', 
+      role: 'Director General', 
+      icon: 'tabler:user-star',
+      description: 'Ingeniero en Ciencia de Datos y Matemáticas. Experto en implementación de soluciones IA con experiencia en manejo y desarrollo de ERP.',
+      experience: '3+',
+      projects: '25+'
+    },
+    { 
+      name: 'Andrés Martínez', 
+      role: 'CTO', 
+      icon: 'tabler:cpu-2',
+      description: 'Ingeniero en Ciencia de Datos y Matemáticas. Experto en IA y Machine Learning, especialista en algoritmos avanzados y arquitecturas escalables.',
+      experience: '3+',
+      projects: '20+'
+    },
+    { 
+      name: 'Patricio Baltazar', 
+      role: 'Director Financiero', 
+      icon: 'tabler:chart-infographic',
+      description: 'Licenciado en Contaduría Pública y Finanzas. Especialista en análisis financiero, ROI de proyectos tecnológicos y optimización de procesos contables.',
+      experience: '2+',
+      projects: '15+'
+    },
+];
+
+const values = [
+    { 
+      name: 'Innovación', 
+      description: 'Adoptamos las tecnologías más avanzadas para resolver problemas reales.', 
+      icon: 'tabler:bulb' 
+    },
+    { 
+      name: 'Eficiencia', 
+      description: 'Cada agente está diseñado para maximizar el ROI y minimizar el tiempo de implementación.', 
+      icon: 'tabler:rocket' 
+    },
+    { 
+      name: 'Seguridad', 
+      description: 'Protección empresarial con estándares ISO 27001 y SOC 2 Type II.', 
+      icon: 'tabler:shield-lock' 
+    },
+    { 
+      name: 'Transparencia', 
+      description: 'Métricas claras, reportes en tiempo real y comunicación constante.', 
+      icon: 'tabler:heart-handshake' 
+    },
+];
+
+const stats = [
+    { number: '50+', label: 'Agentes Desplegados' },
+    { number: '25+', label: 'Empresas Transformadas' },
+    { number: '320%', label: 'ROI Promedio Primer Año' },
+    { number: '98%', label: 'Satisfacción del Cliente' },
+];
+---
+<BaseLayout
+  title="Sobre Nosotros"
+  description="Conoce al equipo de expertos detrás de Automatización Industrial Mireles y nuestra misión de transformar la industria."
+>
+  <!-- Hero Section -->
+  <div class="bg-gradient-to-b from-teal-50 to-white py-20 text-center">
+    <div class="container mx-auto px-4">
+      <h1 class="text-4xl md:text-5xl font-black text-teal-800 tracking-tight">
+        Los Expertos Detrás de tu Transformación Digital
+      </h1>
+      <p class="mt-6 text-lg text-gray-600 max-w-3xl mx-auto">
+        Somos un equipo de ingenieros, desarrolladores y estrategas apasionados por resolver problemas complejos 
+        a través de la inteligencia artificial y la automatización industrial.
+      </p>
+    </div>
+  </div>
+
+  <!-- Stats Section -->
+  <div class="py-16 bg-white">
+    <div class="container mx-auto px-4">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
+        {stats.map(stat => (
+          <div class="text-center">
+            <div class="text-3xl md:text-4xl font-black text-teal-600">{stat.number}</div>
+            <div class="text-sm text-gray-600 font-medium">{stat.label}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  <!-- Mission Section -->
+  <div class="py-20 bg-teal-50">
+    <div class="container mx-auto px-4">
+      <div class="max-w-4xl mx-auto text-center">
+        <h2 class="text-3xl md:text-4xl font-black text-teal-800 mb-8">Nuestra Misión</h2>
+        <p class="text-xl text-gray-600 leading-relaxed mb-8">
+          Democratizar el acceso a la automatización inteligente para que cualquier empresa, 
+          sin importar su tamaño, pueda competir en la era digital.
+        </p>
+        <div class="bg-white p-8 rounded-2xl shadow-lg border border-teal-100">
+          <p class="text-lg text-gray-700 italic">
+            "Creemos que la inteligencia artificial no debe ser un privilegio de las grandes corporaciones. 
+            Nuestros Agentes Inteligentes están diseñados para ser accesibles, seguros y generar resultados 
+            medibles desde el primer día."
+          </p>
+          <p class="text-teal-600 font-semibold mt-4">- Equipo Fundador AIM</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Valores Section -->
+  <div class="py-20 bg-white">
+    <div class="container mx-auto px-4">
+      <div class="text-center max-w-3xl mx-auto mb-16">
+        <h2 class="text-3xl md:text-4xl font-black text-teal-800">Nuestros Valores Fundamentales</h2>
+        <p class="mt-4 text-gray-600">Los principios que guían cada decisión y cada línea de código</p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        {values.map(value => (
+          <div class="text-center group">
+            <div class="inline-block bg-teal-100 p-4 rounded-xl group-hover:bg-teal-600 transition-colors duration-300">
+              <Icon name={value.icon} class="w-8 h-8 text-teal-600 group-hover:text-white transition-colors duration-300" />
+            </div>
+            <h3 class="mt-4 text-xl font-bold text-teal-800">{value.name}</h3>
+            <p class="mt-2 text-gray-600 leading-relaxed">{value.description}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+
+   <!-- Equipo Section -->
+  <div class="py-20 bg-teal-50">
+    <div class="container mx-auto px-4">
+       <div class="text-center max-w-3xl mx-auto mb-16">
+        <h2 class="text-3xl md:text-4xl font-black text-teal-800">Conoce a Nuestro Equipo Directivo</h2>
+        <p class="mt-4 text-gray-600">Líderes con experiencia comprobada en automatización e inteligencia artificial</p>
+      </div>
+       <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        {teamMembers.map(member => (
+            <ProfileCard member={member} client:load />
+        ))}
+       </div>
+    </div>
+  </div>
+
+  <!-- CTA Section -->
+  <div class="py-20 bg-teal-600">
+    <div class="container mx-auto px-4 text-center">
+      <h2 class="text-3xl md:text-4xl font-bold text-white mb-6">
+        ¿Listo para conocer el potencial de tu empresa?
+      </h2>
+      <p class="text-xl text-teal-100 mb-8 max-w-2xl mx-auto">
+        Nuestro equipo está listo para analizar tus procesos y diseñar una estrategia de automatización personalizada.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a 
+          href="/demo" 
+          class="bg-white text-teal-600 font-bold py-4 px-8 rounded-lg hover:bg-teal-50 transition-colors shadow-lg"
+        >
+          Agendar Demo Estratégica
+        </a>
+        <a 
+          href="/herramientas/calculadora-roi" 
+          class="bg-teal-500 text-white font-bold py-4 px-8 rounded-lg hover:bg-teal-400 transition-colors border border-teal-400"
+        >
+          Calcular tu ROI Potencial
+        </a>
+      </div>
+    </div>
+  </div>
+</BaseLayout> 

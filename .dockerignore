@@ -1,0 +1,75 @@
+# .dockerignore global para la raíz del proyecto
+
+# Directorios de node_modules
+**/node_modules
+npm-debug.log*
+.npm
+
+# Archivos de construcción
+**/dist
+**/build
+**/.astro
+
+# Archivos de entorno y configuración
+.env
+.env.*
+!env.example
+
+# Logs
+**/*.log
+logs
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Archivos temporales
+.tmp
+tmp
+.cache
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Archivos de IDE/Editor
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Git
+.git
+.gitignore
+
+# Docker
+**/Dockerfile*
+**/docker-compose*
+**/.dockerignore
+
+# Documentación
+README*.md
+*.md
+!README-Docker.md
+
+# Backups y archivos de desarrollo
+Backups/
+**/*-seeder.js
+**/test-*.js
+**/test-*.html
+**/debug-*.html
+**/fix-*.js
+**/fix-*.sql
+
+# Scripts PowerShell
+**/ps1/
+
+# Archivos temporales y backups
+*.bak
+*.backup
+*.old
+*.orig
+
+# Archivos de TypeScript compilados
+**/*.tsbuildinfo 

@@ -1,0 +1,813 @@
+---
+import PortalLayoutSidebar from '../../layouts/PortalLayoutSidebar.astro';
+import { Icon } from 'astro-icon/components';
+---
+
+<PortalLayoutSidebar title="Departamentos - Portal AIM">
+  <!-- Contenedor de autenticación -->
+  <div id="auth-container">
+    <!-- Loading state -->
+    <div id="auth-loading" class="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div class="text-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
+        <p class="text-gray-600">Cargando departamentos...</p>
+      </div>
+    </div>
+
+    <!-- Main content (hidden initially) -->
+    <div id="main-content" class="hidden">
+      <!-- Header con gradiente -->
+      <div class="mb-8">
+        <div class="bg-gradient-to-r from-teal-600 to-emerald-600 rounded-xl p-6 text-white">
+          <div class="flex items-center justify-between">
+            <div>
+              <h1 class="text-2xl font-bold mb-2">Gestión de Departamentos</h1>
+              <p class="text-teal-100">Organización y estructura departamental del sistema</p>
+            </div>
+            <div class="text-right">
+              <div class="text-teal-100 text-sm">Departamentos disponibles</div>
+              <div class="text-3xl font-bold" id="total-departments">7</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-500 mb-1">Total Departamentos</p>
+              <p class="text-2xl font-bold text-gray-900" id="stat-total">-</p>
+              <p class="text-sm text-gray-500 flex items-center mt-2">
+                <Icon name="tabler:building" class="w-4 h-4 mr-1" />
+                Organizacionales
+              </p>
+            </div>
+            <div class="p-3 bg-teal-50 rounded-lg">
+              <Icon name="tabler:building" class="w-6 h-6 text-teal-600" />
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-500 mb-1">Usuarios Asignados</p>
+              <p class="text-2xl font-bold text-gray-900" id="stat-users">-</p>
+              <p class="text-sm text-blue-600 flex items-center mt-2">
+                <Icon name="tabler:users" class="w-4 h-4 mr-1" />
+                Con departamento
+              </p>
+            </div>
+            <div class="p-3 bg-blue-50 rounded-lg">
+              <Icon name="tabler:users" class="w-6 h-6 text-blue-600" />
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-500 mb-1">Mayor Departamento</p>
+              <p class="text-xl font-bold text-gray-900" id="stat-largest">-</p>
+              <p class="text-sm text-green-600 flex items-center mt-2">
+                <Icon name="tabler:trending-up" class="w-4 h-4 mr-1" />
+                Más usuarios
+              </p>
+            </div>
+            <div class="p-3 bg-green-50 rounded-lg">
+              <Icon name="tabler:trending-up" class="w-6 h-6 text-green-600" />
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-500 mb-1">Componentes</p>
+              <p class="text-2xl font-bold text-gray-900">3</p>
+              <p class="text-sm text-purple-600 flex items-center mt-2">
+                <Icon name="tabler:components" class="w-4 h-4 mr-1" />
+                Listos para usar
+              </p>
+            </div>
+            <div class="p-3 bg-purple-50 rounded-lg">
+              <Icon name="tabler:components" class="w-6 h-6 text-purple-600" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Acciones principales -->
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-xl font-semibold text-gray-900">Departamentos del Sistema</h2>
+        <div class="flex space-x-3">
+          <button 
+            onclick="showAddDepartmentModal()"
+            class="bg-gradient-to-r from-teal-600 to-emerald-600 text-white px-6 py-3 rounded-lg hover:from-teal-700 hover:to-emerald-700 transition-colors duration-200 flex items-center space-x-2 shadow-lg"
+          >
+            <Icon name="tabler:plus" class="w-5 h-5" />
+            <span>Agregar Departamento</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Grid principal con departamentos y componentes -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Lista de departamentos -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+          <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <div class="p-2 bg-teal-50 rounded-lg">
+                <Icon name="tabler:building" class="w-5 h-5 text-teal-600" />
+              </div>
+              <h3 class="text-lg font-semibold text-gray-900">Departamentos Disponibles</h3>
+            </div>
+            <span class="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full" id="departments-count">Cargando...</span>
+          </div>
+          <div class="p-6">
+            <div id="departments-list" class="space-y-3">
+              <!-- Los departamentos se cargarán aquí -->
+              <div class="animate-pulse space-y-3">
+                <div class="h-16 bg-gray-100 rounded-lg"></div>
+                <div class="h-16 bg-gray-100 rounded-lg"></div>
+                <div class="h-16 bg-gray-100 rounded-lg"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Demo de componentes -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+          <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <div class="p-2 bg-purple-50 rounded-lg">
+                <Icon name="tabler:components" class="w-5 h-5 text-purple-600" />
+              </div>
+              <h3 class="text-lg font-semibold text-gray-900">Componentes Disponibles</h3>
+            </div>
+            <span class="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">3 componentes</span>
+          </div>
+          <div class="p-6 space-y-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                <Icon name="tabler:list" class="w-4 h-4 mr-2 text-gray-500" />
+                Selector de Departamento
+              </label>
+              <div id="department-selector-demo" class="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                  <option>Cargando departamentos...</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                <Icon name="tabler:filter" class="w-4 h-4 mr-2 text-gray-500" />
+                Filtro de Departamento
+              </label>
+              <div id="department-filter-demo" class="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                  <option>Cargando filtros...</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                <Icon name="tabler:tags" class="w-4 h-4 mr-2 text-gray-500" />
+                Badges de Departamento
+              </label>
+              <div class="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                <div id="department-badges-demo" class="flex flex-wrap gap-2">
+                  <div class="animate-pulse flex space-x-2">
+                    <div class="h-6 w-16 bg-gray-300 rounded-full"></div>
+                    <div class="h-6 w-20 bg-gray-300 rounded-full"></div>
+                    <div class="h-6 w-18 bg-gray-300 rounded-full"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Estadísticas por departamento -->
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+        <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <div class="p-2 bg-orange-50 rounded-lg">
+              <Icon name="tabler:chart-bar" class="w-5 h-5 text-orange-600" />
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900">Estadísticas por Departamento</h3>
+          </div>
+          <button 
+            onclick="refreshStats()"
+            class="text-sm text-teal-600 hover:text-teal-700 font-medium flex items-center space-x-1"
+          >
+            <Icon name="tabler:refresh" class="w-4 h-4" />
+            <span>Actualizar</span>
+          </button>
+        </div>
+        <div class="p-6">
+          <div id="department-stats" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <!-- Las estadísticas se cargarán aquí -->
+            <div class="animate-pulse space-y-4">
+              <div class="h-20 bg-gray-100 rounded-lg"></div>
+              <div class="h-20 bg-gray-100 rounded-lg"></div>
+              <div class="h-20 bg-gray-100 rounded-lg"></div>
+              <div class="h-20 bg-gray-100 rounded-lg"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Estado de prueba de API -->
+      <div id="api-test-result" class="hidden mt-6 p-4 rounded-lg border">
+        <div class="flex items-center space-x-2">
+          <Icon name="tabler:check" class="w-5 h-5 text-green-600" />
+          <span class="font-medium text-green-800">API funcionando correctamente</span>
+        </div>
+      </div>
+
+      <!-- Modal para agregar departamento -->
+      <div id="add-department-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-96 shadow-lg rounded-md bg-white">
+          <div class="mt-3">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-medium text-gray-900">Agregar Nuevo Departamento</h3>
+              <button onclick="hideAddDepartmentModal()" class="text-gray-400 hover:text-gray-600">
+                <Icon name="tabler:x" class="w-6 h-6" />
+              </button>
+            </div>
+
+            <form id="add-department-form" class="space-y-4">
+              <div>
+                <label for="dept-name" class="block text-sm font-medium text-gray-700 mb-2">
+                  Nombre del Departamento <span class="text-red-500">*</span>
+                </label>
+                <input 
+                  type="text" 
+                  id="dept-name" 
+                  required
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  placeholder="Ej: Recursos Humanos"
+                />
+              </div>
+
+              <div>
+                <label for="dept-code" class="block text-sm font-medium text-gray-700 mb-2">
+                  Código del Departamento <span class="text-red-500">*</span>
+                </label>
+                <input 
+                  type="text" 
+                  id="dept-code" 
+                  required
+                  pattern="[a-z0-9_-]+"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  placeholder="Ej: rrhh"
+                />
+                <p class="text-xs text-gray-500 mt-1">Solo letras minúsculas, números, guiones y guiones bajos</p>
+              </div>
+
+              <div>
+                <label for="dept-description" class="block text-sm font-medium text-gray-700 mb-2">
+                  Descripción (Opcional)
+                </label>
+                <textarea 
+                  id="dept-description" 
+                  rows="3"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  placeholder="Descripción del departamento..."
+                ></textarea>
+              </div>
+
+              <div>
+                <label for="dept-color" class="block text-sm font-medium text-gray-700 mb-2">
+                  Color (Opcional)
+                </label>
+                <div class="flex items-center space-x-2">
+                  <input 
+                    type="color" 
+                    id="dept-color" 
+                    value="#059669"
+                    class="w-12 h-10 border border-gray-300 rounded-lg cursor-pointer"
+                  />
+                  <span class="text-sm text-gray-500">Color para badges y elementos visuales</span>
+                </div>
+              </div>
+
+              <div class="flex items-center space-x-2">
+                <input 
+                  type="checkbox" 
+                  id="dept-active" 
+                  checked
+                  class="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                />
+                <label for="dept-active" class="text-sm text-gray-700">
+                  Departamento activo
+                </label>
+              </div>
+
+              <div class="flex space-x-3 pt-4">
+                <button 
+                  type="button"
+                  onclick="hideAddDepartmentModal()"
+                  class="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors duration-200"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="submit"
+                  class="flex-1 bg-gradient-to-r from-teal-600 to-emerald-600 text-white px-4 py-2 rounded-lg hover:from-teal-700 hover:to-emerald-700 transition-colors duration-200"
+                >
+                  Crear Departamento
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error state -->
+    <div id="auth-error" class="hidden min-h-screen bg-gray-50 flex items-center justify-center">
+      <div class="text-center max-w-md mx-auto">
+        <div class="mb-4">
+          <Icon name="tabler:alert-circle" class="w-16 h-16 text-red-500 mx-auto" />
+        </div>
+        <h2 class="text-xl font-semibold text-gray-900 mb-2">Error de autenticación</h2>
+        <p class="text-gray-600 mb-6">No tienes permisos para acceder a esta página</p>
+        <a 
+          href="/login" 
+          class="bg-teal-600 text-white px-6 py-2 rounded-lg hover:bg-teal-700 transition-colors duration-200"
+        >
+          Iniciar Sesión
+        </a>
+      </div>
+    </div>
+  </div>
+</PortalLayoutSidebar>
+
+<script>
+  import { apiClient } from '../../lib/apiClient.js';
+
+  let departments = [];
+  let userStats = {};
+  let isLoading = true;
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    await initializePage();
+  });
+
+  async function initializePage() {
+    try {
+      // Verificar autenticación
+      const authCheck = await verifyAuth();
+      if (!authCheck) return;
+
+      // Mostrar contenido principal
+      showMainContent();
+
+      // Cargar datos
+      await loadDepartments();
+      await loadUserStats();
+      updateStats();
+      
+    } catch (error) {
+      console.error('Error inicializando página:', error);
+      showError();
+    }
+  }
+
+  async function verifyAuth() {
+    try {
+      const userInfo = await apiClient.getMe();
+      return userInfo && userInfo.success;
+    } catch (error) {
+      showAuthError();
+      return false;
+    }
+  }
+
+  function showMainContent() {
+    document.getElementById('auth-loading').classList.add('hidden');
+    document.getElementById('main-content').classList.remove('hidden');
+  }
+
+  function showAuthError() {
+    document.getElementById('auth-loading').classList.add('hidden');
+    document.getElementById('auth-error').classList.remove('hidden');
+  }
+
+  async function loadDepartments() {
+    try {
+      const response = await apiClient.getDepartments();
+      departments = response || [];
+      
+      // Actualizar contador
+      document.getElementById('departments-count').textContent = `${departments.length} disponibles`;
+      document.getElementById('stat-total').textContent = departments.length;
+      document.getElementById('total-departments').textContent = departments.length;
+      
+      // Mostrar lista de departamentos
+      renderDepartmentsList();
+      
+      // Mostrar badges demo
+      renderBadgesDemo();
+      
+      // Mostrar selectores demo
+      renderSelectorsDemo();
+      
+      isLoading = false;
+      
+    } catch (error) {
+      console.error('Error loading departments:', error);
+      showError();
+    }
+  }
+
+  async function loadUserStats() {
+    try {
+      // Obtener usuarios con departamentos
+      const usersResponse = await apiClient.getUsersWithRoles({ limit: 100 });
+      const users = usersResponse?.data?.items || [];
+      
+      // Calcular estadísticas por departamento
+      userStats = {};
+      departments.forEach(dept => {
+        userStats[dept.value] = {
+          users: 0,
+          label: dept.label
+        };
+      });
+
+      // Contar usuarios por departamento
+      users.forEach(user => {
+        if (user.department && userStats[user.department]) {
+          userStats[user.department].users++;
+        }
+      });
+
+    } catch (error) {
+      console.error('Error loading user stats:', error);
+      // Usar datos de ejemplo si falla
+      userStats = {
+        direccion: { users: 2, label: 'Dirección' },
+        ventas: { users: 5, label: 'Ventas' },
+        operaciones: { users: 3, label: 'Operaciones' },
+        soporte: { users: 4, label: 'Soporte' },
+        finanzas: { users: 2, label: 'Finanzas' },
+        rrhh: { users: 1, label: 'RRHH' },
+        marketing: { users: 3, label: 'Marketing' }
+      };
+    }
+  }
+
+  function renderDepartmentsList() {
+    const departmentsList = document.getElementById('departments-list');
+    if (!departments || departments.length === 0) {
+      departmentsList.innerHTML = `
+        <div class="text-center p-8 text-gray-500">
+          <div class="mb-4">
+            <svg class="w-12 h-12 mx-auto text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm2 3a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1z" clip-rule="evenodd"/>
+            </svg>
+          </div>
+          <p>No se encontraron departamentos</p>
+        </div>
+      `;
+      return;
+    }
+
+    departmentsList.innerHTML = departments.map(dept => `
+      <div class="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200 hover:shadow-md transition-shadow duration-200">
+        <div class="flex items-center space-x-3">
+          <div class="p-2 ${getDepartmentColorClass(dept.value)} rounded-lg">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm2 3a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1z"/>
+            </svg>
+          </div>
+          <div>
+            <span class="font-medium text-gray-900">${dept.label}</span>
+            <div class="text-sm text-gray-500">Código: ${dept.value}</div>
+          </div>
+        </div>
+        <div class="flex items-center space-x-2">
+          <span class="text-sm text-gray-600">${userStats[dept.value]?.users || 0} usuarios</span>
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800">
+            ${dept.key}
+          </span>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function renderBadgesDemo() {
+    const badgesContainer = document.getElementById('department-badges-demo');
+    if (!departments || departments.length === 0) {
+      badgesContainer.innerHTML = '<p class="text-gray-500 text-sm">No hay departamentos disponibles</p>';
+      return;
+    }
+
+    badgesContainer.innerHTML = departments.map(dept => {
+      const colorClass = getDepartmentBadgeClass(dept.value);
+      return `
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colorClass}">
+          ${dept.label}
+        </span>
+      `;
+    }).join('');
+  }
+
+  function renderSelectorsDemo() {
+    const selectorDemo = document.getElementById('department-selector-demo');
+    const filterDemo = document.getElementById('department-filter-demo');
+    
+    if (!departments || departments.length === 0) {
+      const emptyOption = '<option value="">No hay departamentos disponibles</option>';
+      selectorDemo.innerHTML = `<select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500">${emptyOption}</select>`;
+      filterDemo.innerHTML = `<select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500">${emptyOption}</select>`;
+      return;
+    }
+
+    selectorDemo.innerHTML = `
+      <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+        <option value="">Selecciona un departamento</option>
+        ${departments.map(dept => `<option value="${dept.value}">${dept.label}</option>`).join('')}
+      </select>
+    `;
+
+    filterDemo.innerHTML = `
+      <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+        <option value="">Filtrar por departamento</option>
+        <option value="all">Todos los departamentos</option>
+        ${departments.map(dept => `<option value="${dept.value}">${dept.label}</option>`).join('')}
+      </select>
+    `;
+  }
+
+  function updateStats() {
+    // Calcular estadísticas reales
+    const totalUsers = Object.values(userStats).reduce((sum, dept) => sum + dept.users, 0);
+    const largestDept = Object.entries(userStats).reduce((max, [key, dept]) => 
+      dept.users > max.users ? dept : max, { users: 0, label: 'N/A' });
+
+    document.getElementById('stat-users').textContent = totalUsers;
+    document.getElementById('stat-largest').textContent = largestDept.label;
+
+    // Mostrar estadísticas por departamento
+    const statsContainer = document.getElementById('department-stats');
+    
+    if (Object.keys(userStats).length === 0) {
+      statsContainer.innerHTML = `
+        <div class="col-span-full text-center p-8 text-gray-500">
+          <p>No hay estadísticas disponibles</p>
+        </div>
+      `;
+      return;
+    }
+
+    statsContainer.innerHTML = Object.entries(userStats).map(([key, data]) => `
+      <div class="bg-gradient-to-br from-gray-50 to-white p-4 rounded-lg border border-gray-200 hover:shadow-md transition-shadow duration-200">
+        <div class="flex items-center justify-between mb-2">
+          <h4 class="font-medium text-gray-900">${data.label}</h4>
+          <div class="p-1 ${getDepartmentColorClass(key)} rounded">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+        </div>
+        <p class="text-2xl font-bold text-teal-600">${data.users}</p>
+        <p class="text-sm text-gray-500">usuarios asignados</p>
+      </div>
+    `).join('');
+  }
+
+  function getDepartmentColorClass(department) {
+    const colors = {
+      'direccion': 'bg-purple-50 text-purple-600',
+      'ventas': 'bg-green-50 text-green-600',
+      'operaciones': 'bg-blue-50 text-blue-600',
+      'soporte': 'bg-yellow-50 text-yellow-600',
+      'finanzas': 'bg-red-50 text-red-600',
+      'rrhh': 'bg-pink-50 text-pink-600',
+      'marketing': 'bg-orange-50 text-orange-600',
+    };
+    return colors[department] || 'bg-gray-50 text-gray-600';
+  }
+
+  function getDepartmentBadgeClass(department) {
+    const colors = {
+      'direccion': 'bg-purple-100 text-purple-800',
+      'ventas': 'bg-green-100 text-green-800',
+      'operaciones': 'bg-blue-100 text-blue-800',
+      'soporte': 'bg-yellow-100 text-yellow-800',
+      'finanzas': 'bg-red-100 text-red-800',
+      'rrhh': 'bg-pink-100 text-pink-800',
+      'marketing': 'bg-orange-100 text-orange-800',
+    };
+    return colors[department] || 'bg-gray-100 text-gray-800';
+  }
+
+  async function testEndpoint() {
+    try {
+      const startTime = Date.now();
+      const result = await apiClient.getDepartments();
+      const duration = Date.now() - startTime;
+      
+      const resultDiv = document.getElementById('api-test-result');
+      resultDiv.innerHTML = `
+        <div class="flex items-center space-x-2">
+          <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+          </svg>
+          <span class="font-medium text-green-800">API funcionando correctamente</span>
+          <span class="text-sm text-green-600">(${duration}ms)</span>
+        </div>
+        <div class="mt-2 text-sm text-green-700">
+          Se obtuvieron ${result ? result.length : 0} departamentos exitosamente
+        </div>
+      `;
+      resultDiv.classList.remove('hidden');
+      resultDiv.className = resultDiv.className.replace('border-red-200 bg-red-50', 'border-green-200 bg-green-50');
+      
+      setTimeout(() => {
+        resultDiv.classList.add('hidden');
+      }, 5000);
+      
+    } catch (error) {
+      const resultDiv = document.getElementById('api-test-result');
+      resultDiv.innerHTML = `
+        <div class="flex items-center space-x-2">
+          <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+          </svg>
+          <span class="font-medium text-red-800">Error probando API</span>
+        </div>
+        <div class="mt-2 text-sm text-red-700">${error.message}</div>
+      `;
+      resultDiv.classList.remove('hidden');
+      resultDiv.className = resultDiv.className.replace('border-green-200 bg-green-50', 'border-red-200 bg-red-50');
+    }
+  }
+
+  async function refreshStats() {
+    // Mostrar loading
+    const statsContainer = document.getElementById('department-stats');
+    statsContainer.innerHTML = `
+      <div class="animate-pulse space-y-4 col-span-full">
+        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div class="h-20 bg-gray-100 rounded-lg"></div>
+          <div class="h-20 bg-gray-100 rounded-lg"></div>
+          <div class="h-20 bg-gray-100 rounded-lg"></div>
+          <div class="h-20 bg-gray-100 rounded-lg"></div>
+        </div>
+      </div>
+    `;
+    
+    try {
+      // Recargar estadísticas reales
+      await loadUserStats();
+      setTimeout(() => {
+        updateStats();
+      }, 1000);
+    } catch (error) {
+      console.error('Error refreshing stats:', error);
+      statsContainer.innerHTML = `
+        <div class="col-span-full text-center p-8 text-red-500">
+          <p>Error al cargar estadísticas</p>
+        </div>
+      `;
+    }
+  }
+
+  function showError() {
+    document.getElementById('departments-list').innerHTML = `
+      <div class="text-center p-8">
+        <svg class="w-12 h-12 text-red-500 mx-auto mb-4" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+        </svg>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">Error al cargar departamentos</h3>
+        <p class="text-gray-600">Por favor, intenta nuevamente más tarde</p>
+      </div>
+    `;
+  }
+
+  // === FUNCIONES PARA AGREGAR DEPARTAMENTO ===
+
+  function showAddDepartmentModal() {
+    document.getElementById('add-department-modal').classList.remove('hidden');
+    // Resetear el formulario
+    document.getElementById('add-department-form').reset();
+    document.getElementById('dept-color').value = '#059669';
+    document.getElementById('dept-active').checked = true;
+  }
+
+  function hideAddDepartmentModal() {
+    document.getElementById('add-department-modal').classList.add('hidden');
+  }
+
+  async function handleAddDepartmentSubmit(event) {
+    event.preventDefault();
+    
+    const formData = new FormData(event.target);
+    const departmentData = {
+      name: document.getElementById('dept-name').value.trim(),
+      code: document.getElementById('dept-code').value.trim().toLowerCase(),
+      description: document.getElementById('dept-description').value.trim() || undefined,
+      color: document.getElementById('dept-color').value,
+      isActive: document.getElementById('dept-active').checked
+    };
+
+    // Validación básica
+    if (!departmentData.name || !departmentData.code) {
+      alert('Por favor completa los campos obligatorios');
+      return;
+    }
+
+    // Validar código
+    if (!/^[a-z0-9_-]+$/.test(departmentData.code)) {
+      alert('El código solo puede contener letras minúsculas, números, guiones y guiones bajos');
+      return;
+    }
+
+    try {
+      // Mostrar loading
+      const submitButton = event.target.querySelector('button[type="submit"]');
+      const originalText = submitButton.textContent;
+      submitButton.textContent = 'Creando...';
+      submitButton.disabled = true;
+
+      // Crear departamento
+      const response = await apiClient.createDepartment(departmentData);
+      
+      if (response.success) {
+        // Éxito
+        hideAddDepartmentModal();
+        showNotification('Departamento creado exitosamente', 'success');
+        
+        // Recargar datos
+        await loadDepartments();
+        await loadUserStats();
+        updateStats();
+        
+      } else {
+        throw new Error(response.message || 'Error creando departamento');
+      }
+      
+    } catch (error) {
+      console.error('Error creando departamento:', error);
+      showNotification(error.message || 'Error al crear el departamento', 'error');
+    } finally {
+      // Restaurar botón
+      const submitButton = event.target.querySelector('button[type="submit"]');
+      submitButton.textContent = 'Crear Departamento';
+      submitButton.disabled = false;
+    }
+  }
+
+  function showNotification(message, type = 'info') {
+    // Crear elemento de notificación
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm ${
+      type === 'success' ? 'bg-green-500 text-white' :
+      type === 'error' ? 'bg-red-500 text-white' :
+      'bg-blue-500 text-white'
+    }`;
+    
+    notification.innerHTML = `
+      <div class="flex items-center space-x-2">
+        <span>${message}</span>
+        <button onclick="this.parentElement.parentElement.remove()" class="text-white hover:text-gray-200">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+          </svg>
+        </button>
+      </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remover después de 5 segundos
+    setTimeout(() => {
+      if (notification.parentElement) {
+        notification.remove();
+      }
+    }, 5000);
+  }
+
+  // Agregar event listener al formulario
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('add-department-form');
+    if (form) {
+      form.addEventListener('submit', handleAddDepartmentSubmit);
+    }
+  });
+
+  // Exponer funciones globalmente
+  window.showAddDepartmentModal = showAddDepartmentModal;
+  window.hideAddDepartmentModal = hideAddDepartmentModal;
+  window.refreshStats = refreshStats;
+</script> 

@@ -1,0 +1,74 @@
+# Archivos y directorios a ignorar durante la construcción de Docker
+
+# Dependencias
+node_modules
+npm-debug.log*
+.npm
+
+# Archivos de construcción
+dist
+build
+.astro
+
+# Archivos de desarrollo
+.env
+.env.local
+.env.development
+.env.test
+
+# Logs
+logs
+*.log
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage
+coverage
+.nyc_output
+
+# Archivos temporales
+.tmp
+tmp
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Archivos de IDE/Editor
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Documentación
+README.md
+*.md
+
+# Archivos de testing y debugging HTML (no necesarios en contenedor)
+test-*.html
+debug-*.html
+fix-*.sql
+database-setup.sql
+test-*.js
+
+# Archivos de configuración de desarrollo
+tailwind.config.mjs
+tsconfig.json
+
+# Backups y archivos temporales
+*.bak
+*.backup
+*.old
+*.orig 

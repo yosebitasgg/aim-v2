@@ -1,0 +1,31 @@
+---
+import { Icon } from 'astro-icon/components';
+
+interface Props {
+	title: string;
+	category: string;
+	description: string;
+	href: string;
+  iconName: string; // ej. 'tabler:file-invoice'
+}
+
+const { title, category, description, href } = Astro.props;
+---
+
+<a href={href} class="block bg-white p-6 rounded-lg border border-slate-200 hover:border-brand-primary hover:shadow-xl transition-all duration-300 group">
+  <div class="flex items-start justify-between">
+    <span class="bg-brand-light p-3 rounded-lg">
+       <Icon name="tabler:file-invoice" class="w-7 h-7 text-brand-primary" />
+    </span>
+     <p class="text-xs font-bold uppercase tracking-wider text-brand-secondary bg-brand-light px-2 py-1 rounded-full">{category}</p>
+  </div>
+  <div class="mt-4">
+    <h3 class="text-xl font-bold text-brand-dark group-hover:text-brand-primary transition-colors">{title}</h3>
+    <p class="mt-2 text-brand-gray">{description}</p>
+    <div class="mt-4">
+      <span class="font-bold text-brand-primary text-sm group-hover:underline">
+        Ver Detalles →
+      </span>
+    </div>
+  </div>
+</a>

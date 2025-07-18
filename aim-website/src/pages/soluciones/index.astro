@@ -1,0 +1,34 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import AgentCard from '../../components/soluciones/AgentCard.astro';
+import { agents } from '../../data/agents.js'; // <-- Importamos los datos
+---
+<BaseLayout 
+  title="Catálogo de Agentes Inteligentes"
+  description="Explora nuestra gama de especialistas digitales listos para integrarse en tu operación y resolver desafíos específicos."
+>
+  <div class="bg-brand-light">
+    <div class="container mx-auto px-4 pt-20 pb-16 text-center">
+       <h1 class="text-4xl md:text-5xl font-black text-brand-dark tracking-tighter">Catálogo de Agentes Inteligentes</h1>
+        <p class="mt-4 text-lg text-brand-gray max-w-2xl mx-auto">
+          Cada Agente es un especialista entrenado para un desafío específico. Encuentra el que tu operación necesita.
+        </p>
+    </div>
+  </div>
+
+  <div class="py-20">
+    <div class="container mx-auto px-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {agents.map(agent => (
+          <AgentCard
+            title={agent.title}
+            category={agent.category}
+            description={agent.short_description}
+            href={`/soluciones/${agent.slug}`}
+            iconName={agent.icon}
+          />
+        ))}
+      </div>
+    </div>
+  </div>
+</BaseLayout>

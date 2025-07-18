@@ -1,0 +1,2421 @@
+---
+import PortalLayoutSidebar from '../../layouts/PortalLayoutSidebar.astro';
+import PortalAuthGuard from '../../components/PortalAuthGuard.jsx';
+import { Icon } from 'astro-icon/components';
+---
+
+<PortalLayoutSidebar title="Crear Agente - Portal AIM">
+  <PortalAuthGuard client:load>
+  <!-- Header Principal -->
+  <div class="mb-8">
+    <div class="bg-gradient-to-r from-teal-600 to-emerald-600 rounded-xl p-6 text-white">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold mb-2">Crear Agente Personalizado</h1>
+          <p class="text-teal-100">Genera agentes basados en órdenes existentes con recomendaciones inteligentes</p>
+        </div>
+        <div class="text-right">
+          <div class="text-teal-100 text-sm">Órdenes Activas</div>
+          <div class="text-xl font-bold" id="totalOrders">0</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Resumen de Órdenes -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500 mb-1">Total Órdenes</p>
+          <p class="text-2xl font-bold text-gray-900" id="ordersCount">0</p>
+          <p class="text-sm text-teal-600 flex items-center mt-2">
+            <Icon name="tabler:list" class="w-4 h-4 mr-1" />
+            Proyectos activos
+          </p>
+        </div>
+        <div class="p-3 bg-teal-50 rounded-lg">
+          <Icon name="tabler:clipboard" class="w-6 h-6 text-teal-600" />
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500 mb-1">Con Agentes</p>
+          <p class="text-2xl font-bold text-gray-900" id="ordersWithAgents">0</p>
+          <p class="text-sm text-emerald-600 flex items-center mt-2">
+            <Icon name="tabler:robot" class="w-4 h-4 mr-1" />
+            En desarrollo/producción
+          </p>
+        </div>
+        <div class="p-3 bg-emerald-50 rounded-lg">
+          <Icon name="tabler:check" class="w-6 h-6 text-emerald-600" />
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500 mb-1">Sin Agentes</p>
+          <p class="text-2xl font-bold text-gray-900" id="ordersWithoutAgents">0</p>
+          <p class="text-sm text-orange-600 flex items-center mt-2">
+            <Icon name="tabler:plus" class="w-4 h-4 mr-1" />
+            Listos para desarrollo
+          </p>
+        </div>
+        <div class="p-3 bg-orange-50 rounded-lg">
+          <Icon name="tabler:alert-circle" class="w-6 h-6 text-orange-600" />
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500 mb-1">Rendimiento Promedio</p>
+          <p class="text-2xl font-bold text-gray-900" id="averagePerformance">0%</p>
+          <p class="text-sm text-teal-600 flex items-center mt-2">
+            <Icon name="tabler:trending-up" class="w-4 h-4 mr-1" />
+            Eficiencia global
+          </p>
+        </div>
+        <div class="p-3 bg-teal-50 rounded-lg">
+          <Icon name="tabler:chart-line" class="w-6 h-6 text-teal-600" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State para Órdenes -->
+  <div id="orders-loading" class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center mb-8">
+    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mx-auto mb-4"></div>
+    <span class="text-gray-600">Cargando órdenes...</span>
+  </div>
+
+  <!-- Órdenes con Agentes Activos -->
+  <div id="orders-with-agents-section" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-8 hidden">
+    <div class="bg-gradient-to-r from-emerald-500 to-teal-500 p-6 text-white">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="text-xl font-semibold">Órdenes con Agentes Activos</h3>
+          <p class="text-emerald-100 mt-1">Monitoreo y gestión de agentes en producción</p>
+        </div>
+        <div class="text-right">
+          <div class="text-emerald-100 text-sm">Agentes</div>
+          <div class="text-lg font-semibold" id="totalActiveAgentsCount">0</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="p-6">
+      <div id="orders-with-agents-content" class="space-y-6">
+        <!-- Se llenará dinámicamente -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Crear Nuevo Agente -->
+  <div id="create-agent-section" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hidden">
+    <div class="bg-gradient-to-r from-teal-500 to-emerald-500 p-6 text-white">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="text-xl font-semibold">Crear Nuevo Agente</h3>
+          <p class="text-teal-100 mt-1">Selecciona una orden y recibe recomendaciones inteligentes</p>
+        </div>
+        <Icon name="tabler:robot" class="w-8 h-8" />
+      </div>
+    </div>
+    
+    <div class="p-6">
+      <!-- Selector de Orden -->
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-700 mb-2">Seleccionar Orden</label>
+        <select id="selectorOrden" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+          <option value="">-- Selecciona una orden --</option>
+        </select>
+      </div>
+      
+      <!-- Información de la Orden Seleccionada -->
+      <div id="infoOrden" class="hidden mb-6">
+        <div class="bg-gray-50 rounded-lg p-4">
+          <h4 class="font-medium text-gray-900 mb-3">Información de la Orden</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <div class="space-y-2">
+                <div><span class="font-medium">Cliente:</span> <span id="infoCliente"></span></div>
+                <div><span class="font-medium">Valor:</span> <span id="infoValor"></span></div>
+                <div><span class="font-medium">Estado:</span> <span id="infoEstado"></span></div>
+              </div>
+            </div>
+            <div>
+              <div class="space-y-2">
+                <div><span class="font-medium">Prioridad:</span> <span id="infoPrioridad"></span></div>
+                <div><span class="font-medium">Fecha:</span> <span id="infoFecha"></span></div>
+                <div><span class="font-medium">Agentes Existentes:</span> <span id="infoAgentesExistentes"></span></div>
+              </div>
+            </div>
+          </div>
+          <div class="mt-4">
+            <span class="font-medium">Descripción:</span>
+            <p id="infoDescripcion" class="mt-1 text-sm text-gray-600"></p>
+          </div>
+          <div class="mt-4">
+            <span class="font-medium">Requerimientos:</span>
+            <p id="infoRequerimientos" class="mt-1 text-sm text-gray-600"></p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Recomendaciones de Agentes -->
+      <div id="recomendaciones" class="hidden">
+        <h4 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
+          <Icon name="tabler:bulb" class="w-5 h-5 mr-2 text-teal-600" />
+          Agentes Recomendados
+        </h4>
+        <div id="listaRecomendaciones" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <!-- Las recomendaciones se llenarán dinámicamente -->
+        </div>
+        
+        <div class="flex space-x-4">
+          <button id="btnCrearPersonalizado" class="bg-gradient-to-r from-teal-600 to-emerald-600 text-white px-6 py-3 rounded-lg font-medium hover:from-teal-700 hover:to-emerald-700 transition-all duration-200 shadow-md hover:shadow-lg">
+            <Icon name="tabler:plus" class="w-5 h-5 inline mr-2" />
+            Crear Agente Personalizado
+          </button>
+          <a href="/portal/galeria-agentes" class="bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors duration-200 inline-flex items-center">
+            <Icon name="tabler:layout-grid" class="w-5 h-5 inline mr-2" />
+            Ver Plantillas
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error State -->
+  <div id="error-state" class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center hidden">
+    <div class="text-red-500 mb-4">
+      <Icon name="tabler:alert-circle" class="w-12 h-12 mx-auto mb-2" />
+      <p class="text-lg font-semibold">Error al cargar las órdenes</p>
+      <p class="text-sm text-gray-600 mt-1">Por favor, inténtalo de nuevo más tarde</p>
+    </div>
+    <button id="retry-orders" class="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700">
+      Reintentar
+    </button>
+  </div>
+
+  <!-- Modal Multi-Step para Crear Agente -->
+  <div id="modalCopiarAgente" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl max-w-6xl w-full max-h-screen overflow-y-auto">
+      <div class="p-6">
+        <!-- Header con progreso -->
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h3 class="text-xl font-semibold text-gray-900" id="modalTitle">Crear Agente Personalizado</h3>
+            <p class="text-sm text-gray-600" id="modalSubtitle">Paso 1 de 3: Configuración básica</p>
+          </div>
+          <button id="cerrarModal" class="text-gray-400 hover:text-gray-600">
+            <Icon name="tabler:x" class="w-6 h-6" />
+          </button>
+        </div>
+        
+        <!-- Progress Bar -->
+        <div class="mb-6">
+          <div class="flex items-center justify-between text-sm text-gray-500 mb-2">
+            <span id="step1Label" class="flex items-center">
+              <span class="w-6 h-6 rounded-full bg-teal-600 text-white text-xs flex items-center justify-center mr-2">1</span>
+              Configuración
+            </span>
+            <span id="step2Label" class="flex items-center">
+              <span class="w-6 h-6 rounded-full bg-gray-300 text-white text-xs flex items-center justify-center mr-2">2</span>
+              Template Workflow
+            </span>
+            <span id="step3Label" class="flex items-center">
+              <span class="w-6 h-6 rounded-full bg-gray-300 text-white text-xs flex items-center justify-center mr-2">3</span>
+              Personalizar Workflow
+            </span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2">
+            <div id="progressBar" class="bg-gradient-to-r from-teal-600 to-emerald-600 h-2 rounded-full transition-all duration-300" style="width: 33%"></div>
+          </div>
+        </div>
+        
+        <!-- Contenido de los pasos -->
+        <div id="modalStepsContainer">
+          <!-- Paso 1: Configuración Básica -->
+          <div id="step1Content" class="step-content">
+            <div id="contenidoModal">
+              <!-- El contenido del paso 1 se llenará dinámicamente -->
+            </div>
+          </div>
+          
+          <!-- Paso 2: Template Workflow -->
+          <div id="step2Content" class="step-content hidden">
+            <div class="space-y-6">
+              <div class="bg-blue-50 rounded-lg p-4">
+                <h4 class="font-semibold text-blue-900 mb-2">Workflow del Template</h4>
+                <p class="text-sm text-blue-800">Revisa el workflow base que se copiará como punto de partida.</p>
+              </div>
+              
+              <div id="templateWorkflowDisplay" class="border border-gray-200 rounded-lg p-4">
+                <div class="flex items-center justify-between mb-4">
+                  <h5 class="font-medium text-gray-900">Flujo de Trabajo n8n</h5>
+                  <div class="flex space-x-2">
+                    <button id="expandWorkflow" class="bg-gray-100 text-gray-700 px-3 py-1 rounded text-sm hover:bg-gray-200">
+                      <Icon name="tabler:maximize" class="w-4 h-4 inline mr-1" />
+                      Ver Completo
+                    </button>
+                    <button id="copyWorkflowJson" class="bg-teal-100 text-teal-700 px-3 py-1 rounded text-sm hover:bg-teal-200">
+                      <Icon name="tabler:copy" class="w-4 h-4 inline mr-1" />
+                      Copiar JSON
+                    </button>
+                  </div>
+                </div>
+                
+                <div id="workflowVisualization" class="bg-gray-50 rounded border-2 border-dashed border-gray-300 p-8 text-center min-h-[300px] flex items-center justify-center">
+                  <div>
+                    <Icon name="tabler:activity" class="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                    <p class="text-gray-600">El workflow se mostrará aquí</p>
+                  </div>
+                </div>
+                
+                <div id="workflowDetails" class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <!-- Los detalles se llenarán dinámicamente -->
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Paso 3: Editor de Workflow -->
+          <div id="step3Content" class="step-content hidden">
+            <div class="space-y-6">
+              <div class="bg-purple-50 rounded-lg p-4">
+                <h4 class="font-semibold text-purple-900 mb-2">Personalizar Workflow</h4>
+                <p class="text-sm text-purple-800">Modifica el workflow según las necesidades específicas de la orden.</p>
+              </div>
+              
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Panel de configuración -->
+                <div class="space-y-4">
+                  <h5 class="font-medium text-gray-900">Configuraciones</h5>
+                  
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Nombre del Workflow</label>
+                    <input type="text" id="workflowName" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500" />
+                  </div>
+                  
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Descripción de Cambios</label>
+                    <textarea id="workflowChanges" rows="3" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="Describe las modificaciones realizadas al workflow..."></textarea>
+                  </div>
+                  
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Nodos Principales</label>
+                    <div id="workflowNodes" class="space-y-2">
+                      <!-- Los nodos se mostrarán dinámicamente -->
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Editor JSON simplificado -->
+                <div class="space-y-4">
+                  <h5 class="font-medium text-gray-900">Editor de Workflow</h5>
+                  <div class="border border-gray-300 rounded-lg">
+                    <div class="bg-gray-50 px-3 py-2 border-b border-gray-300 flex items-center justify-between">
+                      <span class="text-sm font-medium text-gray-700">Workflow JSON</span>
+                      <div class="flex space-x-2">
+                        <button id="formatJson" class="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded hover:bg-gray-300">
+                          Formatear
+                        </button>
+                        <button id="validateJson" class="text-xs bg-teal-100 text-teal-700 px-2 py-1 rounded hover:bg-teal-200">
+                          Validar
+                        </button>
+                      </div>
+                    </div>
+                    <textarea id="workflowJsonEditor" rows="12" class="w-full p-3 font-mono text-sm border-0 focus:outline-none focus:ring-2 focus:ring-teal-500 rounded-b-lg resize-none"></textarea>
+                  </div>
+                  
+                  <div id="jsonValidationResult" class="hidden">
+                    <!-- Resultado de validación se mostrará aquí -->
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Botones de navegación -->
+        <div class="flex justify-between items-center mt-6 pt-6 border-t border-gray-200">
+          <button id="prevStepBtn" class="bg-gray-100 text-gray-700 px-6 py-2 rounded-lg font-medium hover:bg-gray-200 transition-colors duration-200 hidden">
+            <Icon name="tabler:arrow-left" class="w-5 h-5 inline mr-2" />
+            Anterior
+          </button>
+          
+          <div class="flex space-x-4">
+            <button id="cancelarCopia" class="bg-gray-100 text-gray-700 px-6 py-2 rounded-lg font-medium hover:bg-gray-200 transition-colors duration-200">
+              Cancelar
+            </button>
+            
+            <button id="nextStepBtn" class="bg-gradient-to-r from-teal-600 to-emerald-600 text-white px-6 py-2 rounded-lg font-medium hover:from-teal-700 hover:to-emerald-700 transition-colors duration-200">
+              <span id="nextStepText">Continuar</span>
+              <Icon name="tabler:arrow-right" class="w-5 h-5 inline ml-2" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </PortalAuthGuard>
+</PortalLayoutSidebar>
+
+<style>
+  .step-content {
+    min-height: 400px;
+  }
+  
+  .step-content.hidden {
+    display: none;
+  }
+  
+  /* Mejoras visuales para el modal */
+  #modalStepsContainer {
+    transition: all 0.3s ease-in-out;
+  }
+  
+  /* Estilos para el editor JSON */
+  #workflowJsonEditor {
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    line-height: 1.4;
+  }
+  
+  /* Animaciones para las notificaciones */
+  .notification-enter {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  
+  .notification-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: all 0.3s ease;
+  }
+  
+  .notification-exit {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  .notification-exit-active {
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: all 0.3s ease;
+  }
+</style>
+
+<script is:inline>
+  // Estado global de la aplicación
+  let appState = {
+    orders: [],
+    createdAgents: [],
+    galleryAgents: [],
+    stats: {},
+    loading: false,
+    error: null,
+    // Estado del modal multi-step
+    modal: {
+      currentStep: 1,
+      totalSteps: 3,
+      selectedOrder: null,
+      selectedAgent: null,
+      agentData: {},
+      workflowData: {},
+      templateWorkflow: null
+    }
+  };
+
+  // Elementos del DOM
+  const elements = {
+    // Loading y estados
+    ordersLoading: null,
+    ordersWithAgentsSection: null,
+    createAgentSection: null,
+    errorState: null,
+    retryOrders: null,
+    
+    // Selectores principales
+    selectorOrden: null,
+    infoOrden: null,
+    recomendaciones: null,
+    modalCopiarAgente: null,
+    
+    // Stats cards
+    totalOrders: null,
+    ordersCount: null,
+    ordersWithAgents: null,
+    ordersWithoutAgents: null,
+    averagePerformance: null,
+    totalActiveAgentsCount: null,
+    
+    // Contenido dinámico
+    ordersWithAgentsContent: null,
+    listaRecomendaciones: null
+  };
+
+  // Función para probar conectividad del backend
+  async function testBackendConnection() {
+    try {
+      console.log('🔌 Probando conectividad con el backend...');
+      
+      const response = await fetch('http://localhost:3001/api/orders/', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        },
+        credentials: 'include'
+      });
+      
+      console.log('📡 Estado de la respuesta:', response.status);
+      
+      if (response.ok) {
+        console.log('✅ Backend conectado correctamente');
+        return true;
+      } else if (response.status === 401) {
+        console.warn('⚠️ Backend conectado pero token de autenticación inválido');
+        return false;
+      } else {
+        console.warn('⚠️ Backend respondió con error:', response.status);
+        return false;
+      }
+    } catch (error) {
+      console.error('❌ No se pudo conectar al backend:', error);
+      return false;
+    }
+  }
+
+  // Variables globales para los clientes API
+  let agentsApiClient = null;
+  let ordersApiClient = null;
+  let galleryApiClient = null;
+
+  // Cargar dependencias de API
+  async function loadApiClients() {
+    try {
+      console.log('📦 Cargando clientes API...');
+      
+      // Cargar agentsApiClient
+      const agentsModule = await import('/src/lib/agentsApiClient.js');
+      agentsApiClient = agentsModule.default;
+      
+      // Cargar ordersApiClient
+      const ordersModule = await import('/src/lib/ordersApiClient.js');
+      ordersApiClient = ordersModule.default;
+      
+      // Cargar galleryApiClient
+      const galleryModule = await import('/src/lib/galleryApiClient.js');
+      galleryApiClient = galleryModule.default;
+      
+      console.log('✅ Clientes API cargados correctamente');
+      return true;
+    } catch (error) {
+      console.error('❌ Error cargando clientes API:', error);
+      return false;
+    }
+  }
+
+  // Inicializar la página cuando el DOM esté listo
+  document.addEventListener('DOMContentLoaded', async function() {
+    try {
+      console.log('🚀 Inicializando página de crear agente...');
+      
+      // Pequeño delay para asegurar que todos los elementos estén disponibles
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Cargar clientes API
+      const apisLoaded = await loadApiClients();
+      if (!apisLoaded) {
+        throw new Error('No se pudieron cargar los clientes API');
+      }
+      
+      // Probar conectividad del backend
+      await testBackendConnection();
+      
+      // Inicializar elementos del DOM (sin validaciones críticas)
+      initializeElements();
+      
+      // Inicializar la página
+      await initializePage();
+      
+      // Configurar event listeners
+      setupEventListeners();
+      
+      console.log('✅ Página de crear agente inicializada correctamente');
+    } catch (error) {
+      console.error('❌ Error inicializando página de crear agente:', error);
+      showInitializationError(error);
+    }
+  });
+
+  async function initializePage() {
+    try {
+      console.log('🔄 Iniciando carga de página...');
+      
+      // Mostrar indicadores de carga
+      showLoading();
+      
+      // Cargar datos en paralelo
+      const results = await Promise.allSettled([
+        loadOrders(),
+        loadAgentsStats(),
+        loadCreatedAgents(),
+        loadGalleryAgents()
+      ]);
+
+      // Log de resultados para debugging
+      results.forEach((result, index) => {
+        const operations = ['orders', 'agentsStats', 'createdAgents', 'galleryAgents'];
+        if (result.status === 'rejected') {
+          console.warn(`Error cargando ${operations[index]}:`, result.reason);
+        } else {
+          console.log(`✅ ${operations[index]} cargado exitosamente`);
+        }
+      });
+
+      console.log('📊 Iniciando renderizado de interfaz...');
+      
+      // Renderizar la interfaz con logging individual
+      try {
+        console.log('📈 Actualizando tarjetas de estadísticas...');
+        updateStatsCards();
+        console.log('✅ Tarjetas de estadísticas actualizadas');
+      } catch (error) {
+        console.error('❌ Error en updateStatsCards:', error);
+      }
+      
+      try {
+        console.log('📋 Actualizando selector de órdenes...');
+        updateOrdersSelector();
+        console.log('✅ Selector de órdenes actualizado');
+      } catch (error) {
+        console.error('❌ Error en updateOrdersSelector:', error);
+      }
+      
+      try {
+        console.log('🏢 Renderizando órdenes con agentes...');
+        renderOrdersWithAgents();
+        console.log('✅ Órdenes con agentes renderizadas');
+      } catch (error) {
+        console.error('❌ Error en renderOrdersWithAgents:', error);
+      }
+      
+      console.log('🎉 Mostrando contenido final...');
+      // Mostrar contenido
+      showContent();
+      console.log('✅ Contenido mostrado exitosamente');
+      
+    } catch (error) {
+      console.error('❌ Error inicializando la página:', error);
+      showError();
+    }
+  }
+
+  async function loadOrders() {
+    try {
+      console.log('📡 Cargando órdenes desde API...');
+      if (!ordersApiClient) {
+        throw new Error('ordersApiClient no está disponible');
+      }
+      
+      const ordersResponse = await ordersApiClient.getOrders({ 
+        limit: 100,
+        page: 1,
+        sortBy: 'createdAt',
+        sortOrder: 'desc'
+      });
+      
+      if (ordersResponse.success && ordersResponse.data?.orders) {
+        console.log('✅ Órdenes cargadas desde API:', ordersResponse.data.orders.length);
+        appState.orders = ordersResponse.data.orders;
+      } else {
+        throw new Error('No se pudieron cargar las órdenes');
+      }
+    } catch (error) {
+      console.error('❌ Error cargando órdenes:', error);
+      appState.orders = [];
+      throw error;
+    }
+  }
+
+  async function loadAgentsStats() {
+    try {
+      if (!agentsApiClient) {
+        console.warn('⚠️ agentsApiClient no está disponible');
+        return;
+      }
+      const statsResponse = await agentsApiClient.getAgentsStats();
+      if (statsResponse.success) {
+        console.log('✅ Estadísticas de agentes cargadas');
+        appState.stats = statsResponse.data;
+      }
+    } catch (error) {
+      console.warn('⚠️ Error cargando estadísticas de agentes:', error);
+      appState.stats = {};
+    }
+  }
+
+  async function loadCreatedAgents() {
+    try {
+      if (!agentsApiClient) {
+        console.warn('⚠️ agentsApiClient no está disponible');
+        return;
+      }
+      const agentsResponse = await agentsApiClient.getCreatedAgents({ limit: 100, page: 1 });
+      if (agentsResponse.success) {
+        console.log('✅ Agentes creados cargados:', agentsResponse.data.items?.length || 0);
+        appState.createdAgents = agentsResponse.data.items || [];
+      }
+    } catch (error) {
+      console.warn('⚠️ Error cargando agentes creados:', error);
+      appState.createdAgents = [];
+    }
+  }
+
+  async function loadGalleryAgents() {
+    try {
+      if (!galleryApiClient) {
+        console.warn('⚠️ galleryApiClient no está disponible');
+        return;
+      }
+      const galleryResponse = await galleryApiClient.getAgents({ limit: 100, page: 1 });
+      if (galleryResponse.success) {
+        console.log('✅ Agentes de galería cargados:', galleryResponse.data.items?.length || 0);
+        appState.galleryAgents = galleryResponse.data.items || [];
+      }
+    } catch (error) {
+      console.warn('⚠️ Error cargando galería de agentes:', error);
+      appState.galleryAgents = [];
+    }
+  }
+
+  // Función para recargar todos los datos después de crear un agente
+  async function refreshAllData() {
+    try {
+      console.log('🔄 Recargando todos los datos...');
+      
+      // Recargar en paralelo para mejor performance
+      const results = await Promise.allSettled([
+        loadOrders(),
+        loadAgentsStats(),
+        loadCreatedAgents(),
+        loadGalleryAgents()
+      ]);
+
+      // Log de resultados para debugging
+      results.forEach((result, index) => {
+        const operations = ['orders', 'agentsStats', 'createdAgents', 'galleryAgents'];
+        if (result.status === 'rejected') {
+          console.warn(`Error recargando ${operations[index]}:`, result.reason);
+        } else {
+          console.log(`✅ ${operations[index]} recargado exitosamente`);
+        }
+      });
+
+      // Actualizar la UI
+      updateStatsCards();
+      updateOrdersSelector();
+      renderOrdersWithAgents();
+      
+      console.log('✅ Todos los datos recargados');
+    } catch (error) {
+      console.error('❌ Error recargando datos:', error);
+    }
+  }
+
+  function showInitializationError(error) {
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'fixed inset-0 flex items-center justify-center bg-gray-100';
+    errorDiv.innerHTML = `
+      <div class="bg-white p-8 rounded-lg shadow-lg max-w-md text-center">
+        <div class="text-red-500 mb-4">
+          <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 19.5c-.77.833.192 2.5 1.732 2.5z"></path>
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Error de Inicialización</h3>
+        <p class="text-gray-600 mb-4">${error.message}</p>
+        <button onclick="window.location.reload()" class="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700">
+          Reintentar
+        </button>
+      </div>
+    `;
+    document.body.appendChild(errorDiv);
+  }
+
+  // Inicializar elementos del DOM
+  function initializeElements() {
+    console.log('🔧 Inicializando elementos del DOM...');
+    
+    // Loading y estados
+    elements.ordersLoading = document.getElementById('orders-loading');
+    elements.ordersWithAgentsSection = document.getElementById('orders-with-agents-section');
+    elements.createAgentSection = document.getElementById('create-agent-section');
+    elements.errorState = document.getElementById('error-state');
+    elements.retryOrders = document.getElementById('retry-orders');
+    
+    // Stats cards - siempre disponibles
+    elements.totalOrders = document.getElementById('totalOrders');
+    elements.ordersCount = document.getElementById('ordersCount');
+    elements.ordersWithAgents = document.getElementById('ordersWithAgents');
+    elements.ordersWithoutAgents = document.getElementById('ordersWithoutAgents');
+    elements.averagePerformance = document.getElementById('averagePerformance');
+    elements.totalActiveAgentsCount = document.getElementById('totalActiveAgentsCount');
+    
+    // Contenido dinámico
+    elements.ordersWithAgentsContent = document.getElementById('orders-with-agents-content');
+    
+    // Nota: elementos dentro de secciones ocultas se buscarán dinámicamente cuando se necesiten
+    console.log('📋 Elementos DOM base inicializados:', {
+      ordersLoading: !!elements.ordersLoading,
+      createAgentSection: !!elements.createAgentSection,
+      ordersWithAgentsSection: !!elements.ordersWithAgentsSection,
+      errorState: !!elements.errorState
+    });
+  }
+
+  // Mostrar estados de la UI
+  function showLoading() {
+    console.log('⏳ Mostrando estado de carga...');
+    elements.ordersLoading?.classList.remove('hidden');
+    elements.ordersWithAgentsSection?.classList.add('hidden');
+    elements.createAgentSection?.classList.add('hidden');
+    elements.errorState?.classList.add('hidden');
+    console.log('✅ Estado de carga mostrado');
+  }
+
+  function showContent() {
+    console.log('🎯 Mostrando contenido principal...');
+    
+    // Buscar elementos dinámicamente si no se encontraron inicialmente
+    if (!elements.ordersWithAgentsSection) {
+      elements.ordersWithAgentsSection = document.getElementById('orders-with-agents-section');
+      console.log('🔄 orders-with-agents-section encontrado dinámicamente:', !!elements.ordersWithAgentsSection);
+    }
+    if (!elements.createAgentSection) {
+      elements.createAgentSection = document.getElementById('create-agent-section');
+      console.log('🔄 create-agent-section encontrado dinámicamente:', !!elements.createAgentSection);
+    }
+    if (!elements.ordersLoading) {
+      elements.ordersLoading = document.getElementById('orders-loading');
+      console.log('🔄 orders-loading encontrado dinámicamente:', !!elements.ordersLoading);
+    }
+    if (!elements.errorState) {
+      elements.errorState = document.getElementById('error-state');
+      console.log('🔄 error-state encontrado dinámicamente:', !!elements.errorState);
+    }
+    
+    console.log('📋 Elementos disponibles:', {
+      ordersLoading: !!elements.ordersLoading,
+      ordersWithAgentsSection: !!elements.ordersWithAgentsSection,
+      createAgentSection: !!elements.createAgentSection,
+      errorState: !!elements.errorState
+    });
+    
+    elements.ordersLoading?.classList.add('hidden');
+    elements.ordersWithAgentsSection?.classList.remove('hidden');
+    elements.createAgentSection?.classList.remove('hidden');
+    elements.errorState?.classList.add('hidden');
+    console.log('✅ Contenido principal mostrado');
+  }
+
+  function showError() {
+    console.log('❌ Mostrando estado de error...');
+    elements.ordersLoading?.classList.add('hidden');
+    elements.ordersWithAgentsSection?.classList.add('hidden');
+    elements.createAgentSection?.classList.add('hidden');
+    elements.errorState?.classList.remove('hidden');
+    console.log('✅ Estado de error mostrado');
+  }
+
+  // Actualizar cards de estadísticas
+  function updateStatsCards() {
+    const stats = appState.stats?.overview || {};
+    
+    if (elements.totalOrders) {
+      elements.totalOrders.textContent = appState.orders.length;
+    }
+    
+    if (elements.ordersCount) {
+      elements.ordersCount.textContent = appState.orders.length;
+    }
+    
+    if (elements.ordersWithAgents) {
+      const ordersWithAgents = appState.orders.filter(o => o.agent).length;
+      elements.ordersWithAgents.textContent = ordersWithAgents;
+    }
+    
+    if (elements.ordersWithoutAgents) {
+      const ordersWithoutAgents = appState.orders.filter(o => !o.agent).length;
+      elements.ordersWithoutAgents.textContent = ordersWithoutAgents;
+    }
+    
+    if (elements.averagePerformance) {
+      elements.averagePerformance.textContent = `${Math.round(stats.successRate || 94)}%`;
+    }
+    
+    if (elements.totalActiveAgentsCount) {
+      const totalAgents = appState.orders.filter(o => o.agent).length;
+      elements.totalActiveAgentsCount.textContent = totalAgents;
+    }
+  }
+
+  // Actualizar selector de órdenes
+  function updateOrdersSelector() {
+    // Buscar el elemento cada vez que se necesite
+    let selector = elements.selectorOrden;
+    if (!selector) {
+      console.log('🔄 Buscando selector de orden dinámicamente...');
+      selector = document.getElementById('selectorOrden');
+      if (selector) {
+        elements.selectorOrden = selector;
+        console.log('✅ Selector de orden encontrado dinámicamente');
+      }
+    }
+    
+    if (!selector) {
+      console.warn('⚠️ Selector de orden no encontrado en DOM, saltando actualización');
+      console.log('🔍 Secciones principales disponibles:', {
+        'create-agent-section': !!document.getElementById('create-agent-section'),
+        'selectorOrden': !!document.getElementById('selectorOrden')
+      });
+      return;
+    }
+    
+    // Limpiar opciones existentes excepto la primera
+    while (selector.children.length > 1) {
+      selector.removeChild(selector.lastChild);
+    }
+    
+    console.log('📋 Actualizando selector con', appState.orders.length, 'órdenes');
+    
+    appState.orders.forEach(order => {
+      const option = document.createElement('option');
+      option.value = order.id;
+      option.textContent = `${order.orderNumber} - ${order.title} (${order.client.companyName})`;
+      option.dataset.order = JSON.stringify(order);
+      selector.appendChild(option);
+    });
+  }
+
+  // Renderizar órdenes con agentes
+  function renderOrdersWithAgents() {
+    try {
+      console.log('🔍 Verificando container ordersWithAgentsContent...');
+      
+      // Buscar el container dinámicamente (puede no haberse encontrado inicialmente si estaba oculto)
+      let container = elements.ordersWithAgentsContent;
+      if (!container) {
+        console.log('🔄 Container no encontrado inicialmente, buscando dinámicamente...');
+        container = document.getElementById('orders-with-agents-content');
+        if (container) {
+          elements.ordersWithAgentsContent = container;
+          console.log('✅ Container encontrado dinámicamente');
+        }
+      }
+      
+      if (!container) {
+        console.warn('⚠️ Container ordersWithAgentsContent no encontrado, saltando renderizado');
+        console.log('🔍 Elementos disponibles en DOM:', {
+          'orders-with-agents-section': !!document.getElementById('orders-with-agents-section'),
+          'orders-with-agents-content': !!document.getElementById('orders-with-agents-content'),
+          'create-agent-section': !!document.getElementById('create-agent-section')
+        });
+        return;
+      }
+      console.log('✅ Container encontrado');
+      
+      console.log('🔍 Filtrando órdenes con agentes de', appState.orders.length, 'órdenes totales');
+      const ordersWithAgents = appState.orders.filter(order => {
+        try {
+          return order && order.agent;
+        } catch (e) {
+          console.warn('⚠️ Error filtrando orden:', e);
+          return false;
+        }
+      });
+      console.log('📊 Órdenes con agentes encontradas:', ordersWithAgents.length);
+      
+      if (ordersWithAgents.length === 0) {
+        console.log('📝 Mostrando estado vacío para órdenes con agentes');
+        container.innerHTML = `
+          <div class="text-center py-8">
+            <div class="text-gray-500 mb-4">
+              <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+              </svg>
+              <p class="text-lg font-semibold">No hay órdenes con agentes</p>
+              <p class="text-sm mt-1">Las órdenes que tengan agentes asignados aparecerán aquí</p>
+            </div>
+          </div>
+        `;
+        return;
+      }
+      
+      console.log('🎨 Renderizando', ordersWithAgents.length, 'órdenes con agentes');
+      container.innerHTML = '';
+      
+      ordersWithAgents.forEach((order, index) => {
+        try {
+          console.log(`🔨 Renderizando orden ${index + 1}:`, order.orderNumber);
+          
+          const orderDiv = document.createElement('div');
+          orderDiv.className = 'border border-gray-200 rounded-lg p-4';
+          
+          // Construir HTML de forma más segura
+          const orderNumber = order.orderNumber || 'Sin número';
+          const title = order.title || 'Sin título';
+          const companyName = order.client?.companyName || 'Sin cliente';
+          const description = order.description || 'Sin descripción';
+          const agentName = order.agent?.name || 'Sin nombre';
+          const agentTitle = order.agent?.title || 'Sin título';
+          const agentCategory = order.agent?.category || 'Sin categoría';
+          const agentStatus = order.agent?.status || 'UNKNOWN';
+          
+          // Valores seguros para métodos que podrían no existir
+          const statusColor = ordersApiClient?.getStatusColor?.(order.status) || 'bg-gray-100 text-gray-800';
+          const statusLabel = ordersApiClient?.getStatusLabel?.(order.status) || order.status;
+          const priorityColor = ordersApiClient?.getPriorityColor?.(order.priority) || 'bg-gray-100 text-gray-800';
+          const priorityLabel = ordersApiClient?.getPriorityLabel?.(order.priority) || order.priority;
+          const formattedCurrency = ordersApiClient?.formatCurrency?.(order.estimatedBudget) || 'N/A';
+          const formattedDate = ordersApiClient?.formatDate?.(order.createdAt) || new Date(order.createdAt).toLocaleDateString();
+          
+          // Determinar estado del agente
+          let agentStatusClass = 'bg-emerald-100 text-emerald-800';
+          let agentStatusText = 'Activo';
+          
+          if (agentStatus === 'COMPLETED') {
+            agentStatusClass = 'bg-green-100 text-green-800';
+            agentStatusText = 'Agente Completo';
+          } else if (agentStatus === 'ACTIVE') {
+            agentStatusClass = 'bg-blue-100 text-blue-800';
+            agentStatusText = 'Agente Activo';
+          } else if (agentStatus === 'IN_DEVELOPMENT') {
+            agentStatusClass = 'bg-yellow-100 text-yellow-800';
+            agentStatusText = 'En Desarrollo';
+          }
+          
+          orderDiv.innerHTML = `
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h4 class="font-semibold text-gray-900 flex items-center">
+                  <svg class="w-5 h-5 mr-2 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                  </svg>
+                  ${orderNumber} - ${title}
+                </h4>
+                <p class="text-sm text-gray-600">${companyName}</p>
+              </div>
+              <div class="flex items-center space-x-4">
+                <span class="px-3 py-1 rounded-full text-sm font-medium ${statusColor}">
+                  ${statusLabel}
+                </span>
+                <span class="px-3 py-1 rounded-full text-sm font-medium ${priorityColor}">
+                  ${priorityLabel}
+                </span>
+              </div>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div>
+                <h5 class="font-medium text-gray-800 mb-2">Información del Proyecto</h5>
+                <div class="space-y-1">
+                  <div class="flex items-center justify-between text-sm">
+                    <span class="text-gray-600">Valor estimado:</span>
+                    <span class="font-medium">${formattedCurrency}</span>
+                  </div>
+                  <div class="flex items-center justify-between text-sm">
+                    <span class="text-gray-600">Fecha creación:</span>
+                    <span class="font-medium">${formattedDate}</span>
+                  </div>
+                  <div class="text-sm">
+                    <span class="text-gray-600">Descripción:</span>
+                    <p class="mt-1 text-gray-800">${description}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <h5 class="font-medium text-gray-800 mb-2">Agente Asignado</h5>
+                <div class="bg-gray-50 rounded-lg p-3">
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="font-medium text-gray-800">${agentName}</span>
+                    <span class="px-2 py-1 rounded text-xs font-medium ${agentStatusClass}">
+                      ${agentStatusText}
+                    </span>
+                  </div>
+                  <div class="text-sm text-gray-600">
+                    <p>${agentTitle}</p>
+                    <p class="mt-1">Categoría: ${agentCategory}</p>
+                    ${agentStatus === 'COMPLETED' ? '<p class="mt-1 text-green-700 font-medium">✓ Listo para integración</p>' : ''}
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="flex space-x-2 mt-4">
+              <button class="agregar-agente-btn bg-teal-100 text-teal-700 px-4 py-2 rounded-lg font-medium text-sm hover:bg-teal-200 transition-colors duration-200" 
+                      data-order-id="${order.id}" 
+                      data-order='${JSON.stringify(order).replace(/'/g, "&apos;")}'>
+                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                Agregar Agente
+              </button>
+              <button class="ver-detalles-btn bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-medium text-sm hover:bg-gray-200 transition-colors duration-200"
+                      data-order-id="${order.id}" 
+                      data-order='${JSON.stringify(order).replace(/'/g, "&apos;")}'>
+                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                </svg>
+                Ver Detalles
+              </button>
+            </div>
+          `;
+          container.appendChild(orderDiv);
+          console.log(`✅ Orden ${index + 1} renderizada exitosamente`);
+        } catch (orderError) {
+          console.error(`❌ Error renderizando orden ${index + 1}:`, orderError);
+        }
+      });
+      
+      console.log('✅ Todas las órdenes con agentes renderizadas exitosamente');
+      
+      // Configurar event listeners para los botones de las órdenes
+      setupOrderActionButtons();
+    } catch (error) {
+      console.error('❌ Error en renderOrdersWithAgents:', error);
+      
+      // Fallback: mostrar mensaje de error
+      const container = elements.ordersWithAgentsContent;
+      if (container) {
+        container.innerHTML = `
+          <div class="text-center py-8">
+            <div class="text-red-500 mb-4">
+              <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <p class="text-lg font-semibold">Error al cargar órdenes con agentes</p>
+              <p class="text-sm mt-1">Por favor, recarga la página para intentar de nuevo</p>
+            </div>
+          </div>
+        `;
+      }
+    }
+  }
+
+  // Configurar event listeners para botones de acciones de órdenes
+  function setupOrderActionButtons() {
+    try {
+      console.log('🔧 Configurando event listeners para botones de órdenes...');
+      
+      // Botones "Agregar Agente"
+      const agregarAgenteBtns = document.querySelectorAll('.agregar-agente-btn');
+      agregarAgenteBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+          const orderId = this.dataset.orderId;
+          const orderData = this.dataset.order;
+          console.log('➕ Agregar agente para orden:', orderId);
+          
+          try {
+            const order = JSON.parse(orderData.replace(/&apos;/g, "'"));
+            handleAgregarAgente(order);
+          } catch (error) {
+            console.error('Error parsing order data:', error);
+          }
+        });
+      });
+      
+      // Botones "Ver Detalles"
+      const verDetallesBtns = document.querySelectorAll('.ver-detalles-btn');
+      verDetallesBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+          const orderId = this.dataset.orderId;
+          const orderData = this.dataset.order;
+          console.log('👁️ Ver detalles de orden:', orderId);
+          
+          try {
+            const order = JSON.parse(orderData.replace(/&apos;/g, "'"));
+            handleVerDetalles(order);
+          } catch (error) {
+            console.error('Error parsing order data:', error);
+          }
+        });
+      });
+      
+      console.log('✅ Event listeners configurados:', {
+        agregarAgente: agregarAgenteBtns.length,
+        verDetalles: verDetallesBtns.length
+      });
+    } catch (error) {
+      console.error('❌ Error configurando event listeners de órdenes:', error);
+    }
+  }
+
+  // Función para manejar "Agregar Agente" - reutiliza el modal existente
+  function handleAgregarAgente(order) {
+    try {
+      console.log('🚀 Iniciando proceso de agregar agente para orden:', order.orderNumber);
+      
+      // Pre-seleccionar la orden en el estado del modal
+      appState.modal.selectedOrder = order;
+      
+      // Buscar agentes recomendados para esta orden
+      const agentesRecomendados = appState.galleryAgents.length > 0 
+        ? appState.galleryAgents.filter(agent => 
+            agent.category?.name === order.agent?.category || 
+            order.title.toLowerCase().includes('automatización') ||
+            order.description.toLowerCase().includes('integración')
+          ).slice(0, 3)
+        : [
+            {
+              title: 'Agente de Automatización Adicional',
+              short_description: 'Agente complementario para los procesos de esta orden',
+              challenge: `Automatiza procesos adicionales para ${order.title}`,
+              id: 'template-additional-automation'
+            },
+            {
+              title: 'Integrador de Sistemas Secundario',
+              short_description: 'Conexión adicional entre sistemas',
+              challenge: 'Sincroniza datos secundarios y procesos complementarios',
+              id: 'template-secondary-integrator'
+            }
+          ];
+      
+      // Si hay al menos un agente recomendado, abrir el modal directamente con el primero
+      if (agentesRecomendados.length > 0) {
+        appState.modal.selectedAgent = agentesRecomendados[0];
+        mostrarModalCopia(agentesRecomendados[0]);
+      } else {
+        // Si no hay agentes recomendados, mostrar un mensaje informativo
+        if (ordersApiClient && ordersApiClient.showNotification) {
+          ordersApiClient.showNotification('No se encontraron agentes recomendados. Selecciona uno de la galería.', 'info');
+        }
+        
+        // Redirigir a la galería de agentes con la orden pre-seleccionada
+        const params = new URLSearchParams({ orderId: order.id });
+        window.location.href = `/portal/galeria-agentes?${params.toString()}`;
+      }
+      
+    } catch (error) {
+      console.error('❌ Error en handleAgregarAgente:', error);
+      if (ordersApiClient && ordersApiClient.showNotification) {
+        ordersApiClient.showNotification('Error al iniciar la creación del agente', 'error');
+      }
+    }
+  }
+
+  // Función para manejar "Ver Detalles"
+  function handleVerDetalles(order) {
+    try {
+      console.log('👁️ Mostrando detalles de orden:', order.orderNumber);
+      mostrarModalDetallesOrden(order);
+    } catch (error) {
+      console.error('❌ Error en handleVerDetalles:', error);
+      if (ordersApiClient && ordersApiClient.showNotification) {
+        ordersApiClient.showNotification('Error al mostrar los detalles de la orden', 'error');
+      }
+    }
+  }
+
+  // Función para mostrar modal con detalles completos de la orden
+  function mostrarModalDetallesOrden(order) {
+    // Guardar la orden actual para uso en funciones onclick
+    window.currentOrderForModal = order;
+    
+    // Crear el modal si no existe
+    let modalDetalles = document.getElementById('modalDetallesOrden');
+    if (!modalDetalles) {
+      modalDetalles = document.createElement('div');
+      modalDetalles.id = 'modalDetallesOrden';
+      modalDetalles.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4';
+      modalDetalles.innerHTML = `
+        <div class="bg-white rounded-xl max-w-4xl w-full max-h-screen overflow-y-auto">
+          <div class="p-6">
+            <div class="flex items-center justify-between mb-6">
+              <h3 class="text-xl font-semibold text-gray-900">Detalles de la Orden</h3>
+              <button id="cerrarModalDetalles" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </div>
+            <div id="contenidoModalDetalles">
+              <!-- El contenido se llenará dinámicamente -->
+            </div>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modalDetalles);
+      
+      // Agregar event listener para cerrar
+      document.getElementById('cerrarModalDetalles').addEventListener('click', () => {
+        modalDetalles.classList.add('hidden');
+      });
+    }
+    
+    // Llenar el contenido del modal
+    const contenido = document.getElementById('contenidoModalDetalles');
+    if (contenido) {
+      
+      // Obtener agentes asociados a esta orden
+      const agentesAsociados = appState.createdAgents.filter(agent => agent.orderId === order.id);
+      
+      // Valores seguros
+      const orderNumber = order.orderNumber || 'Sin número';
+      const title = order.title || 'Sin título';
+      const description = order.description || 'Sin descripción';
+      const requirements = order.requirements || 'Sin requerimientos específicos';
+      const companyName = order.client?.companyName || 'Sin cliente';
+      const contactName = order.client?.primaryContact?.fullName || 'Sin contacto';
+      const contactEmail = order.client?.primaryContact?.email || 'Sin email';
+      const estimatedBudget = order.estimatedBudget || 0;
+      const createdAt = order.createdAt || new Date().toISOString();
+      
+      // Formateo seguro
+      const formattedCurrency = ordersApiClient?.formatCurrency?.(estimatedBudget) || `$${estimatedBudget.toLocaleString()}`;
+      const formattedDate = ordersApiClient?.formatDate?.(createdAt) || new Date(createdAt).toLocaleDateString();
+      const statusColor = ordersApiClient?.getStatusColor?.(order.status) || 'bg-gray-100 text-gray-800';
+      const statusLabel = ordersApiClient?.getStatusLabel?.(order.status) || order.status;
+      const priorityColor = ordersApiClient?.getPriorityColor?.(order.priority) || 'bg-gray-100 text-gray-800';
+      const priorityLabel = ordersApiClient?.getPriorityLabel?.(order.priority) || order.priority;
+      
+      contenido.innerHTML = `
+        <div class="space-y-6">
+          <!-- Header con información principal -->
+          <div class="bg-gradient-to-r from-teal-50 to-emerald-50 rounded-lg p-6">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h4 class="text-2xl font-bold text-teal-900">${orderNumber}</h4>
+                <p class="text-lg text-teal-700">${title}</p>
+              </div>
+              <div class="flex space-x-3">
+                <span class="px-3 py-2 rounded-full text-sm font-medium ${statusColor}">
+                  ${statusLabel}
+                </span>
+                <span class="px-3 py-2 rounded-full text-sm font-medium ${priorityColor}">
+                  ${priorityLabel}
+                </span>
+              </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div>
+                <span class="font-medium text-teal-800">Cliente:</span>
+                <p class="text-teal-700">${companyName}</p>
+              </div>
+              <div>
+                <span class="font-medium text-teal-800">Valor estimado:</span>
+                <p class="text-teal-700">${formattedCurrency}</p>
+              </div>
+              <div>
+                <span class="font-medium text-teal-800">Fecha creación:</span>
+                <p class="text-teal-700">${formattedDate}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Información del proyecto -->
+            <div class="bg-white border border-gray-200 rounded-lg p-6">
+              <h5 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                Información del Proyecto
+              </h5>
+              
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                  <p class="text-gray-900 bg-gray-50 rounded-lg p-3">${description}</p>
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Requerimientos</label>
+                  <p class="text-gray-900 bg-gray-50 rounded-lg p-3">${requirements}</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Información del cliente -->
+            <div class="bg-white border border-gray-200 rounded-lg p-6">
+              <h5 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <svg class="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+                Información del Cliente
+              </h5>
+              
+              <div class="space-y-3">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">Empresa</label>
+                  <p class="text-gray-900">${companyName}</p>
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">Contacto principal</label>
+                  <p class="text-gray-900">${contactName}</p>
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700">Email</label>
+                  <p class="text-gray-900">${contactEmail}</p>
+                </div>
+              </div>
+              
+              <div class="mt-4">
+                <button onclick="window.location.href='/portal/clientes'" class="w-full bg-green-100 text-green-700 px-4 py-2 rounded-lg font-medium hover:bg-green-200 transition-colors">
+                  <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                  </svg>
+                  Ver Perfil del Cliente
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Agentes asociados -->
+          <div class="bg-white border border-gray-200 rounded-lg">
+            <div class="bg-gradient-to-r from-purple-500 to-indigo-500 p-4 text-white rounded-t-lg">
+              <h5 class="text-lg font-semibold flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                </svg>
+                Agentes Asociados (${agentesAsociados.length})
+              </h5>
+            </div>
+            
+                         <div class="p-4" id="agentesAsociadosContainer">
+               <!-- Se llenará dinámicamente con JavaScript -->
+             </div>
+             
+             <div class="p-4 hidden" id="noAgentesMessage">
+               <div class="text-center py-6">
+                <div class="text-center py-6">
+                  <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                  </svg>
+                                     <p class="text-gray-500">No hay agentes asociados a esta orden</p>
+                   <button onclick="document.getElementById('cerrarModalDetalles').click(); window.handleAgregarAgente(window.currentOrderForModal)" 
+                           class="mt-3 bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700">
+                                          Crear Primer Agente
+                   </button>
+                 </div>
+               </div>
+          </div>
+          
+                     <!-- Acciones -->
+           <div class="flex space-x-4 pt-4 border-t border-gray-200">
+             <button onclick="window.handleAgregarAgente(window.currentOrderForModal); document.getElementById('cerrarModalDetalles').click();" 
+                     class="bg-teal-100 text-teal-700 px-6 py-2 rounded-lg font-medium hover:bg-teal-200 transition-colors">
+              <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+              </svg>
+              Agregar Agente
+            </button>
+            
+            <button onclick="window.location.href='/portal/ordenes'" 
+                    class="bg-gray-100 text-gray-700 px-6 py-2 rounded-lg font-medium hover:bg-gray-200 transition-colors">
+              <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              Ver Todas las Órdenes
+            </button>
+          </div>
+        </div>
+             `;
+       
+       // Llenar dinámicamente los agentes asociados
+       renderAgentesAsociados(agentesAsociados);
+     }
+     
+     // Mostrar el modal
+     modalDetalles.classList.remove('hidden');
+   }
+   
+   // Función auxiliar para renderizar agentes asociados dinámicamente
+   function renderAgentesAsociados(agentesAsociados) {
+     const container = document.getElementById('agentesAsociadosContainer');
+     const noAgentesMessage = document.getElementById('noAgentesMessage');
+     
+     if (!container) return;
+     
+     if (agentesAsociados.length > 0) {
+       container.classList.remove('hidden');
+       if (noAgentesMessage) noAgentesMessage.classList.add('hidden');
+       
+       const agentesHTML = agentesAsociados.map(agent => {
+         const agentStatusDisplay = getStatusDisplay(agent.status);
+         const formattedDate = agentsApiClient?.formatDate?.(agent.createdAt) || new Date(agent.createdAt).toLocaleDateString();
+         
+         return `
+           <div class="border border-gray-200 rounded-lg p-4">
+             <div class="flex items-center justify-between mb-2">
+               <h6 class="font-semibold text-gray-900">${agent.name}</h6>
+               <span class="px-3 py-1 rounded-full text-xs font-medium ${agentStatusDisplay.color}">
+                 ${agentStatusDisplay.label}
+               </span>
+             </div>
+             <p class="text-sm text-gray-600 mb-2">${agent.agentNumber}</p>
+             <div class="flex items-center space-x-4 text-sm text-gray-600">
+               <span>Tipo: ${agent.connectionType}</span>
+               <span>•</span>
+               <span>Creado: ${formattedDate}</span>
+             </div>
+             <div class="flex space-x-2 mt-3">
+               <button onclick="window.location.href='/portal/agentes'" class="bg-purple-100 text-purple-700 px-3 py-1 rounded text-sm hover:bg-purple-200">
+                 Ver en "Mis Agentes"
+               </button>
+             </div>
+           </div>
+         `;
+       }).join('');
+       
+       container.innerHTML = `<div class="space-y-4">${agentesHTML}</div>`;
+     } else {
+       container.classList.add('hidden');
+       if (noAgentesMessage) noAgentesMessage.classList.remove('hidden');
+     }
+  }
+
+  // Función auxiliar para determinar el estado de un agente
+  function getStatusDisplay(status) {
+    const statusMap = {
+      'COMPLETED': { label: 'Agente Terminado', color: 'bg-green-100 text-green-800' },
+      'ACTIVE': { label: 'Agente Activo', color: 'bg-blue-100 text-blue-800' },
+      'IN_DEVELOPMENT': { label: 'En Desarrollo', color: 'bg-yellow-100 text-yellow-800' },
+      'INACTIVE': { label: 'Inactivo', color: 'bg-gray-100 text-gray-800' },
+      'ERROR': { label: 'Error', color: 'bg-red-100 text-red-800' }
+    };
+    return statusMap[status] || { label: status, color: 'bg-gray-100 text-gray-800' };
+  }
+
+  // Hacer funciones globales para que sean accesibles desde onclick
+  window.handleAgregarAgente = handleAgregarAgente;
+  window.handleVerDetalles = handleVerDetalles;
+  window.getStatusDisplay = getStatusDisplay;
+
+  function setupEventListeners() {
+    console.log('🔧 Configurando event listeners');
+    
+    // Retry button - buscar dinámicamente
+    const retryOrders = document.getElementById('retry-orders');
+    if (retryOrders) {
+      retryOrders.addEventListener('click', async () => {
+        try {
+          await initializePage();
+        } catch (error) {
+          console.error('Error en retry:', error);
+        }
+      });
+    }
+    
+    // Selector de orden - buscar dinámicamente
+    const selectorOrden = document.getElementById('selectorOrden');
+    if (selectorOrden) {
+      elements.selectorOrden = selectorOrden;
+      selectorOrden.addEventListener('change', function() {
+        const orderSelected = this.value;
+        console.log('📋 Orden seleccionada:', orderSelected);
+        
+        if (orderSelected) {
+          const orderData = this.options[this.selectedIndex].dataset.order;
+          if (orderData) {
+            const order = JSON.parse(orderData);
+            mostrarInfoOrden(order);
+            mostrarRecomendaciones(order);
+          }
+        } else {
+          const infoOrden = document.getElementById('infoOrden');
+          const recomendaciones = document.getElementById('recomendaciones');
+          infoOrden?.classList.add('hidden');
+          recomendaciones?.classList.add('hidden');
+        }
+      });
+      console.log('✅ Event listener agregado al selector de orden');
+    } else {
+      console.warn('⚠️ Selector de orden no encontrado al configurar event listeners, se configurará más tarde');
+    }
+    
+    // Event listeners para modal multi-step
+    setupModalEventListeners();
+  }
+
+  function mostrarInfoOrden(order) {
+    const infoOrden = document.getElementById('infoOrden');
+    if (!infoOrden) {
+      console.warn('⚠️ Elemento infoOrden no encontrado');
+      return;
+    }
+    
+    console.log('📄 Mostrando información de orden:', order.orderNumber);
+    
+    const infoCliente = document.getElementById('infoCliente');
+    const infoValor = document.getElementById('infoValor');
+    const infoEstado = document.getElementById('infoEstado');
+    const infoPrioridad = document.getElementById('infoPrioridad');
+    const infoFecha = document.getElementById('infoFecha');
+    const infoAgentesExistentes = document.getElementById('infoAgentesExistentes');
+    const infoDescripcion = document.getElementById('infoDescripcion');
+    const infoRequerimientos = document.getElementById('infoRequerimientos');
+    
+    if (infoCliente) infoCliente.textContent = order.client.companyName;
+    if (infoValor) infoValor.textContent = ordersApiClient?.formatCurrency?.(order.estimatedBudget) || 'N/A';
+    if (infoEstado) infoEstado.innerHTML = `<span class="px-2 py-1 rounded ${ordersApiClient?.getStatusColor?.(order.status) || 'bg-gray-100 text-gray-800'}">${ordersApiClient?.getStatusLabel?.(order.status) || order.status}</span>`;
+    if (infoPrioridad) infoPrioridad.innerHTML = `<span class="px-2 py-1 rounded ${ordersApiClient?.getPriorityColor?.(order.priority) || 'bg-gray-100 text-gray-800'}">${ordersApiClient?.getPriorityLabel?.(order.priority) || order.priority}</span>`;
+    if (infoFecha) infoFecha.textContent = ordersApiClient?.formatDate?.(order.createdAt) || new Date(order.createdAt).toLocaleDateString();
+    if (infoAgentesExistentes) infoAgentesExistentes.textContent = order.agent ? '1 agente asignado' : 'Sin agentes';
+    if (infoDescripcion) infoDescripcion.textContent = order.description || 'Sin descripción';
+    if (infoRequerimientos) infoRequerimientos.textContent = order.requirements || 'Sin requerimientos específicos';
+    
+    infoOrden.classList.remove('hidden');
+  }
+  
+  function mostrarRecomendaciones(order) {
+    const recomendaciones = document.getElementById('recomendaciones');
+    const listaRecomendaciones = document.getElementById('listaRecomendaciones');
+    
+    if (!recomendaciones || !listaRecomendaciones) {
+      console.warn('⚠️ Elementos de recomendaciones no encontrados');
+      return;
+    }
+    
+    console.log('💡 Mostrando recomendaciones para orden:', order.orderNumber);
+    
+    // Generar recomendaciones básicas basadas en la orden
+    const recomendacionesBasicas = [
+      {
+        title: 'Agente de Automatización Personalizado',
+        short_description: 'Agente específico para los requerimientos de esta orden',
+        challenge: `Automatiza los procesos específicos de ${order.title} para ${order.client.companyName}`
+      },
+      {
+        title: 'Integrador de Sistemas',
+        short_description: 'Conexión entre sistemas empresariales',
+        challenge: 'Sincroniza datos y procesos entre diferentes sistemas utilizados por el cliente'
+      }
+    ];
+    
+    // Buscar agentes de galería relevantes
+    const agentesRecomendados = appState.galleryAgents.length > 0 
+      ? appState.galleryAgents.filter(agent => 
+          agent.category?.name === order.agent?.category || 
+          order.title.toLowerCase().includes('automatización') ||
+          order.description.toLowerCase().includes('integración')
+        ).slice(0, 3)
+      : recomendacionesBasicas;
+    
+    const agentesFinales = agentesRecomendados.length > 0 ? agentesRecomendados : recomendacionesBasicas;
+    
+    listaRecomendaciones.innerHTML = '';
+    
+    agentesFinales.forEach((agente, index) => {
+      const div = document.createElement('div');
+      div.className = 'border border-gray-200 rounded-lg p-4 hover:border-teal-300 transition-colors duration-200';
+      div.innerHTML = `
+        <div class="flex items-center space-x-3 mb-3">
+          <div class="p-2 bg-teal-50 rounded-lg">
+            <svg class="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+            </svg>
+          </div>
+          <div>
+            <h5 class="font-semibold text-gray-900">${agente.title}</h5>
+            <p class="text-sm text-gray-600">${agente.short_description}</p>
+          </div>
+        </div>
+        
+        <div class="mb-4">
+          <p class="text-sm text-gray-600 line-clamp-2">${agente.challenge}</p>
+        </div>
+        
+        <div class="flex space-x-2">
+          <button class="copiar-agente flex-1 bg-emerald-100 text-emerald-700 px-3 py-2 rounded-lg font-medium text-sm hover:bg-emerald-200 transition-colors duration-200" data-agente='${JSON.stringify(agente)}'>
+            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+            </svg>
+            Usar Plantilla
+          </button>
+        </div>
+      `;
+      listaRecomendaciones.appendChild(div);
+    });
+    
+    // Agregar event listeners para botones de copiar
+    document.querySelectorAll('.copiar-agente').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const agente = JSON.parse(this.dataset.agente);
+        mostrarModalCopia(agente);
+      });
+    });
+    
+    recomendaciones.classList.remove('hidden');
+  }
+  
+  // ===== FUNCIONES PARA MODAL MULTI-STEP =====
+
+  function setupModalEventListeners() {
+    // Cerrar modal
+    const cerrarModal = document.getElementById('cerrarModal');
+    const cancelarCopia = document.getElementById('cancelarCopia');
+    
+    if (cerrarModal) {
+      cerrarModal.addEventListener('click', closeModal);
+    }
+    
+    if (cancelarCopia) {
+      cancelarCopia.addEventListener('click', closeModal);
+    }
+    
+    // Navegación entre pasos
+    const nextStepBtn = document.getElementById('nextStepBtn');
+    const prevStepBtn = document.getElementById('prevStepBtn');
+    
+    if (nextStepBtn) {
+      nextStepBtn.addEventListener('click', handleNextStep);
+    }
+    
+    if (prevStepBtn) {
+      prevStepBtn.addEventListener('click', handlePrevStep);
+    }
+    
+    // Botones del paso 2
+    setupStep2EventListeners();
+    
+    // Botones del paso 3
+    setupStep3EventListeners();
+    
+    // Crear agente personalizado
+    const btnCrearPersonalizado = document.getElementById('btnCrearPersonalizado');
+    if (btnCrearPersonalizado) {
+      btnCrearPersonalizado.addEventListener('click', function() {
+        if (ordersApiClient && ordersApiClient.showNotification) {
+          ordersApiClient.showNotification('Funcionalidad en desarrollo: Crear agente desde cero con asistente inteligente.', 'info');
+        } else {
+          alert('Funcionalidad en desarrollo: Crear agente desde cero con asistente inteligente.');
+        }
+      });
+    }
+  }
+
+  function setupStep2EventListeners() {
+    // Expandir workflow
+    const expandWorkflow = document.getElementById('expandWorkflow');
+    if (expandWorkflow) {
+      expandWorkflow.addEventListener('click', function() {
+        // Funcionalidad para expandir el workflow
+        console.log('Expandir workflow');
+      });
+    }
+    
+    // Copiar JSON del workflow
+    const copyWorkflowJson = document.getElementById('copyWorkflowJson');
+    if (copyWorkflowJson) {
+      copyWorkflowJson.addEventListener('click', function() {
+        if (appState.modal.templateWorkflow) {
+          navigator.clipboard.writeText(JSON.stringify(appState.modal.templateWorkflow, null, 2))
+            .then(() => {
+              if (ordersApiClient && ordersApiClient.showNotification) {
+                ordersApiClient.showNotification('JSON copiado al portapapeles', 'success');
+              } else {
+                alert('JSON copiado al portapapeles');
+              }
+            })
+            .catch(err => {
+              console.error('Error al copiar:', err);
+            });
+        }
+      });
+    }
+  }
+
+  function setupStep3EventListeners() {
+    // Formatear JSON
+    const formatJson = document.getElementById('formatJson');
+    if (formatJson) {
+      formatJson.addEventListener('click', function() {
+        const editor = document.getElementById('workflowJsonEditor');
+        if (editor && editor.value) {
+          try {
+            const parsed = JSON.parse(editor.value);
+            editor.value = JSON.stringify(parsed, null, 2);
+          } catch (error) {
+            if (ordersApiClient && ordersApiClient.showNotification) {
+              ordersApiClient.showNotification('JSON inválido, no se puede formatear', 'error');
+            } else {
+              alert('JSON inválido, no se puede formatear');
+            }
+          }
+        }
+      });
+    }
+    
+    // Validar JSON
+    const validateJson = document.getElementById('validateJson');
+    if (validateJson) {
+      validateJson.addEventListener('click', validateWorkflowJson);
+    }
+  }
+
+  function closeModal() {
+    const modalCopiarAgente = document.getElementById('modalCopiarAgente');
+    modalCopiarAgente?.classList.add('hidden');
+    
+    // Reset modal state
+    appState.modal = {
+      currentStep: 1,
+      totalSteps: 3,
+      selectedOrder: null,
+      selectedAgent: null,
+      agentData: {},
+      workflowData: {},
+      templateWorkflow: null
+    };
+  }
+
+  async function handleNextStep() {
+    const currentStep = appState.modal.currentStep;
+    
+    if (currentStep === 1) {
+      // Validar y procesar datos del paso 1
+      if (validateStep1()) {
+        goToStep(2);
+        await loadTemplateWorkflow();
+      }
+    } else if (currentStep === 2) {
+      // Procesar paso 2 y ir al paso 3
+      if (validateStep2()) {
+        goToStep(3);
+        initializeWorkflowEditor();
+      }
+    } else if (currentStep === 3) {
+      // Crear el agente completo
+      if (validateStep3()) {
+        await createCompleteAgent();
+      }
+    }
+  }
+
+  function handlePrevStep() {
+    const currentStep = appState.modal.currentStep;
+    if (currentStep > 1) {
+      goToStep(currentStep - 1);
+    }
+  }
+
+  function goToStep(stepNumber) {
+    // Ocultar todos los pasos
+    for (let i = 1; i <= appState.modal.totalSteps; i++) {
+      const stepContent = document.getElementById(`step${i}Content`);
+      stepContent?.classList.add('hidden');
+      
+      // Actualizar indicadores de progreso
+      const stepLabel = document.getElementById(`step${i}Label`);
+      const stepCircle = stepLabel?.querySelector('span');
+      if (stepCircle) {
+        stepCircle.className = 'w-6 h-6 rounded-full text-white text-xs flex items-center justify-center mr-2 ' + 
+          (i <= stepNumber ? 'bg-teal-600' : 'bg-gray-300');
+      }
+    }
+    
+    // Mostrar paso actual
+    const currentStepContent = document.getElementById(`step${stepNumber}Content`);
+    currentStepContent?.classList.remove('hidden');
+    
+    // Actualizar progreso
+    const progressBar = document.getElementById('progressBar');
+    if (progressBar) {
+      const progressWidth = (stepNumber / appState.modal.totalSteps) * 100;
+      progressBar.style.width = `${progressWidth}%`;
+    }
+    
+    // Actualizar título y subtítulo
+    const modalTitle = document.getElementById('modalTitle');
+    const modalSubtitle = document.getElementById('modalSubtitle');
+    const stepTitles = [
+      'Crear Agente Personalizado',
+      'Revisar Template Workflow', 
+      'Personalizar Workflow'
+    ];
+    const stepSubtitles = [
+      'Paso 1 de 3: Configuración básica',
+      'Paso 2 de 3: Analizar workflow base',
+      'Paso 3 de 3: Modificar y finalizar'
+    ];
+    
+    if (modalTitle) modalTitle.textContent = stepTitles[stepNumber - 1];
+    if (modalSubtitle) modalSubtitle.textContent = stepSubtitles[stepNumber - 1];
+    
+    // Actualizar botones
+    const prevStepBtn = document.getElementById('prevStepBtn');
+    const nextStepBtn = document.getElementById('nextStepBtn');
+    const nextStepText = document.getElementById('nextStepText');
+    
+    if (prevStepBtn) {
+      if (stepNumber === 1) {
+        prevStepBtn.classList.add('hidden');
+      } else {
+        prevStepBtn.classList.remove('hidden');
+      }
+    }
+    
+    if (nextStepText) {
+      if (stepNumber === appState.modal.totalSteps) {
+        nextStepText.textContent = 'Crear Agente';
+      } else {
+        nextStepText.textContent = 'Continuar';
+      }
+    }
+    
+    appState.modal.currentStep = stepNumber;
+  }
+
+  function validateStep1() {
+    const nombreAgente = document.getElementById('nombreNuevoAgente')?.value;
+    const modificaciones = document.getElementById('modificaciones')?.value;
+    
+    if (!nombreAgente || nombreAgente.trim().length === 0) {
+      if (ordersApiClient && ordersApiClient.showNotification) {
+        ordersApiClient.showNotification('El nombre del agente es requerido', 'error');
+      } else {
+        alert('El nombre del agente es requerido');
+      }
+      return false;
+    }
+    
+    // Guardar datos del paso 1
+    appState.modal.agentData = {
+      name: nombreAgente.trim(),
+      description: modificaciones?.trim() || '',
+      ...appState.modal.agentData
+    };
+    
+    return true;
+  }
+
+  function validateStep2() {
+    // Validar que se haya cargado el template workflow
+    if (!appState.modal.templateWorkflow) {
+      if (ordersApiClient && ordersApiClient.showNotification) {
+        ordersApiClient.showNotification('Error al cargar el template workflow', 'error');
+      } else {
+        alert('Error al cargar el template workflow');
+      }
+      return false;
+    }
+    return true;
+  }
+
+  function validateStep3() {
+    const workflowName = document.getElementById('workflowName')?.value;
+    const workflowJson = document.getElementById('workflowJsonEditor')?.value;
+    
+    if (!workflowName || workflowName.trim().length === 0) {
+      if (ordersApiClient && ordersApiClient.showNotification) {
+        ordersApiClient.showNotification('El nombre del workflow es requerido', 'error');
+      } else {
+        alert('El nombre del workflow es requerido');
+      }
+      return false;
+    }
+    
+    if (!workflowJson || workflowJson.trim().length === 0) {
+      if (ordersApiClient && ordersApiClient.showNotification) {
+        ordersApiClient.showNotification('El JSON del workflow es requerido', 'error');
+      } else {
+        alert('El JSON del workflow es requerido');
+      }
+      return false;
+    }
+    
+    try {
+      JSON.parse(workflowJson);
+    } catch (error) {
+      if (ordersApiClient && ordersApiClient.showNotification) {
+        ordersApiClient.showNotification('El JSON del workflow no es válido', 'error');
+      } else {
+        alert('El JSON del workflow no es válido');
+      }
+      return false;
+    }
+    
+    return true;
+  }
+
+  function validateWorkflowJson() {
+    const editor = document.getElementById('workflowJsonEditor');
+    const resultDiv = document.getElementById('jsonValidationResult');
+    
+    if (!editor || !resultDiv) return;
+    
+    const jsonContent = editor.value;
+    
+    try {
+      JSON.parse(jsonContent);
+      resultDiv.className = 'bg-green-50 border border-green-200 rounded-lg p-3';
+      resultDiv.innerHTML = `
+        <div class="flex items-center text-green-800">
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+          JSON válido
+        </div>
+      `;
+      resultDiv.classList.remove('hidden');
+    } catch (error) {
+      resultDiv.className = 'bg-red-50 border border-red-200 rounded-lg p-3';
+      resultDiv.innerHTML = `
+        <div class="text-red-800">
+          <div class="flex items-center mb-1">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            JSON inválido
+          </div>
+          <p class="text-sm">${error.message}</p>
+        </div>
+      `;
+      resultDiv.classList.remove('hidden');
+    }
+  }
+
+  async function loadTemplateWorkflow() {
+    const selectedAgent = appState.modal.selectedAgent;
+    if (!selectedAgent) {
+      console.warn('No hay agente seleccionado');
+      return;
+    }
+    
+    try {
+      // Intentar cargar el workflow real del agente template
+      let templateWorkflow = selectedAgent.n8nWorkflow;
+      
+      // Si no hay workflow en el agente seleccionado, usar uno por defecto
+      if (!templateWorkflow) {
+        console.log('📋 Usando workflow por defecto para:', selectedAgent.title);
+        templateWorkflow = {
+          name: selectedAgent.title || "Template Workflow",
+          version: "1.0.0",
+          nodes: [
+            {
+              name: "Start",
+              type: "n8n-nodes-base.start",
+              typeVersion: 1,
+              position: [250, 300],
+              parameters: {}
+            },
+            {
+              name: `Process ${selectedAgent.title}`,
+              type: "n8n-nodes-base.function",
+              typeVersion: 1,
+              position: [450, 300],
+              parameters: {
+                functionCode: `// Procesamiento específico para ${selectedAgent.title}\nreturn items.map(item => {\n  // Lógica de procesamiento aquí\n  return item;\n});`
+              }
+            },
+            {
+              name: "HTTP Request",
+              type: "n8n-nodes-base.httpRequest",
+              typeVersion: 2,
+              position: [650, 300],
+              parameters: {
+                url: "https://api.example.com/webhook",
+                method: "POST"
+              }
+            },
+            {
+              name: "Output",
+              type: "n8n-nodes-base.set",
+              typeVersion: 1,
+              position: [850, 300],
+              parameters: {
+                values: {
+                  "status": "completed",
+                  "processedAt": "={{new Date().toISOString()}}"
+                }
+              }
+            }
+          ],
+          connections: {
+            "Start": {
+              "main": [
+                [
+                  {
+                    "node": `Process ${selectedAgent.title}`,
+                    "type": "main",
+                    "index": 0
+                  }
+                ]
+              ]
+            },
+            [`Process ${selectedAgent.title}`]: {
+              "main": [
+                [
+                  {
+                    "node": "HTTP Request",
+                    "type": "main",
+                    "index": 0
+                  }
+                ]
+              ]
+            },
+            "HTTP Request": {
+              "main": [
+                [
+                  {
+                    "node": "Output",
+                    "type": "main",
+                    "index": 0
+                  }
+                ]
+              ]
+            }
+          },
+          meta: {
+            templateType: "automation",
+            complexity: selectedAgent.complexity || "medium",
+            estimatedTime: "1-2 hours"
+          }
+        };
+      } else {
+        console.log('✅ Usando workflow del template:', selectedAgent.title);
+      }
+      
+      appState.modal.templateWorkflow = templateWorkflow;
+      displayTemplateWorkflow(templateWorkflow);
+      
+    } catch (error) {
+      console.error('❌ Error cargando template workflow:', error);
+      
+      // Fallback a workflow básico
+      const fallbackWorkflow = {
+        name: "Basic Workflow",
+        version: "1.0.0",
+        nodes: [
+          {
+            name: "Start",
+            type: "n8n-nodes-base.start",
+            typeVersion: 1,
+            position: [250, 300]
+          }
+        ],
+        connections: {}
+      };
+      
+      appState.modal.templateWorkflow = fallbackWorkflow;
+      displayTemplateWorkflow(fallbackWorkflow);
+    }
+  }
+
+  function displayTemplateWorkflow(workflow) {
+    const workflowVisualization = document.getElementById('workflowVisualization');
+    const workflowDetails = document.getElementById('workflowDetails');
+    
+    if (workflowVisualization) {
+      workflowVisualization.innerHTML = `
+        <div class="text-left w-full">
+          <div class="bg-white rounded-lg p-4 border border-gray-200 mb-4">
+            <h6 class="font-medium text-gray-900 mb-2">Estructura del Workflow</h6>
+            <div class="space-y-2 text-sm text-gray-600">
+              <div>• Nodos: ${workflow.nodes?.length || 0}</div>
+              <div>• Versión: ${workflow.version || '1.0.0'}</div>
+              <div>• Tipo: Template Base</div>
+            </div>
+          </div>
+          
+          <div class="space-y-2">
+            ${workflow.nodes?.map((node, index) => `
+              <div class="flex items-center justify-between bg-gray-50 rounded p-2">
+                <div class="flex items-center">
+                  <span class="w-6 h-6 bg-teal-100 text-teal-700 rounded-full text-xs flex items-center justify-center mr-2">${index + 1}</span>
+                  <span class="font-medium">${node.name}</span>
+                </div>
+                <span class="text-xs text-gray-500">${node.type?.split('.').pop() || 'node'}</span>
+              </div>
+            `).join('') || '<p class="text-gray-500">No hay nodos definidos</p>'}
+          </div>
+        </div>
+      `;
+    }
+    
+    if (workflowDetails) {
+      workflowDetails.innerHTML = `
+        <div class="bg-gray-50 rounded-lg p-3">
+          <h6 class="font-medium text-gray-900 mb-1">Nodos</h6>
+          <p class="text-lg font-bold text-teal-600">${workflow.nodes?.length || 0}</p>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-3">
+          <h6 class="font-medium text-gray-900 mb-1">Conexiones</h6>
+          <p class="text-lg font-bold text-teal-600">${Object.keys(workflow.connections || {}).length}</p>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-3">
+          <h6 class="font-medium text-gray-900 mb-1">Complejidad</h6>
+          <p class="text-lg font-bold text-teal-600">${appState.modal.selectedAgent?.complexity || 'Media'}</p>
+        </div>
+      `;
+    }
+  }
+
+  function initializeWorkflowEditor() {
+    const workflowName = document.getElementById('workflowName');
+    const workflowJsonEditor = document.getElementById('workflowJsonEditor');
+    const workflowNodes = document.getElementById('workflowNodes');
+    
+    if (workflowName && appState.modal.agentData.name) {
+      workflowName.value = `${appState.modal.agentData.name} - Workflow`;
+    }
+    
+    if (workflowJsonEditor && appState.modal.templateWorkflow) {
+      workflowJsonEditor.value = JSON.stringify(appState.modal.templateWorkflow, null, 2);
+    }
+    
+    if (workflowNodes && appState.modal.templateWorkflow?.nodes) {
+      workflowNodes.innerHTML = appState.modal.templateWorkflow.nodes.map(node => `
+        <div class="flex items-center justify-between bg-gray-50 rounded p-2">
+          <span class="text-sm">${node.name}</span>
+          <span class="text-xs text-gray-500">${node.type?.split('.').pop() || 'node'}</span>
+        </div>
+      `).join('');
+    }
+  }
+
+  async function createCompleteAgent() {
+    try {
+      if (!agentsApiClient) {
+        throw new Error('agentsApiClient no está disponible');
+      }
+      
+      console.log('🚀 Creando agente completo...');
+      
+      // Obtener datos del formulario
+      const workflowName = document.getElementById('workflowName')?.value;
+      const workflowChanges = document.getElementById('workflowChanges')?.value;
+      const workflowJson = document.getElementById('workflowJsonEditor')?.value;
+      
+      // Parsear el workflow JSON
+      let parsedWorkflow;
+      try {
+        parsedWorkflow = JSON.parse(workflowJson);
+      } catch (error) {
+        throw new Error('JSON del workflow inválido');
+      }
+      
+      // Preparar datos del agente
+      const agentData = {
+        orderId: appState.modal.selectedOrder.id,
+        templateAgentId: appState.modal.selectedAgent.id,
+        name: appState.modal.agentData.name,
+        description: appState.modal.agentData.description || `Agente personalizado basado en ${appState.modal.selectedAgent.title}`,
+        purpose: `Automatización personalizada para la orden ${appState.modal.selectedOrder.orderNumber}`,
+        connectionType: appState.modal.selectedAgent.connectionType || 'API',
+        complexity: appState.modal.selectedAgent.complexity || 'medium',
+        estimatedHours: 8,
+        status: 'IN_DEVELOPMENT' // Estado inicial
+      };
+      
+      // Mostrar loading
+      const nextStepBtn = document.getElementById('nextStepBtn');
+      if (nextStepBtn) {
+        nextStepBtn.disabled = true;
+        nextStepBtn.innerHTML = `
+          <span class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
+          Creando...
+        `;
+      }
+      
+      // 1. Crear el agente
+      console.log('📝 Creando agente...');
+      const agentResponse = await agentsApiClient.createCreatedAgent(agentData);
+      
+      if (!agentResponse.success) {
+        throw new Error(agentResponse.message || 'Error al crear el agente');
+      }
+      
+      const createdAgent = agentResponse.data;
+      console.log('✅ Agente creado:', createdAgent.id);
+      
+      // 2. Crear el workflow
+      console.log('🔄 Creando workflow...');
+      const workflowData = {
+        createdAgentId: createdAgent.id,
+        workflowName: workflowName,
+        workflowType: 'modified',
+        description: workflowChanges || 'Workflow personalizado',
+        n8nWorkflow: parsedWorkflow,
+        workflowNodes: parsedWorkflow.nodes?.map(node => node.name) || [],
+        nodeCount: parsedWorkflow.nodes?.length || 0,
+        connectionCount: Object.keys(parsedWorkflow.connections || {}).length,
+        complexity: appState.modal.selectedAgent.complexity || 'medium',
+        changeLog: workflowChanges || 'Adaptación inicial del template',
+        isCurrentVersion: true,
+        isActive: true
+      };
+      
+      const workflowResponse = await agentsApiClient.createAgentWorkflow(workflowData);
+      
+      if (!workflowResponse.success) {
+        console.warn('⚠️ Error creando workflow:', workflowResponse.message);
+        // Continuar aunque el workflow falle
+      } else {
+        console.log('✅ Workflow creado:', workflowResponse.data.id);
+      }
+      
+      // 3. Marcar el agente como COMPLETADO al finalizar todo el proceso
+      console.log('🏁 Marcando agente como completado...');
+      try {
+        const updateResponse = await agentsApiClient.updateCreatedAgent(createdAgent.id, {
+          status: 'COMPLETED',
+          completedAt: new Date().toISOString(),
+          finalWorkflowId: workflowResponse.data?.id
+        });
+        
+        if (updateResponse.success) {
+          console.log('✅ Agente marcado como completado');
+        } else {
+          console.warn('⚠️ Error marcando agente como completado:', updateResponse.message);
+        }
+      } catch (updateError) {
+        console.warn('⚠️ Error actualizando estado del agente:', updateError);
+      }
+      
+      // Mostrar éxito
+      if (ordersApiClient && ordersApiClient.showNotification) {
+        ordersApiClient.showNotification('¡Agente creado y completado exitosamente! El agente está listo para integración.', 'success');
+      } else {
+        alert('¡Agente creado y completado exitosamente! El agente está listo para integración.');
+      }
+      
+      // Cerrar modal
+      closeModal();
+      
+      // Recargar datos para reflejar el nuevo agente
+      await refreshAllData();
+      
+      // Opcional: Redirigir a la página de "Mis Agentes" para ver el nuevo agente
+      setTimeout(() => {
+        if (confirm('¿Quieres ver el agente recién creado en "Mis Agentes"?')) {
+          window.location.href = '/portal/agentes';
+        }
+      }, 2000);
+      
+      console.log('✅ Proceso de creación completado');
+      
+    } catch (error) {
+      console.error('❌ Error creando agente:', error);
+      
+      if (ordersApiClient && ordersApiClient.showNotification) {
+        ordersApiClient.showNotification(`Error: ${error.message}`, 'error');
+      } else {
+        alert(`Error: ${error.message}`);
+      }
+    } finally {
+      // Restaurar botón
+      const nextStepBtn = document.getElementById('nextStepBtn');
+      if (nextStepBtn) {
+        nextStepBtn.disabled = false;
+        nextStepBtn.innerHTML = `
+          <span id="nextStepText">Crear Agente</span>
+          <svg class="w-5 h-5 inline ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+          </svg>
+        `;
+      }
+    }
+  }
+
+  function mostrarModalCopia(agente) {
+    const modalCopiarAgente = document.getElementById('modalCopiarAgente');
+    if (!modalCopiarAgente) {
+      console.warn('⚠️ Modal de copiar agente no encontrado');
+      return;
+    }
+    
+    // Verificar si ya hay una orden preseleccionada en el estado del modal
+    let selectedOrder = appState.modal.selectedOrder;
+    
+    // Si no hay orden preseleccionada, buscar en el selector
+    if (!selectedOrder) {
+      console.log('🔍 No hay orden preseleccionada, buscando en selector...');
+      const selectorOrden = document.getElementById('selectorOrden');
+      if (!selectorOrden || !selectorOrden.value) {
+        if (ordersApiClient && ordersApiClient.showNotification) {
+          ordersApiClient.showNotification('Por favor selecciona una orden primero', 'warning');
+        } else {
+          alert('Por favor selecciona una orden primero');
+        }
+        return;
+      }
+      selectedOrder = JSON.parse(selectorOrden.options[selectorOrden.selectedIndex].dataset.order);
+      console.log('✅ Orden obtenida del selector:', selectedOrder.orderNumber);
+    } else {
+      console.log('✅ Usando orden preseleccionada:', selectedOrder.orderNumber);
+    }
+    
+    // Guardar estado inicial del modal
+    appState.modal.selectedOrder = selectedOrder;
+    appState.modal.selectedAgent = agente;
+    appState.modal.currentStep = 1;
+    
+    // Mostrar contenido del paso 1
+    const contenidoModal = document.getElementById('contenidoModal');
+    if (contenidoModal) {
+      contenidoModal.innerHTML = `
+        <div class="space-y-6">
+          <div class="bg-gradient-to-r from-teal-50 to-emerald-50 rounded-lg p-4">
+            <h4 class="font-medium text-teal-900 mb-2">${agente.title}</h4>
+            <p class="text-sm text-teal-800">${agente.short_description || agente.description}</p>
+          </div>
+          
+          <div class="bg-blue-50 rounded-lg p-4">
+            <h5 class="font-medium text-blue-900 mb-2">Orden Seleccionada</h5>
+            <div class="text-sm text-blue-800">
+              <div><strong>Cliente:</strong> ${selectedOrder.client.companyName}</div>
+              <div><strong>Orden:</strong> ${selectedOrder.orderNumber}</div>
+              <div><strong>Proyecto:</strong> ${selectedOrder.title}</div>
+            </div>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Nombre del Nuevo Agente</label>
+            <input type="text" id="nombreNuevoAgente" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500" 
+                   value="${agente.title} - ${selectedOrder.client.companyName}" />
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Descripción de la Adaptación</label>
+            <textarea id="modificaciones" rows="3" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500" 
+                      placeholder="Describe cómo quieres adaptar este agente para ${selectedOrder.title}..."></textarea>
+          </div>
+          
+          <div class="bg-teal-50 rounded-lg p-4">
+            <h5 class="font-medium text-teal-900 mb-2">Lo que se copiará del template:</h5>
+            <ul class="text-sm text-teal-800 space-y-1">
+              <li>✓ Flujo de trabajo base n8n</li>
+              <li>✓ Configuraciones de conexión</li>
+              <li>✓ Validaciones y reglas de negocio</li>
+              <li>✓ Estructura de nodos</li>
+              <li>✓ Configuración de manejo de errores</li>
+            </ul>
+          </div>
+        </div>
+      `;
+    }
+    
+    // Inicializar en el paso 1
+    goToStep(1);
+    
+    modalCopiarAgente.classList.remove('hidden');
+  }
+</script> 
