@@ -139,9 +139,4 @@ volumes:
     name: aim-postgres-data
 
 # Configuración adicional para desarrollo vs producción
-profiles:
-  # Perfil de desarrollo (por defecto)
-  - development
-  
-  # Perfil de producción
-  - production 
+# (Profiles removidos para compatibilidad con versiones anteriores de Docker Compose) 

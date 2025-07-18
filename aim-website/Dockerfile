@@ -141,8 +141,11 @@ COPY . .
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S -D -H -u 1001 -h /app -s /bin/sh -G nodejs -g nodejs aimfrontend
 
-# Cambiar propiedad de archivos al usuario no-root
-RUN chown -R aimfrontend:nodejs /app
+# Crear directorio .astro con permisos correctos
+RUN mkdir -p /app/.astro && \
+    chown -R aimfrontend:nodejs /app && \
+    chmod -R 755 /app/.astro
+
 USER aimfrontend
 
 # Exponer puerto de desarrollo (Astro default: 4321)

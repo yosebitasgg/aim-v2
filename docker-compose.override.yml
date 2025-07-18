@@ -25,12 +25,12 @@ services:
       # Variables específicas para desarrollo
       PUBLIC_API_URL: http://localhost:3001
       ASTRO_TELEMETRY_DISABLED: 1
-    volumes:
-      # Bind mounts para hot-reloading en desarrollo
-      - ./aim-website:/app:delegated
-      - /app/node_modules
-      - /app/dist
-      - /app/.astro
+    # volumes:
+      # Bind mounts deshabilitados temporalmente para evitar problemas de permisos
+      # - ./aim-website:/app:delegated
+      # - /app/node_modules
+      # - /app/dist
+      # - /app/.astro
     ports:
       # Puerto interno para desarrollo (Astro dev server)
       - "4321:4321"
