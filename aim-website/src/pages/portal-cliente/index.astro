@@ -1,0 +1,1491 @@
+---
+import PortalClientLayoutSidebar from '../../layouts/PortalClientLayoutSidebar.astro';
+import { Icon } from 'astro-icon/components';
+
+// Usar nuevo sistema JWT - no verificamos auth en SSR
+// La autenticación se manejará del lado del cliente
+const user = null; // Se obtendrá dinámicamente del cliente
+---
+
+<PortalClientLayoutSidebar title="Dashboard - Portal de Clientes AIM">
+  <!-- CDN para Chart.js y otras librerías -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/date-fns@2.29.3/index.min.js"></script>
+
+  <!-- Contenedor de autenticación -->
+  <div id="auth-container">
+    <!-- Loading state -->
+    <div id="auth-loading" class="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div class="text-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
+        <p class="text-gray-600">Verificando autenticación...</p>
+      </div>
+    </div>
+
+    <!-- Main content (hidden initially) -->
+    <div id="main-content" class="hidden">
+      <!-- Welcome Banner -->
+      <div class="mb-8">
+        <div class="bg-gradient-to-r from-teal-600 via-emerald-600 to-cyan-600 rounded-xl p-6 text-white relative overflow-hidden">
+          <!-- Background Pattern -->
+          <div class="absolute inset-0 bg-gradient-to-r from-teal-600/10 to-transparent">
+            <div class="absolute inset-0" style="background-image: radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%), radial-gradient(circle at 80% 50%, rgba(255,255,255,0.1) 0%, transparent 50%);"></div>
+          </div>
+          
+          <div class="relative flex items-center justify-between">
+            <div class="flex-1">
+              <h1 class="text-3xl font-bold mb-2">¡Bienvenido<span id="user-name"></span>!</h1>
+              <p class="text-teal-100 mb-3">Monitorea el progreso de tu automatización empresarial</p>
+              <div class="flex items-center space-x-6 text-sm text-teal-100">
+                <div class="flex items-center">
+                  <Icon name="tabler:building" class="w-4 h-4 mr-2" />
+                  <span>Empresa: </span><span id="company-name" class="font-medium ml-1">-</span>
+                </div>
+                <div class="flex items-center">
+                  <Icon name="tabler:calendar" class="w-4 h-4 mr-2" />
+                  <span>Cliente desde: </span><span id="client-since" class="font-medium ml-1">-</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="text-right">
+              <div class="text-teal-100 text-sm mb-1">Mis órdenes activas</div>
+              <div class="text-5xl font-bold mb-2" id="active-orders-count">0</div>
+              <div class="text-teal-100 text-sm flex items-center justify-end">
+                <Icon name="tabler:trending-up" class="w-4 h-4 mr-1" />
+                <span id="orders-trend">Cargando...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- KPI Cards Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Total Investment -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer" onclick="showInvestmentDetails()">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-500 mb-1">Inversión Total</p>
+              <p class="text-2xl font-bold text-gray-900" id="total-investment">$0</p>
+              <p class="text-sm text-teal-600 flex items-center mt-2">
+                <Icon name="tabler:currency-dollar" class="w-4 h-4 mr-1" />
+                <span id="investment-change">+0%</span><span class="mx-0.5"></span> este mes
+              </p>
+            </div>
+            <div class="p-3 bg-teal-50 rounded-lg">
+              <Icon name="tabler:wallet" class="w-6 h-6 text-teal-600" />
+            </div>
+          </div>
+        </div>
+
+        <!-- ROI Generated -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer" onclick="showROIDetails()">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-500 mb-1">ROI Generado</p>
+              <p class="text-2xl font-bold text-emerald-600" id="roi-percentage">0%</p>
+              <p class="text-sm text-emerald-600 flex items-center mt-2">
+                <Icon name="tabler:trending-up" class="w-4 h-4 mr-1" />
+                $<span id="roi-value">0</span> <span class="mx-0.5"></span>ahorrado
+              </p>
+            </div>
+            <div class="p-3 bg-emerald-50 rounded-lg">
+              <Icon name="tabler:chart-line" class="w-6 h-6 text-emerald-600" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Active Agents Performance -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer" onclick="showAgentsDetails()">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-500 mb-1">Eficiencia Agentes</p>
+              <p class="text-2xl font-bold text-blue-600" id="agents-efficiency">0%</p>
+              <p class="text-sm text-blue-600 flex items-center mt-2">
+                <Icon name="tabler:robot" class="w-4 h-4 mr-1" />
+                <span id="active-agents">0</span><span class="mx-0.5"></span> activos
+              </p>
+            </div>
+            <div class="p-3 bg-blue-50 rounded-lg">
+              <Icon name="tabler:robot" class="w-6 h-6 text-blue-600" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Monthly Savings -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer" onclick="showSavingsDetails()">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-500 mb-1">Ahorro Mensual</p>
+              <p class="text-2xl font-bold text-purple-600" id="monthly-savings">$0</p>
+              <p class="text-sm text-purple-600 flex items-center mt-2">
+                <Icon name="tabler:coins" class="w-4 h-4 mr-1" />
+                <span id="time-saved">0h</span><span class="mx-0.5"></span> tiempo
+              </p>
+            </div>
+            <div class="p-3 bg-purple-50 rounded-lg">
+              <Icon name="tabler:coins" class="w-6 h-6 text-purple-600" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Dashboard Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+        <!-- Orders Progress Chart -->
+        <div class="lg:col-span-2 bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h2 class="text-xl font-semibold text-gray-900">Progreso de Proyectos</h2>
+              <p class="text-sm text-gray-500">Evolución de tus órdenes en el tiempo</p>
+            </div>
+            <div class="flex items-center space-x-2">
+              <select id="chart-period" class="px-3 py-1 border border-gray-300 rounded-lg text-sm">
+                <option value="30d">30 días</option>
+                <option value="90d">3 meses</option>
+                <option value="1y">1 año</option>
+              </select>
+              <button onclick="refreshChartData()" class="p-2 text-gray-400 hover:text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">
+                <Icon name="tabler:refresh" class="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+          <div class="relative">
+            <canvas id="ordersProgressChart" class="w-full h-64"></canvas>
+          </div>
+        </div>
+
+        <!-- Activity Timeline -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-semibold text-gray-900">Actividad Reciente</h2>
+            <button onclick="showAllActivity()" class="text-teal-600 hover:text-teal-700 text-sm font-medium">Ver todo</button>
+          </div>
+          <div id="activity-timeline" class="space-y-4 max-h-64 overflow-y-auto">
+            <div class="flex items-center justify-center py-8 text-gray-500">
+              <div class="text-center">
+                <Icon name="tabler:activity" class="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                <p class="text-sm">Cargando actividad...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Performance Analytics -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <!-- Agents Performance -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h2 class="text-xl font-semibold text-gray-900">Rendimiento de Agentes</h2>
+              <p class="text-sm text-gray-500">Eficiencia y métricas de tus automatizaciones</p>
+            </div>
+            <div class="p-2 bg-emerald-50 rounded-lg">
+              <Icon name="tabler:robot" class="w-5 h-5 text-emerald-600" />
+            </div>
+          </div>
+          <div class="relative">
+            <canvas id="agentsPerformanceChart" class="w-full h-48"></canvas>
+          </div>
+          <div class="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-gray-100">
+            <div class="text-center">
+              <p class="text-sm text-gray-500">Ejecuciones</p>
+              <p class="text-lg font-bold text-gray-900" id="total-executions">0</p>
+            </div>
+            <div class="text-center">
+              <p class="text-sm text-gray-500">Éxito</p>
+              <p class="text-lg font-bold text-emerald-600" id="success-rate">0%</p>
+            </div>
+            <div class="text-center">
+              <p class="text-sm text-gray-500">Uptime</p>
+              <p class="text-lg font-bold text-blue-600" id="uptime">0%</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Financial Overview -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h2 class="text-xl font-semibold text-gray-900">Resumen Financiero</h2>
+              <p class="text-sm text-gray-500">Estado de facturación y pagos</p>
+            </div>
+            <div class="p-2 bg-teal-50 rounded-lg">
+              <Icon name="tabler:receipt" class="w-5 h-5 text-teal-600" />
+            </div>
+          </div>
+          <div class="relative mb-4">
+            <canvas id="financialChart" class="w-full h-48"></canvas>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="p-3 bg-green-50 rounded-lg">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm text-green-600">Facturado</p>
+                  <p class="text-lg font-bold text-green-700" id="total-billed">$0</p>
+                </div>
+                <Icon name="tabler:check" class="w-5 h-5 text-green-600" />
+              </div>
+            </div>
+            <div class="p-3 bg-yellow-50 rounded-lg">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm text-yellow-600">Pendiente</p>
+                  <p class="text-lg font-bold text-yellow-700" id="pending-amount">$0</p>
+                </div>
+                <Icon name="tabler:clock" class="w-5 h-5 text-yellow-600" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ROI and Value Metrics -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+        <!-- ROI Breakdown -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-semibold text-gray-900">Desglose ROI</h2>
+            <div class="p-2 bg-emerald-50 rounded-lg">
+              <Icon name="tabler:trending-up" class="w-5 h-5 text-emerald-600" />
+            </div>
+          </div>
+          <div class="relative">
+            <canvas id="roiBreakdownChart" class="w-full h-40"></canvas>
+          </div>
+          <div class="mt-4 space-y-2">
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">Ahorro en tiempo:</span>
+              <span class="font-medium" id="time-savings">0h/mes</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">Reducción costos:</span>
+              <span class="font-medium" id="cost-reduction">$0/mes</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">Mejora eficiencia:</span>
+              <span class="font-medium" id="efficiency-improvement">0%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Project Status Distribution -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-semibold text-gray-900">Estado de Proyectos</h2>
+            <div class="p-2 bg-blue-50 rounded-lg">
+              <Icon name="tabler:chart-pie" class="w-5 h-5 text-blue-600" />
+            </div>
+          </div>
+          <div class="relative">
+            <canvas id="projectStatusChart" class="w-full h-40"></canvas>
+          </div>
+          <div class="mt-4" id="project-status-legend">
+            <!-- Leyenda se poblará dinámicamente -->
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <h2 class="text-xl font-semibold text-gray-900 mb-6">Acciones Rápidas</h2>
+          <div class="space-y-3">
+            <a href="/portal-cliente/ordenes" class="flex items-center p-3 bg-teal-50 hover:bg-teal-100 rounded-lg transition-colors group">
+              <div class="p-2 bg-teal-100 rounded-lg mr-3 group-hover:bg-teal-200">
+                <Icon name="tabler:shopping-cart" class="w-5 h-5 text-teal-600" />
+              </div>
+              <div>
+                <p class="font-medium text-gray-900">Mis Órdenes</p>
+                <p class="text-sm text-gray-500">Ver todos los proyectos</p>
+              </div>
+            </a>
+            
+            <a href="/portal-cliente/agentes" class="flex items-center p-3 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors group">
+              <div class="p-2 bg-emerald-100 rounded-lg mr-3 group-hover:bg-emerald-200">
+                <Icon name="tabler:robot" class="w-5 h-5 text-emerald-600" />
+              </div>
+              <div>
+                <p class="font-medium text-gray-900">Mis Agentes</p>
+                <p class="text-sm text-gray-500">Monitorear automatizaciones</p>
+              </div>
+            </a>
+            
+            <a href="/portal-cliente/documentos" class="flex items-center p-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors group">
+              <div class="p-2 bg-purple-100 rounded-lg mr-3 group-hover:bg-purple-200">
+                <Icon name="tabler:files" class="w-5 h-5 text-purple-600" />
+              </div>
+              <div>
+                <p class="font-medium text-gray-900">Documentos</p>
+                <p class="text-sm text-gray-500">Reportes y análisis</p>
+              </div>
+            </a>
+            
+            <a href="/portal-cliente/facturacion" class="flex items-center p-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors group">
+              <div class="p-2 bg-blue-100 rounded-lg mr-3 group-hover:bg-blue-200">
+                <Icon name="tabler:receipt" class="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <p class="font-medium text-gray-900">Facturación</p>
+                <p class="text-sm text-gray-500">Estado de pagos</p>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Company Information -->
+      <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-xl font-semibold text-gray-900">Mi Empresa</h2>
+          <a href="/portal-cliente/configuracion" class="text-teal-600 hover:text-teal-700 text-sm font-medium flex items-center">
+            <Icon name="tabler:settings" class="w-4 h-4 mr-1" />
+            Configurar
+          </a>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="flex items-center space-x-3">
+            <div class="p-2 bg-teal-50 rounded-lg">
+              <Icon name="tabler:building" class="w-5 h-5 text-teal-600" />
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">Empresa</p>
+              <p class="font-medium text-gray-900" id="company-info-name">-</p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-3">
+            <div class="p-2 bg-blue-50 rounded-lg">
+              <Icon name="tabler:category" class="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">Industria</p>
+              <p class="font-medium text-gray-900" id="company-info-industry">-</p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-3">
+            <div class="p-2 bg-emerald-50 rounded-lg">
+              <Icon name="tabler:calendar-stats" class="w-5 h-5 text-emerald-600" />
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">Cliente desde</p>
+              <p class="font-medium text-gray-900" id="company-info-since">-</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modales para detalles -->
+  <div id="detailModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-4">
+        <h3 id="modalTitle" class="text-xl font-semibold text-gray-900"></h3>
+        <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+          <Icon name="tabler:x" class="w-6 h-6" />
+        </button>
+      </div>
+      <div id="modalContent">
+        <!-- Contenido dinámico -->
+      </div>
+    </div>
+  </div>
+</PortalClientLayoutSidebar>
+
+<script>
+  // Variables globales
+  let userStore = null;
+  let apiClient = null;
+  let unsubscribe = null;
+  let currentUser = null;
+  let clientData = null;
+  let dashboardState = {
+    user: null,
+    stats: null,
+    charts: {},
+    loaded: false
+  };
+
+  // Inicializar cuando el DOM esté listo
+  document.addEventListener('DOMContentLoaded', async () => {
+    console.log('🔄 Inicializando Dashboard Renovado del Portal de Clientes...');
+    
+    // Cargar módulos dinámicamente para evitar error de exports
+    try {
+      const userStoreModule = await import('../../lib/userStore.js');
+      const apiClientModule = await import('../../lib/apiClient.js');
+      
+      userStore = userStoreModule.userStore;
+      apiClient = apiClientModule.apiClient;
+      
+      console.log('✅ Módulos cargados correctamente');
+      await initializeClientPortal();
+    } catch (error) {
+      console.error('❌ Error cargando módulos:', error);
+      // Fallback para autenticación básica
+      await initializeFallbackAuth();
+    }
+  });
+
+  // Inicializar portal de clientes
+  async function initializeClientPortal() {
+    try {
+      console.log('🚀 Iniciando portal de clientes con userStore...');
+      
+      if (!userStore) {
+        throw new Error('UserStore no está disponible');
+      }
+      
+      // Suscribirse a cambios del store
+      unsubscribe = userStore.subscribe(handleStoreUpdate);
+      
+      // Obtener el estado actual del store
+      const currentState = userStore.getState();
+      
+      if (currentState.user && currentState.initialized) {
+        console.log('✅ Usando datos ya cargados del store');
+        await onAuthSuccess(currentState.user);
+      } else {
+        console.log('📡 Cargando datos del usuario...');
+        await userStore.loadUser();
+      }
+      
+      console.log('✅ Portal de clientes inicializado correctamente');
+      
+    } catch (error) {
+      console.error('❌ Error inicializando portal de clientes:', error);
+      onAuthError(error);
+    }
+  }
+
+  // Función de fallback para autenticación básica
+  async function initializeFallbackAuth() {
+    try {
+      console.log('🔄 Iniciando autenticación de fallback...');
+      
+      // Verificar token JWT básico
+      const token = localStorage.getItem('accessToken') || localStorage.getItem('authToken');
+      
+      if (!token) {
+        throw new Error('No hay token de autenticación');
+      }
+      
+      // Hacer petición directa al endpoint de usuario
+      const response = await fetch('/api/auth/me', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Token no válido');
+      }
+      
+      const userData = await response.json();
+      
+      if (userData.success && userData.data) {
+        console.log('✅ Usuario obtenido con fallback:', userData.data);
+        await onAuthSuccess(userData.data);
+      } else {
+        throw new Error('Respuesta inválida del servidor');
+      }
+      
+    } catch (error) {
+      console.error('❌ Error en autenticación de fallback:', error);
+      onAuthError(error);
+    }
+  }
+
+  // Manejar actualizaciones del store
+  function handleStoreUpdate(state) {
+    console.log('📡 Store actualizado en portal de clientes:', state);
+    
+    if (state.user && !state.isLoading && !state.error) {
+      onAuthSuccess(state.user);
+    } else if (state.error) {
+      console.error('❌ Error en el store:', state.error);
+      onAuthError(state.error);
+    }
+  }
+
+  // Callback cuando la autenticación es exitosa
+  async function onAuthSuccess(user) {
+    try {
+      console.log('✅ Portal de Clientes - Usuario autenticado:', user);
+      
+      // Verificar que el usuario es un cliente
+      if (user.role !== 'client') {
+        console.log('❌ Usuario no es cliente, redirigiendo al portal principal...');
+        window.location.href = '/portal';
+        return;
+      }
+      
+      dashboardState.user = user;
+      
+      // Mostrar contenido principal
+      showMainContent();
+      
+      // Actualizar el nombre del usuario inmediatamente como fallback prioritario
+      console.log('🚀 Actualizando nombre del usuario inmediatamente en onAuthSuccess...');
+      function forceUpdateUserName() {
+        const userName = document.getElementById('user-name');
+        if (userName && user.name) {
+          const firstName = user.name.split(' ')[0];
+          console.log(`🎯 Forzando actualización del nombre a: "${firstName}"`);
+          console.log(`📋 Valor actual: "${userName.textContent}"`);
+          userName.textContent = firstName;
+          console.log(`✅ Nombre actualizado inmediatamente a: "${userName.textContent}"`);
+          return true;
+        } else {
+          console.warn('⚠️ No se pudo forzar actualización del nombre:', {
+            element: !!userName,
+            name: user.name
+          });
+          return false;
+        }
+      }
+      
+      forceUpdateUserName();
+      
+      // Asegurar que el nombre se actualice múltiples veces
+      setTimeout(() => {
+        console.log('🔄 Re-verificando nombre del usuario después de 100ms...');
+        forceUpdateUserName();
+      }, 100);
+      
+      setTimeout(() => {
+        console.log('🔄 Re-verificando nombre del usuario después de 300ms...');
+        forceUpdateUserName();
+      }, 300);
+      
+      // Cargar perfil completo del cliente desde el backend
+      await loadClientProfile();
+      
+      // Cargar datos del dashboard
+      await loadEnhancedDashboardData();
+      
+    } catch (error) {
+      console.error('💥 Error cargando portal de clientes:', error);
+      onAuthError(error);
+    }
+  }
+
+  // Callback cuando la autenticación falla
+  function onAuthError(error) {
+    console.error('❌ Portal de Clientes - Error de autenticación:', error);
+    
+    // Limpiar tokens y redirigir a login
+    if (apiClient && apiClient.clearTokens) {
+      apiClient.clearTokens();
+    } else {
+      // Fallback: limpiar tokens manualmente
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('refreshToken');
+    }
+    
+    setTimeout(() => {
+      window.location.href = '/login';
+    }, 2000);
+  }
+
+  // Mostrar contenido principal
+  function showMainContent() {
+    const loadingElement = document.getElementById('auth-loading');
+    const mainContent = document.getElementById('main-content');
+    
+    if (loadingElement) {
+      loadingElement.classList.add('hidden');
+    }
+    
+    if (mainContent) {
+      mainContent.classList.remove('hidden');
+      console.log('✅ Contenido principal del portal de clientes mostrado');
+    }
+  }
+
+
+
+  // Cargar perfil del cliente usando la misma lógica de configuracion.astro
+  async function loadClientProfile() {
+    try {
+      console.log('👤 Cargando perfil del cliente desde /portal-clients/profile...');
+      
+      if (!apiClient || !apiClient.request) {
+        console.warn('⚠️ ApiClient no disponible para cargar perfil del cliente');
+        return;
+      }
+      
+      const response = await apiClient.request('/portal-clients/profile', {
+        method: 'GET'
+      });
+
+      currentUser = response.data?.user;
+      clientData = response.data?.client;
+
+      console.log('✅ Perfil del cliente cargado:', {
+        user: currentUser?.email,
+        client: clientData?.companyName
+      });
+      
+      updateClientInfo();
+      
+    } catch (error) {
+      console.error('❌ Error cargando perfil del cliente:', error);
+      // No lanzar error para no interrumpir el flujo del dashboard
+    }
+  }
+
+  // Actualizar información del cliente en la UI
+  function updateClientInfo() {
+    if (!currentUser || !clientData) {
+      console.warn('⚠️ No hay datos del cliente para actualizar');
+      return;
+    }
+
+    console.log('🏢 Actualizando información del cliente en la UI...');
+    console.log('👤 Datos del usuario:', { name: currentUser.name, email: currentUser.email });
+    console.log('🏢 Datos del cliente:', { companyName: clientData.companyName, industry: clientData.industry });
+
+    // Función para actualizar nombre del usuario de forma robusta
+    function updateUserName() {
+      const userName = document.getElementById('user-name');
+      if (userName && currentUser.name) {
+        const firstName = currentUser.name.split(' ')[0];
+        console.log(`🎯 Intentando actualizar nombre del usuario a: "${firstName}"`);
+        console.log(`📋 Valor actual del elemento: "${userName.textContent}"`);
+        userName.textContent = firstName;
+        console.log(`✅ Nombre del usuario actualizado a: "${userName.textContent}"`);
+        return true;
+      } else {
+        console.warn('⚠️ No se pudo actualizar el nombre del usuario:', {
+          element: !!userName,
+          name: currentUser.name
+        });
+        return false;
+      }
+    }
+
+    // Actualizar nombre del usuario inmediatamente
+    updateUserName();
+
+    // Actualizar información de la empresa en el banner
+    const companyName = document.getElementById('company-name');
+    const clientSince = document.getElementById('client-since');
+    
+    if (companyName && clientData.companyName) {
+      companyName.textContent = clientData.companyName;
+      console.log(`✅ Empresa actualizada: ${clientData.companyName}`);
+    }
+    
+    if (clientSince && clientData.clientSince) {
+      const date = new Date(clientData.clientSince);
+      const formattedDate = date.toLocaleDateString('es-ES', { 
+        year: 'numeric', 
+        month: 'long' 
+      });
+      clientSince.textContent = formattedDate;
+      console.log(`✅ Fecha cliente desde actualizada: ${formattedDate}`);
+    }
+
+    // Actualizar información de la empresa en la sección "Mi Empresa"
+    const companyInfoName = document.getElementById('company-info-name');
+    const companyInfoIndustry = document.getElementById('company-info-industry');
+    const companyInfoSince = document.getElementById('company-info-since');
+    
+    if (companyInfoName && clientData.companyName) {
+      companyInfoName.textContent = clientData.companyName;
+      console.log(`✅ Info empresa nombre actualizado: ${clientData.companyName}`);
+    }
+    
+    if (companyInfoIndustry) {
+      const industry = getIndustryLabel(clientData.industry);
+      companyInfoIndustry.textContent = industry;
+      console.log(`✅ Info industria actualizada: ${industry}`);
+    }
+    
+    if (companyInfoSince && clientData.clientSince) {
+      const date = new Date(clientData.clientSince);
+      const formattedDate = date.toLocaleDateString('es-ES', { 
+        year: 'numeric', 
+        month: 'long' 
+      });
+      companyInfoSince.textContent = formattedDate;
+      console.log(`✅ Info fecha desde actualizada: ${formattedDate}`);
+    }
+
+    console.log('✅ Información del cliente actualizada completamente');
+
+    // Forzar múltiples actualizaciones para asegurar que se apliquen (especialmente el nombre del usuario)
+    setTimeout(() => {
+      console.log('🔄 Segunda actualización del nombre del usuario...');
+      const userName = document.getElementById('user-name');
+      if (userName && currentUser.name && (userName.textContent === 'Cliente' || userName.textContent.trim() === '')) {
+        updateUserName();
+      }
+    }, 500);
+    
+    setTimeout(() => {
+      console.log('🔄 Tercera verificación del nombre del usuario...');
+      const userName = document.getElementById('user-name');
+      if (userName && currentUser.name && (userName.textContent === 'Cliente' || userName.textContent.trim() === '')) {
+        updateUserName();
+      }
+    }, 1000);
+    
+    // Verificación adicional agresiva para el nombre del usuario
+    setTimeout(() => {
+      console.log('🔄 Verificación final del nombre del usuario...');
+      const userName = document.getElementById('user-name');
+      if (userName && currentUser.name) {
+        const firstName = currentUser.name.split(' ')[0];
+        if (userName.textContent !== firstName) {
+          console.log(`🚨 Discrepancia detectada! Esperado: "${firstName}", Actual: "${userName.textContent}"`);
+          updateUserName();
+        }
+      }
+    }, 2000);
+  }
+
+  // Función auxiliar para formatear etiquetas de industria
+  function getIndustryLabel(industry) {
+    const labels = {
+      'tecnologia': 'Tecnología',
+      'manufacturera': 'Manufacturera',
+      'servicios': 'Servicios',
+      'comercio': 'Comercio',
+      'construccion': 'Construcción',
+      'alimentaria': 'Alimentaria',
+      'automotriz': 'Automotriz',
+      'salud': 'Salud',
+      'educacion': 'Educación',
+      'otro': 'Otro'
+    };
+    return labels[industry] || industry || 'No especificada';
+  }
+
+  // Cargar datos mejorados del dashboard
+  async function loadEnhancedDashboardData() {
+    try {
+      console.log('📊 Cargando datos mejorados del dashboard de cliente...');
+      
+      if (!apiClient || !apiClient.request) {
+        console.log('⚠️ ApiClient no disponible, usando datos por defecto');
+        loadDefaultDashboardData();
+        return;
+      }
+      
+      // Cargar datos con más filtros e información
+      const data = await apiClient.request('/portal-clients/dashboard/stats', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          dateRange: '90d',
+          includeActivity: true,
+          activityLimit: 10,
+          includeROI: true,
+          includeFinancial: true,
+          includeAgentMetrics: true
+        })
+      });
+      
+      if (data.success) {
+        dashboardState.stats = data.data;
+        
+        // Actualizar todos los componentes del dashboard
+        updateKPICards(data.data);
+        updateActivityTimeline(data.data.recentActivity || []);
+        initializeCharts(data.data);
+        
+        console.log('✅ Datos del dashboard mejorado cargados exitosamente');
+      } else {
+        throw new Error(data.message || 'Error obteniendo datos del dashboard');
+      }
+      
+    } catch (error) {
+      console.error('❌ Error cargando datos del dashboard:', error);
+      // Mostrar datos por defecto en caso de error
+      loadDefaultDashboardData();
+    }
+  }
+
+  // Cargar datos por defecto
+  function loadDefaultDashboardData() {
+    const defaultStats = {
+      totalOrders: 0,
+      activeOrders: 0,
+      totalAgents: 0,
+      activeAgents: 0,
+      totalInvestment: 0,
+      roiPercentage: 0,
+      roiValue: 0,
+      monthlySavings: 0,
+      agentsEfficiency: 0,
+      timeSaved: 0,
+      totalBilled: 0,
+      pendingAmount: 0,
+      ordersByStatus: [],
+      ordersByMonth: [],
+      agentMetrics: {
+        totalExecutions: 0,
+        successRate: 0,
+        uptime: 0
+      }
+    };
+    
+    updateKPICards(defaultStats);
+    updateActivityTimeline([]);
+    initializeCharts(defaultStats);
+  }
+
+  // Actualizar tarjetas KPI
+  function updateKPICards(stats) {
+    // Órdenes activas con tendencia
+    const activeOrdersCount = document.getElementById('active-orders-count');
+    const ordersTrend = document.getElementById('orders-trend');
+    if (activeOrdersCount) activeOrdersCount.textContent = stats.activeOrders || 0;
+    if (ordersTrend) {
+      const trend = calculateTrend(stats.ordersTrend);
+      ordersTrend.textContent = trend > 0 ? `+${trend}% vs mes anterior` : `${trend}% vs mes anterior`;
+    }
+    
+    // Inversión total
+    const totalInvestment = document.getElementById('total-investment');
+    const investmentChange = document.getElementById('investment-change');
+    if (totalInvestment) totalInvestment.textContent = formatCurrency(stats.totalInvestment || 0);
+    if (investmentChange) investmentChange.textContent = `+${stats.investmentChange || 0}%`;
+    
+    // ROI
+    const roiPercentage = document.getElementById('roi-percentage');
+    const roiValue = document.getElementById('roi-value');
+    if (roiPercentage) roiPercentage.textContent = `${stats.roiPercentage || 0}%`;
+    if (roiValue) roiValue.textContent = formatNumber(stats.roiValue || 0);
+    
+    // Eficiencia de agentes
+    const agentsEfficiency = document.getElementById('agents-efficiency');
+    const activeAgents = document.getElementById('active-agents');
+    if (agentsEfficiency) agentsEfficiency.textContent = `${stats.agentsEfficiency || 0}%`;
+    if (activeAgents) activeAgents.textContent = stats.activeAgents || 0;
+    
+    // Ahorro mensual
+    const monthlySavings = document.getElementById('monthly-savings');
+    const timeSaved = document.getElementById('time-saved');
+    if (monthlySavings) monthlySavings.textContent = formatCurrency(stats.monthlySavings || 0);
+    if (timeSaved) timeSaved.textContent = `${stats.timeSaved || 0}h`;
+    
+    // Métricas de agentes
+    if (stats.agentMetrics) {
+      const totalExecutions = document.getElementById('total-executions');
+      const successRate = document.getElementById('success-rate');
+      const uptime = document.getElementById('uptime');
+      
+      if (totalExecutions) totalExecutions.textContent = formatNumber(stats.agentMetrics.totalExecutions || 0);
+      if (successRate) successRate.textContent = `${stats.agentMetrics.successRate || 0}%`;
+      if (uptime) uptime.textContent = `${stats.agentMetrics.uptime || 0}%`;
+    }
+    
+    // Datos financieros
+    const totalBilled = document.getElementById('total-billed');
+    const pendingAmount = document.getElementById('pending-amount');
+    if (totalBilled) totalBilled.textContent = formatCurrency(stats.totalBilled || 0);
+    if (pendingAmount) pendingAmount.textContent = formatCurrency(stats.pendingAmount || 0);
+    
+    // ROI breakdown
+    const timeSavings = document.getElementById('time-savings');
+    const costReduction = document.getElementById('cost-reduction');
+    const efficiencyImprovement = document.getElementById('efficiency-improvement');
+    
+    if (timeSavings) timeSavings.textContent = `${stats.timeSavingsHours || 0}h/mes`;
+    if (costReduction) costReduction.textContent = formatCurrency(stats.costReduction || 0) + '/mes';
+    if (efficiencyImprovement) efficiencyImprovement.textContent = `${stats.efficiencyImprovement || 0}%`;
+  }
+
+  // Actualizar timeline de actividad
+  function updateActivityTimeline(activities) {
+    const container = document.getElementById('activity-timeline');
+    if (!container) return;
+    
+    if (!activities || activities.length === 0) {
+      container.innerHTML = `
+        <div class="flex items-center justify-center py-8 text-gray-500">
+          <div class="text-center">
+            <svg class="w-8 h-8 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <p class="text-sm">No hay actividad reciente</p>
+          </div>
+        </div>
+      `;
+      return;
+    }
+    
+    container.innerHTML = activities.slice(0, 6).map((activity, index) => {
+      const date = new Date(activity.date);
+      const timeAgo = getTimeAgo(date);
+      const isLast = index === activities.length - 1 || index === 5;
+      
+      const iconMap = {
+        'order_status_change': 'tabler:shopping-cart',
+        'document_activity': 'tabler:file-text',
+        'agent_update': 'tabler:robot',
+        'payment_received': 'tabler:credit-card'
+      };
+      
+      const colorMap = {
+        'order_status_change': 'teal',
+        'document_activity': 'purple',
+        'agent_update': 'emerald',
+        'payment_received': 'blue'
+      };
+      
+      const icon = iconMap[activity.type] || 'tabler:activity';
+      const color = colorMap[activity.type] || 'gray';
+      
+      return `
+        <div class="relative ${!isLast ? 'pb-4' : ''}">
+          ${!isLast ? '<div class="absolute left-4 top-8 w-0.5 h-full bg-gray-200"></div>' : ''}
+          <div class="flex items-start space-x-3">
+            <div class="flex-shrink-0 w-8 h-8 bg-${color}-50 rounded-full flex items-center justify-center">
+              <svg class="w-4 h-4 text-${color}-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm text-gray-900 font-medium">${activity.description}</p>
+              <p class="text-xs text-gray-500 mt-1">${timeAgo}</p>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // Inicializar gráficas
+  function initializeCharts(stats) {
+    // Gráfica de progreso de órdenes
+    initOrdersProgressChart(stats.ordersByMonth || []);
+    
+    // Gráfica de rendimiento de agentes
+    initAgentsPerformanceChart(stats.agentPerformance || []);
+    
+    // Gráfica financiera
+    initFinancialChart(stats.financialData || []);
+    
+    // Gráfica de ROI breakdown
+    initROIBreakdownChart(stats.roiBreakdown || {});
+    
+    // Gráfica de distribución de estados
+    initProjectStatusChart(stats.ordersByStatus || []);
+  }
+
+  // Gráfica de progreso de órdenes
+  function initOrdersProgressChart(data) {
+    const ctx = document.getElementById('ordersProgressChart');
+    if (!ctx) return;
+    
+    if (dashboardState.charts.ordersProgress) {
+      dashboardState.charts.ordersProgress.destroy();
+    }
+    
+    dashboardState.charts.ordersProgress = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: data.map(d => {
+          const [year, month] = d.month.split('-');
+          return new Date(year, month - 1).toLocaleDateString('es-ES', { month: 'short', year: '2-digit' });
+        }),
+        datasets: [{
+          label: 'Órdenes Creadas',
+          data: data.map(d => d.count),
+          borderColor: 'rgb(20, 184, 166)',
+          backgroundColor: 'rgba(20, 184, 166, 0.1)',
+          tension: 0.4,
+          fill: true
+        }, {
+          label: 'Valor ($)',
+          data: data.map(d => d.value),
+          borderColor: 'rgb(16, 185, 129)',
+          backgroundColor: 'rgba(16, 185, 129, 0.1)',
+          tension: 0.4,
+          fill: true,
+          yAxisID: 'y1'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          intersect: false,
+          mode: 'index'
+        },
+        plugins: {
+          legend: {
+            position: 'bottom'
+          }
+        },
+        scales: {
+          y: {
+            type: 'linear',
+            display: true,
+            position: 'left'
+          },
+          y1: {
+            type: 'linear',
+            display: true,
+            position: 'right',
+            grid: {
+              drawOnChartArea: false
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // Gráfica de rendimiento de agentes
+  function initAgentsPerformanceChart(data) {
+    const ctx = document.getElementById('agentsPerformanceChart');
+    if (!ctx) return;
+    
+    if (dashboardState.charts.agentsPerformance) {
+      dashboardState.charts.agentsPerformance.destroy();
+    }
+    
+    // Datos ejemplo si no hay datos reales
+    const chartData = data.length > 0 ? data : [
+      { name: 'Agent A', efficiency: 95, executions: 120 },
+      { name: 'Agent B', efficiency: 87, executions: 95 },
+      { name: 'Agent C', efficiency: 92, executions: 110 }
+    ];
+    
+    dashboardState.charts.agentsPerformance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: chartData.map(d => d.name),
+        datasets: [{
+          label: 'Eficiencia (%)',
+          data: chartData.map(d => d.efficiency),
+          backgroundColor: 'rgba(16, 185, 129, 0.8)',
+          borderColor: 'rgb(16, 185, 129)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 100
+          }
+        }
+      }
+    });
+  }
+
+  // Gráfica financiera
+  function initFinancialChart(data) {
+    const ctx = document.getElementById('financialChart');
+    if (!ctx) return;
+    
+    if (dashboardState.charts.financial) {
+      dashboardState.charts.financial.destroy();
+    }
+    
+    // Datos ejemplo si no hay datos reales
+    const chartData = data.length > 0 ? data : [
+      { month: '2024-01', billed: 15000, paid: 15000, pending: 0 },
+      { month: '2024-02', billed: 18000, paid: 16000, pending: 2000 },
+      { month: '2024-03', billed: 22000, paid: 20000, pending: 2000 }
+    ];
+    
+    dashboardState.charts.financial = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: chartData.map(d => {
+          const [year, month] = d.month.split('-');
+          return new Date(year, month - 1).toLocaleDateString('es-ES', { month: 'short' });
+        }),
+        datasets: [{
+          label: 'Facturado',
+          data: chartData.map(d => d.billed),
+          backgroundColor: 'rgba(59, 130, 246, 0.8)',
+          borderColor: 'rgb(59, 130, 246)',
+          borderWidth: 1
+        }, {
+          label: 'Pagado',
+          data: chartData.map(d => d.paid),
+          backgroundColor: 'rgba(16, 185, 129, 0.8)',
+          borderColor: 'rgb(16, 185, 129)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom'
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+  }
+
+  // Gráfica de desglose ROI
+  function initROIBreakdownChart(data) {
+    const ctx = document.getElementById('roiBreakdownChart');
+    if (!ctx) return;
+    
+    if (dashboardState.charts.roiBreakdown) {
+      dashboardState.charts.roiBreakdown.destroy();
+    }
+    
+    const chartData = {
+      timeSavings: data.timeSavings || 40,
+      costReduction: data.costReduction || 35,
+      qualityImprovement: data.qualityImprovement || 25
+    };
+    
+    dashboardState.charts.roiBreakdown = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Ahorro Tiempo', 'Reducción Costos', 'Mejora Calidad'],
+        datasets: [{
+          data: [chartData.timeSavings, chartData.costReduction, chartData.qualityImprovement],
+          backgroundColor: [
+            'rgba(16, 185, 129, 0.8)',
+            'rgba(59, 130, 246, 0.8)',
+            'rgba(139, 92, 246, 0.8)'
+          ],
+          borderColor: [
+            'rgb(16, 185, 129)',
+            'rgb(59, 130, 246)',
+            'rgb(139, 92, 246)'
+          ],
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              boxWidth: 12,
+              fontSize: 11
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // Gráfica de distribución de estados de proyectos
+  function initProjectStatusChart(data) {
+    const ctx = document.getElementById('projectStatusChart');
+    if (!ctx) return;
+    
+    if (dashboardState.charts.projectStatus) {
+      dashboardState.charts.projectStatus.destroy();
+    }
+    
+    // Datos ejemplo si no hay datos reales
+    const chartData = data.length > 0 ? data : [
+      { status: 'COMPLETED', count: 8, color: '#10B981' },
+      { status: 'IN_PROGRESS', count: 3, color: '#3B82F6' },
+      { status: 'PENDING', count: 2, color: '#F59E0B' }
+    ];
+    
+    dashboardState.charts.projectStatus = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: chartData.map(d => getStatusLabel(d.status)),
+        datasets: [{
+          data: chartData.map(d => d.count),
+          backgroundColor: chartData.map(d => d.color + '80'), // 50% opacity
+          borderColor: chartData.map(d => d.color),
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          }
+        }
+      }
+    });
+    
+    // Actualizar leyenda manual
+    updateProjectStatusLegend(chartData);
+  }
+
+  // Actualizar leyenda de estados de proyecto
+  function updateProjectStatusLegend(data) {
+    const legendContainer = document.getElementById('project-status-legend');
+    if (!legendContainer) return;
+    
+    legendContainer.innerHTML = data.map(item => `
+      <div class="flex items-center justify-between py-1">
+        <div class="flex items-center">
+          <div class="w-3 h-3 rounded-full mr-2" style="background-color: ${item.color}"></div>
+          <span class="text-sm text-gray-600">${getStatusLabel(item.status)}</span>
+        </div>
+        <span class="text-sm font-medium text-gray-900">${item.count}</span>
+      </div>
+    `).join('');
+  }
+
+  // Funciones auxiliares
+  function getStatusLabel(status) {
+    const labels = {
+      'DRAFT': 'Borrador',
+      'PENDING': 'Pendiente',
+      'IN_PROGRESS': 'En Progreso',
+      'IN_REVIEW': 'En Revisión',
+      'COMPLETED': 'Completado',
+      'CANCELLED': 'Cancelado',
+      'ON_HOLD': 'En Espera'
+    };
+    return labels[status] || status;
+  }
+
+  function formatCurrency(amount) {
+    return new Intl.NumberFormat('es-MX', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount);
+  }
+
+  function formatNumber(num) {
+    return new Intl.NumberFormat('es-MX').format(num);
+  }
+
+  function calculateTrend(data) {
+    if (!data || data.length < 2) return 0;
+    const current = data[data.length - 1];
+    const previous = data[data.length - 2];
+    return Math.round(((current - previous) / previous) * 100);
+  }
+
+  function getTimeAgo(date) {
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const minutes = Math.floor(diff / (1000 * 60));
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    
+    if (minutes < 60) return `hace ${minutes} min`;
+    if (hours < 24) return `hace ${hours}h`;
+    return `hace ${days}d`;
+  }
+
+  // Funciones para mostrar detalles en modales
+  window.showInvestmentDetails = function() {
+    showModal('Detalles de Inversión', `
+      <div class="space-y-4">
+        <div class="p-4 bg-teal-50 rounded-lg">
+          <h4 class="font-medium text-teal-900 mb-2">Inversión Total Acumulada</h4>
+          <p class="text-2xl font-bold text-teal-600">${formatCurrency(dashboardState.stats?.totalInvestment || 0)}</p>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="p-3 bg-gray-50 rounded-lg">
+            <p class="text-sm text-gray-600">Este mes</p>
+            <p class="font-bold">${formatCurrency(dashboardState.stats?.monthlyInvestment || 0)}</p>
+          </div>
+          <div class="p-3 bg-gray-50 rounded-lg">
+            <p class="text-sm text-gray-600">Proyección anual</p>
+            <p class="font-bold">${formatCurrency((dashboardState.stats?.monthlyInvestment || 0) * 12)}</p>
+          </div>
+        </div>
+      </div>
+    `);
+  }
+
+  window.showROIDetails = function() {
+    showModal('Análisis de ROI', `
+      <div class="space-y-4">
+        <div class="p-4 bg-emerald-50 rounded-lg">
+          <h4 class="font-medium text-emerald-900 mb-2">Retorno de Inversión</h4>
+          <p class="text-2xl font-bold text-emerald-600">${dashboardState.stats?.roiPercentage || 0}%</p>
+          <p class="text-sm text-emerald-700">Valor generado: ${formatCurrency(dashboardState.stats?.roiValue || 0)}</p>
+        </div>
+        <div class="space-y-3">
+          <div class="flex justify-between">
+            <span class="text-gray-600">Ahorro en tiempo:</span>
+            <span class="font-medium">${dashboardState.stats?.timeSavingsHours || 0}h/mes</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">Reducción de costos:</span>
+            <span class="font-medium">${formatCurrency(dashboardState.stats?.costReduction || 0)}/mes</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">Mejora en eficiencia:</span>
+            <span class="font-medium">${dashboardState.stats?.efficiencyImprovement || 0}%</span>
+          </div>
+        </div>
+      </div>
+    `);
+  }
+
+  window.showAgentsDetails = function() {
+    showModal('Rendimiento de Agentes', `
+      <div class="space-y-4">
+        <div class="p-4 bg-blue-50 rounded-lg">
+          <h4 class="font-medium text-blue-900 mb-2">Eficiencia Promedio</h4>
+          <p class="text-2xl font-bold text-blue-600">${dashboardState.stats?.agentsEfficiency || 0}%</p>
+        </div>
+        <div class="grid grid-cols-3 gap-4">
+          <div class="text-center p-3 bg-gray-50 rounded-lg">
+            <p class="text-sm text-gray-600">Ejecuciones</p>
+            <p class="text-lg font-bold">${formatNumber(dashboardState.stats?.agentMetrics?.totalExecutions || 0)}</p>
+          </div>
+          <div class="text-center p-3 bg-gray-50 rounded-lg">
+            <p class="text-sm text-gray-600">Éxito</p>
+            <p class="text-lg font-bold">${dashboardState.stats?.agentMetrics?.successRate || 0}%</p>
+          </div>
+          <div class="text-center p-3 bg-gray-50 rounded-lg">
+            <p class="text-sm text-gray-600">Uptime</p>
+            <p class="text-lg font-bold">${dashboardState.stats?.agentMetrics?.uptime || 0}%</p>
+          </div>
+        </div>
+      </div>
+    `);
+  }
+
+  window.showSavingsDetails = function() {
+    showModal('Análisis de Ahorros', `
+      <div class="space-y-4">
+        <div class="p-4 bg-purple-50 rounded-lg">
+          <h4 class="font-medium text-purple-900 mb-2">Ahorro Mensual</h4>
+          <p class="text-2xl font-bold text-purple-600">${formatCurrency(dashboardState.stats?.monthlySavings || 0)}</p>
+        </div>
+        <div class="space-y-3">
+          <div class="flex justify-between">
+            <span class="text-gray-600">Tiempo ahorrado:</span>
+            <span class="font-medium">${dashboardState.stats?.timeSaved || 0}h/mes</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">Valor por hora:</span>
+            <span class="font-medium">${formatCurrency((dashboardState.stats?.monthlySavings || 0) / Math.max(dashboardState.stats?.timeSaved || 1, 1))}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">Proyección anual:</span>
+            <span class="font-medium">${formatCurrency((dashboardState.stats?.monthlySavings || 0) * 12)}</span>
+          </div>
+        </div>
+      </div>
+    `);
+  }
+
+  window.showAllActivity = function() {
+    window.location.href = '/portal-cliente/configuracion#activity';
+  }
+
+  window.refreshChartData = function() {
+    loadEnhancedDashboardData();
+  }
+
+  function showModal(title, content) {
+    const modal = document.getElementById('detailModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalContent = document.getElementById('modalContent');
+    
+    if (modal && modalTitle && modalContent) {
+      modalTitle.textContent = title;
+      modalContent.innerHTML = content;
+      modal.classList.remove('hidden');
+    }
+  }
+
+  window.closeModal = function() {
+    const modal = document.getElementById('detailModal');
+    if (modal) {
+      modal.classList.add('hidden');
+    }
+  }
+
+  // Limpiar al cerrar la página
+  window.addEventListener('beforeunload', () => {
+    if (unsubscribe) {
+      unsubscribe();
+    }
+    // Destruir gráficas
+    Object.values(dashboardState.charts).forEach(chart => {
+      if (chart && typeof chart.destroy === 'function') {
+        chart.destroy();
+      }
+    });
+  });
+</script>
+
+<style>
+  /* Estilos específicos para el portal de clientes */
+  .chart-container {
+    position: relative;
+    height: 300px;
+  }
+  
+  /* Animaciones para las tarjetas */
+  .hover\:shadow-md {
+    transition: box-shadow 0.15s ease-in-out;
+  }
+  
+  /* Gradientes personalizados */
+  .bg-gradient-to-r {
+    background: linear-gradient(to right, var(--tw-gradient-stops));
+  }
+  
+  /* Scrollbar personalizado para el timeline */
+  #activity-timeline::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  #activity-timeline::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 2px;
+  }
+  
+  #activity-timeline::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 2px;
+  }
+  
+  #activity-timeline::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+  
+  /* Efecto hover para acciones rápidas */
+  .group:hover .group-hover\:bg-teal-200 {
+    background-color: rgb(153 246 228);
+  }
+  
+  .group:hover .group-hover\:bg-emerald-200 {
+    background-color: rgb(167 243 208);
+  }
+  
+  .group:hover .group-hover\:bg-purple-200 {
+    background-color: rgb(196 181 253);
+  }
+  
+  .group:hover .group-hover\:bg-blue-200 {
+    background-color: rgb(191 219 254);
+  }
+</style> 

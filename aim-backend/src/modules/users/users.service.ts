@@ -57,6 +57,14 @@ export class UsersService {
               description: true,
             },
           },
+          associatedClient: {
+            select: {
+              id: true,
+              companyName: true,
+              industry: true,
+              status: true,
+            },
+          },
         },
         orderBy: {
           [filters.sortBy]: filters.sortOrder,
@@ -96,6 +104,14 @@ export class UsersService {
               id: true,
               name: true,
               description: true,
+            },
+          },
+          associatedClient: {
+            select: {
+              id: true,
+              companyName: true,
+              industry: true,
+              status: true,
             },
           },
         },
@@ -147,6 +163,7 @@ export class UsersService {
             phoneNumber: data.phoneNumber,
             role: data.role,
             roleId: data.roleId,
+            clientId: data.clientId,
             status: 'active',
             emailVerified: false,
             isFirstLogin: true,
@@ -158,6 +175,14 @@ export class UsersService {
                 id: true,
                 name: true,
                 description: true,
+              },
+            },
+            associatedClient: {
+              select: {
+                id: true,
+                companyName: true,
+                industry: true,
+                status: true,
               },
             },
           },
@@ -416,7 +441,7 @@ export class UsersService {
   /**
    * Mapea un usuario de Prisma a la respuesta
    */
-  private mapUserToResponse(user: User & { customRole?: any }): UserResponse {
+  private mapUserToResponse(user: User & { customRole?: any; associatedClient?: any }): UserResponse {
     return {
       id: user.id,
       name: user.name,
@@ -426,6 +451,7 @@ export class UsersService {
       status: user.status,
       role: user.role,
       roleId: user.roleId || undefined,
+      clientId: user.clientId || undefined,
       lastLoginAt: user.lastLoginAt || undefined,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
@@ -433,6 +459,12 @@ export class UsersService {
         id: user.customRole.id,
         name: user.customRole.name,
         description: user.customRole.description,
+      } : undefined,
+      associatedClient: user.associatedClient ? {
+        id: user.associatedClient.id,
+        companyName: user.associatedClient.companyName,
+        industry: user.associatedClient.industry,
+        status: user.associatedClient.status,
       } : undefined,
     };
   }

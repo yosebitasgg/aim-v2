@@ -3,6 +3,7 @@ export const USER_ROLES = {
   MANAGER: 'manager',
   USER: 'user',
   VIEWER: 'viewer',
+  CLIENT: 'client',
 } as const;
 
 export const USER_STATUS = {
@@ -28,9 +29,11 @@ export const MODULES = {
   AGENTS: 'agents',
   CLIENTS: 'clients',
   ORDERS: 'orders',
+  DOCUMENTS: 'documents',
   QUOTES: 'quotes',
   BILLING: 'billing',
   REPORTS: 'reports',
+  DEPARTMENTS: 'departments',
 } as const;
 
 export const ACTIONS = {
@@ -60,9 +63,11 @@ export const DEFAULT_PERMISSIONS = {
     [MODULES.AGENTS]: { read: true, create: true, update: true, delete: true },
     [MODULES.CLIENTS]: { read: true, create: true, update: true, delete: true },
     [MODULES.ORDERS]: { read: true, create: true, update: true, delete: true },
+    [MODULES.DOCUMENTS]: { read: true, create: true, update: true, delete: true },
     [MODULES.QUOTES]: { read: true, create: true, update: true, delete: true },
     [MODULES.BILLING]: { read: true, create: true, update: true, delete: true },
     [MODULES.REPORTS]: { read: true, create: true, update: true, delete: true },
+    [MODULES.DEPARTMENTS]: { read: true, create: true, update: true, delete: true },
   },
   [USER_ROLES.MANAGER]: {
     [MODULES.DASHBOARD]: { read: true, create: false, update: false, delete: false },
@@ -70,9 +75,11 @@ export const DEFAULT_PERMISSIONS = {
     [MODULES.AGENTS]: { read: true, create: true, update: true, delete: false },
     [MODULES.CLIENTS]: { read: true, create: true, update: true, delete: false },
     [MODULES.ORDERS]: { read: true, create: true, update: true, delete: false },
+    [MODULES.DOCUMENTS]: { read: true, create: true, update: true, delete: false },
     [MODULES.QUOTES]: { read: true, create: true, update: true, delete: false },
     [MODULES.BILLING]: { read: true, create: false, update: false, delete: false },
     [MODULES.REPORTS]: { read: true, create: false, update: false, delete: false },
+    [MODULES.DEPARTMENTS]: { read: true, create: false, update: false, delete: false },
   },
   [USER_ROLES.USER]: {
     [MODULES.DASHBOARD]: { read: true, create: false, update: false, delete: false },
@@ -80,9 +87,11 @@ export const DEFAULT_PERMISSIONS = {
     [MODULES.AGENTS]: { read: true, create: true, update: true, delete: false },
     [MODULES.CLIENTS]: { read: true, create: false, update: false, delete: false },
     [MODULES.ORDERS]: { read: true, create: true, update: true, delete: false },
+    [MODULES.DOCUMENTS]: { read: true, create: true, update: true, delete: false },
     [MODULES.QUOTES]: { read: true, create: false, update: false, delete: false },
     [MODULES.BILLING]: { read: false, create: false, update: false, delete: false },
     [MODULES.REPORTS]: { read: false, create: false, update: false, delete: false },
+    [MODULES.DEPARTMENTS]: { read: false, create: false, update: false, delete: false },
   },
   [USER_ROLES.VIEWER]: {
     [MODULES.DASHBOARD]: { read: true, create: false, update: false, delete: false },
@@ -90,9 +99,23 @@ export const DEFAULT_PERMISSIONS = {
     [MODULES.AGENTS]: { read: true, create: false, update: false, delete: false },
     [MODULES.CLIENTS]: { read: true, create: false, update: false, delete: false },
     [MODULES.ORDERS]: { read: true, create: false, update: false, delete: false },
+    [MODULES.DOCUMENTS]: { read: false, create: false, update: false, delete: false },
     [MODULES.QUOTES]: { read: true, create: false, update: false, delete: false },
     [MODULES.BILLING]: { read: false, create: false, update: false, delete: false },
     [MODULES.REPORTS]: { read: false, create: false, update: false, delete: false },
+    [MODULES.DEPARTMENTS]: { read: false, create: false, update: false, delete: false },
+  },
+  [USER_ROLES.CLIENT]: {
+    [MODULES.DASHBOARD]: { read: true, create: false, update: false, delete: false },
+    [MODULES.USERS]: { read: false, create: false, update: false, delete: false },
+    [MODULES.AGENTS]: { read: true, create: false, update: false, delete: false },
+    [MODULES.CLIENTS]: { read: false, create: false, update: false, delete: false },
+    [MODULES.ORDERS]: { read: true, create: false, update: false, delete: false },
+    [MODULES.DOCUMENTS]: { read: true, create: false, update: false, delete: false },
+    [MODULES.QUOTES]: { read: true, create: false, update: false, delete: false },
+    [MODULES.BILLING]: { read: true, create: false, update: false, delete: false },
+    [MODULES.REPORTS]: { read: false, create: false, update: false, delete: false },
+    [MODULES.DEPARTMENTS]: { read: false, create: false, update: false, delete: false },
   },
 } as const;
 

@@ -9,6 +9,7 @@ export const UpdateUserSchema = z.object({
   status: z.enum(['active', 'inactive', 'suspended']).optional(),
   role: z.string().optional(),
   roleId: z.string().optional(),
+  clientId: z.string().optional(),
 });
 
 // Schema para crear usuario
@@ -20,6 +21,7 @@ export const CreateUserSchema = z.object({
   phoneNumber: z.string().optional(),
   role: z.string().default('user'),
   roleId: z.string().optional(),
+  clientId: z.string().optional(),
 });
 
 // Schema para filtros de usuarios
@@ -49,6 +51,7 @@ export interface UserResponse {
   status: string;
   role: string;
   roleId?: string;
+  clientId?: string;
   lastLoginAt?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -56,6 +59,12 @@ export interface UserResponse {
     id: string;
     name: string;
     description?: string;
+  };
+  associatedClient?: {
+    id: string;
+    companyName: string;
+    industry: string;
+    status: string;
   };
 }
 

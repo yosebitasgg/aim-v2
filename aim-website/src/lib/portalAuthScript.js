@@ -1,11 +1,26 @@
 // src/lib/portalAuthScript.js
 // Script reutilizable para autenticación JWT en páginas del portal
+// 
+// FUNCIONALIDADES:
+// - Verificación de token JWT válido
+// - Verificación de usuario activo
+// - Verificación de roles autorizados para el portal (admin, employee, manager, master)
+// - Verificación periódica de autenticación y roles
+// - Redirección automática a login si no cumple requisitos
 
 import { createAuthChecker } from './auth.js';
 
 // Variables globales
 let currentUser = null;
 let authChecker = null;
+
+// Roles permitidos para acceder al portal administrativo
+const ALLOWED_PORTAL_ROLES = ['admin', 'employee', 'manager', 'master'];
+
+// Función para verificar si un rol está autorizado para el portal
+function isRoleAuthorized(role) {
+    return ALLOWED_PORTAL_ROLES.includes(role);
+}
 
 // Función principal de inicialización
 export async function initializePortalAuth(onAuthSuccess = null, onAuthError = null) {
@@ -40,9 +55,40 @@ export async function initializePortalAuth(onAuthSuccess = null, onAuthError = n
         // Mostrar contenido principal y ocultar loading
         showMainContent();
 
-        // Callback de éxito opcional
+        // Callback de éxito opcional - ejecutar ANTES de verificar roles
         if (onAuthSuccess && typeof onAuthSuccess === 'function') {
-            await onAuthSuccess(currentUser);
+            try {
+                await onAuthSuccess(currentUser);
+                
+                // Verificar roles permitidos DESPUÉS del callback de la página
+                const userRole = currentUser.role;
+                
+                if (!isRoleAuthorized(userRole)) {
+                    console.log('❌ Rol no autorizado para el portal:', userRole);
+                    console.log('📋 Roles autorizados:', ALLOWED_PORTAL_ROLES.join(', '));
+                    showAuthError(`Acceso denegado. Tu rol "${userRole}" no tiene permisos para acceder al portal administrativo.`);
+                    return;
+                }
+                
+                console.log('✅ Rol autorizado para el portal:', userRole);
+                
+            } catch (callbackError) {
+                console.error('Error en callback de página:', callbackError);
+                showAuthError('Error verificando permisos específicos de la página');
+                return;
+            }
+        } else {
+            // Si no hay callback, verificar roles directamente
+            const userRole = currentUser.role;
+            
+            if (!isRoleAuthorized(userRole)) {
+                console.log('❌ Rol no autorizado para el portal:', userRole);
+                console.log('📋 Roles autorizados:', ALLOWED_PORTAL_ROLES.join(', '));
+                showAuthError(`Acceso denegado. Tu rol "${userRole}" no tiene permisos para acceder al portal administrativo.`);
+                return;
+            }
+            
+            console.log('✅ Rol autorizado para el portal:', userRole);
         }
 
         // Configurar verificación periódica de token
@@ -115,6 +161,16 @@ function setupTokenVerification() {
                 console.log('🔄 Token inválido, redirigiendo...');
                 clearInterval(intervalId);
                 window.location.href = '/login';
+                return;
+            }
+
+            // Verificar que el usuario siga teniendo un rol autorizado
+            if (!isRoleAuthorized(user.role)) {
+                console.log('🔄 Rol ya no autorizado, redirigiendo...', user.role);
+                console.log('📋 Roles autorizados:', ALLOWED_PORTAL_ROLES.join(', '));
+                clearInterval(intervalId);
+                window.location.href = '/login';
+                return;
             }
         } catch (error) {
             console.error('Error verificando token:', error);
@@ -137,6 +193,16 @@ export function getCurrentUser() {
 // Verificar si está autenticado (función helper)
 export function isAuthenticated() {
     return authChecker ? authChecker.isAuthenticated() : false;
+}
+
+// Verificar si un usuario tiene rol autorizado para el portal (función helper)
+export function hasAuthorizedRole(user) {
+    return user && isRoleAuthorized(user.role);
+}
+
+// Obtener lista de roles autorizados (función helper)
+export function getAuthorizedRoles() {
+    return [...ALLOWED_PORTAL_ROLES];
 }
 
 // Crear HTML de loading estándar para portal

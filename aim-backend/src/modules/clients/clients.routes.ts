@@ -24,6 +24,17 @@ export function createClientsRoutes(prisma: PrismaClient): Router {
   );
 
   /**
+   * @route GET /api/clients/list
+   * @desc Obtener lista simple de clientes para selects
+   * @access Requiere permisos de lectura de clientes
+   */
+  router.get(
+    '/list',
+    PermissionsMiddleware.requirePermission('clients', 'read'),
+    clientsController.getClientsList
+  );
+
+  /**
    * @route GET /api/clients
    * @desc Obtener todos los clientes con paginación y filtros
    * @access Requiere permisos de lectura de clientes

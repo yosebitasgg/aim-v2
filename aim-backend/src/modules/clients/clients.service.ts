@@ -710,4 +710,31 @@ export class ClientsService {
       value: data.value,
     }));
   }
+
+  /**
+   * Obtener lista simple de clientes para selects
+   */
+  async getClientsList(): Promise<Array<{ id: string; companyName: string; industry: string; status: string }>> {
+    try {
+      const clients = await this.prisma.client.findMany({
+        where: {
+          isActive: true,
+        },
+        select: {
+          id: true,
+          companyName: true,
+          industry: true,
+          status: true,
+        },
+        orderBy: {
+          companyName: 'asc',
+        },
+      });
+
+      return clients;
+    } catch (error) {
+      logger.error('Error obteniendo lista de clientes', { error });
+      throw new Error('Error al obtener la lista de clientes');
+    }
+  }
 } 

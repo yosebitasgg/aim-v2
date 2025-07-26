@@ -1,0 +1,836 @@
+---
+import PortalClientLayoutSidebar from '../../layouts/PortalClientLayoutSidebar.astro';
+import { Icon } from 'astro-icon/components';
+---
+
+<PortalClientLayoutSidebar title="Mis Órdenes - Portal de Clientes AIM">
+  <!-- Contenedor de autenticación -->
+  <div id="auth-container">
+    <!-- Loading state -->
+    <div id="auth-loading" class="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div class="text-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
+        <p class="text-gray-600">Verificando autenticación...</p>
+      </div>
+    </div>
+
+    <!-- Main content (hidden initially) -->
+    <div id="main-content" class="hidden">
+      <!-- Header con estadísticas -->
+      <div class="mb-8">
+        <div class="bg-gradient-to-r from-teal-600 to-emerald-600 rounded-xl p-6 text-white">
+          <div class="flex items-center justify-between">
+            <div>
+              <h1 class="text-2xl font-bold mb-2">Mis Órdenes</h1>
+              <p class="text-teal-100">Monitorea el estado y progreso de todos tus proyectos</p>
+            </div>
+            <div class="text-right">
+              <div class="text-teal-100 text-sm">Órdenes activas</div>
+              <div class="text-3xl font-bold" id="headerActiveOrders">0</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-500 mb-1">Total</p>
+              <p class="text-2xl font-bold text-gray-900" id="stat-total">0</p>
+              <p class="text-sm text-teal-600 flex items-center mt-2">
+                <Icon name="tabler:package" class="w-4 h-4 mr-1" />
+                Todas
+              </p>
+            </div>
+            <div class="p-3 bg-teal-50 rounded-lg">
+              <Icon name="tabler:shopping-cart" class="w-6 h-6 text-teal-600" />
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-500 mb-1">En Progreso</p>
+              <p class="text-2xl font-bold text-gray-900" id="stat-in-progress">0</p>
+              <p class="text-sm text-blue-600 flex items-center mt-2">
+                <Icon name="tabler:clock" class="w-4 h-4 mr-1" />
+                Activas
+              </p>
+            </div>
+            <div class="p-3 bg-blue-50 rounded-lg">
+              <Icon name="tabler:activity" class="w-6 h-6 text-blue-600" />
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-500 mb-1">Completadas</p>
+              <p class="text-2xl font-bold text-gray-900" id="stat-completed">0</p>
+              <p class="text-sm text-green-600 flex items-center mt-2">
+                <Icon name="tabler:circle-check" class="w-4 h-4 mr-1" />
+                Finalizadas
+              </p>
+            </div>
+            <div class="p-3 bg-green-50 rounded-lg">
+              <Icon name="tabler:circle-check" class="w-6 h-6 text-green-600" />
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-500 mb-1">Pendientes</p>
+              <p class="text-2xl font-bold text-gray-900" id="stat-pending">0</p>
+              <p class="text-sm text-yellow-600 flex items-center mt-2">
+                <Icon name="tabler:clock-pause" class="w-4 h-4 mr-1" />
+                Esperando
+              </p>
+            </div>
+            <div class="p-3 bg-yellow-50 rounded-lg">
+              <Icon name="tabler:hourglass" class="w-6 h-6 text-yellow-600" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters and Search -->
+      <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-8">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div class="flex-1">
+            <div class="relative">
+              <Icon name="tabler:search" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input 
+                type="text" 
+                id="search-input"
+                placeholder="Buscar por número, título o descripción..."
+                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+          
+          <div class="flex gap-3">
+            <select id="status-filter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+              <option value="">Todos los estados</option>
+              <option value="PENDING">Pendiente</option>
+              <option value="IN_PROGRESS">En Progreso</option>
+              <option value="IN_REVIEW">En Revisión</option>
+              <option value="COMPLETED">Completada</option>
+              <option value="CANCELLED">Cancelada</option>
+              <option value="ON_HOLD">En Espera</option>
+            </select>
+            
+            <select id="priority-filter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+              <option value="">Todas las prioridades</option>
+              <option value="LOW">Baja</option>
+              <option value="MEDIUM">Media</option>
+              <option value="HIGH">Alta</option>
+              <option value="CRITICAL">Crítica</option>
+            </select>
+            
+            <button id="clear-filters" class="px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50">
+              <Icon name="tabler:x" class="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Orders Table -->
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Orden
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Estado
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Prioridad
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Progreso
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Entrega
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Asignado a
+                </th>
+                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Acciones
+                </th>
+              </tr>
+            </thead>
+            <tbody id="orders-table-body" class="bg-white divide-y divide-gray-200">
+              <!-- Loading state -->
+              <tr id="loading-row">
+                <td colspan="7" class="px-6 py-12 text-center">
+                  <div class="flex items-center justify-center">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mr-3"></div>
+                    <span class="text-gray-500">Cargando órdenes...</span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div id="pagination" class="bg-gray-50 px-6 py-3 border-t border-gray-200">
+          <div class="flex items-center justify-between">
+            <div class="text-sm text-gray-700">
+              Mostrando <span id="pagination-from">0</span> a <span id="pagination-to">0</span> de <span id="pagination-total">0</span> órdenes
+            </div>
+            <div class="flex space-x-2">
+              <button id="prev-page" class="px-3 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                Anterior
+              </button>
+              <div id="page-numbers" class="flex space-x-1">
+                <!-- Page numbers will be inserted here -->
+              </div>
+              <button id="next-page" class="px-3 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                Siguiente
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Order Detail Modal -->
+  <div id="order-detail-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-lg bg-white">
+      <div class="flex items-center justify-between pb-4 border-b">
+        <h3 class="text-xl font-semibold text-gray-900" id="modal-order-title">Detalle de Orden</h3>
+        <button onclick="closeOrderDetailModal()" class="text-gray-400 hover:text-gray-600">
+          <Icon name="tabler:x" class="w-6 h-6" />
+        </button>
+      </div>
+      
+      <div id="modal-content" class="py-6">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mx-auto"></div>
+      </div>
+    </div>
+  </div>
+</PortalClientLayoutSidebar>
+
+<script>
+  import { userStore } from '../../lib/userStore.js';
+  import { apiClient } from '../../lib/apiClient.js';
+
+  // Variables globales
+  let unsubscribe = null;
+  let currentOrders = [];
+  let filteredOrders = [];
+  let currentPage = 1;
+  let totalPages = 1;
+  let totalOrders = 0;
+  const ordersPerPage = 10;
+  
+  let currentFilters = {
+    search: '',
+    status: '',
+    priority: '',
+    sortBy: 'createdAt',
+    sortOrder: 'desc'
+  };
+
+  // Inicializar cuando el DOM esté listo
+  document.addEventListener('DOMContentLoaded', async () => {
+    console.log('🔄 Inicializando página de órdenes del cliente...');
+    await initializeOrdersPage();
+  });
+
+  // Inicializar página de órdenes
+  async function initializeOrdersPage() {
+    try {
+      // Suscribirse a cambios del store
+      unsubscribe = userStore.subscribe(handleStoreUpdate);
+      
+      // Obtener el estado actual del store
+      const currentState = userStore.getState();
+      
+      if (currentState.user && currentState.initialized) {
+        console.log('✅ Usando datos ya cargados del store');
+        await onAuthSuccess(currentState.user);
+      } else {
+        console.log('📡 Cargando datos del usuario...');
+        await userStore.loadUser();
+      }
+      
+    } catch (error) {
+      console.error('❌ Error inicializando página de órdenes:', error);
+      onAuthError(error);
+    }
+  }
+
+  // Manejar actualizaciones del store
+  function handleStoreUpdate(state) {
+    if (state.user && !state.isLoading && !state.error) {
+      onAuthSuccess(state.user);
+    } else if (state.error) {
+      console.error('❌ Error en el store:', state.error);
+      onAuthError(state.error);
+    }
+  }
+
+  // Callback cuando la autenticación es exitosa
+  async function onAuthSuccess(user) {
+    try {
+      console.log('✅ Órdenes - Usuario autenticado:', user);
+      
+      // Verificar que el usuario es un cliente
+      if (user.role !== 'client') {
+        console.log('❌ Usuario no es cliente, redirigiendo al portal principal...');
+        window.location.href = '/portal';
+        return;
+      }
+      
+      // Mostrar contenido principal
+      showMainContent();
+      
+      // Configurar event listeners
+      setupEventListeners();
+      
+      // Cargar datos iniciales
+      await loadOrders();
+      
+    } catch (error) {
+      console.error('💥 Error cargando página de órdenes:', error);
+      onAuthError(error);
+    }
+  }
+
+  // Callback cuando la autenticación falla
+  function onAuthError(error) {
+    console.error('❌ Error de autenticación:', error);
+    apiClient.clearTokens();
+    setTimeout(() => {
+      window.location.href = '/login';
+    }, 2000);
+  }
+
+  // Mostrar contenido principal
+  function showMainContent() {
+    const loadingElement = document.getElementById('auth-loading');
+    const mainContent = document.getElementById('main-content');
+    
+    if (loadingElement) {
+      loadingElement.classList.add('hidden');
+    }
+    
+    if (mainContent) {
+      mainContent.classList.remove('hidden');
+      console.log('✅ Contenido de órdenes mostrado');
+    }
+  }
+
+  // Configurar event listeners
+  function setupEventListeners() {
+    // Búsqueda
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+      searchInput.addEventListener('input', debounce(handleSearch, 300));
+    }
+
+    // Filtros
+    const statusFilter = document.getElementById('status-filter');
+    const priorityFilter = document.getElementById('priority-filter');
+    
+    if (statusFilter) {
+      statusFilter.addEventListener('change', handleFilterChange);
+    }
+    
+    if (priorityFilter) {
+      priorityFilter.addEventListener('change', handleFilterChange);
+    }
+
+    // Limpiar filtros
+    const clearFilters = document.getElementById('clear-filters');
+    if (clearFilters) {
+      clearFilters.addEventListener('click', clearAllFilters);
+    }
+
+    // Paginación
+    const prevPage = document.getElementById('prev-page');
+    const nextPage = document.getElementById('next-page');
+    
+    if (prevPage) {
+      prevPage.addEventListener('click', () => {
+        if (currentPage > 1) {
+          currentPage--;
+          loadOrders();
+        }
+      });
+    }
+    
+    if (nextPage) {
+      nextPage.addEventListener('click', () => {
+        if (currentPage < totalPages) {
+          currentPage++;
+          loadOrders();
+        }
+      });
+    }
+  }
+
+  // Cargar órdenes desde la API
+  async function loadOrders() {
+    try {
+      console.log('📦 Cargando órdenes del cliente...');
+      
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: ordersPerPage.toString(),
+        ...currentFilters
+      });
+
+      const data = await apiClient.request(`/portal-clients/orders?${params}`, {
+        method: 'GET'
+      });
+
+      if (data.success) {
+        currentOrders = data.data.orders;
+        totalOrders = data.data.pagination.total;
+        totalPages = data.data.pagination.totalPages;
+        
+        updateOrdersTable();
+        updatePagination(data.data.pagination);
+        updateStats();
+        
+        console.log('✅ Órdenes cargadas:', currentOrders.length);
+      } else {
+        throw new Error(data.message || 'Error obteniendo órdenes');
+      }
+
+    } catch (error) {
+      console.error('❌ Error cargando órdenes:', error);
+      showOrdersError();
+    }
+  }
+
+  // Actualizar tabla de órdenes
+  function updateOrdersTable() {
+    const tbody = document.getElementById('orders-table-body');
+    if (!tbody) return;
+
+    if (currentOrders.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" class="px-6 py-12 text-center">
+            <div class="text-gray-500">
+              <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+              </svg>
+              <p class="text-lg font-medium">No se encontraron órdenes</p>
+              <p class="text-sm">No tienes órdenes que coincidan con los filtros aplicados</p>
+            </div>
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = currentOrders.map(order => `
+      <tr class="hover:bg-gray-50 cursor-pointer" onclick="openOrderDetail('${order.id}')">
+        <td class="px-6 py-4 whitespace-nowrap">
+          <div>
+            <div class="text-sm font-medium text-gray-900">${order.orderNumber}</div>
+            <div class="text-sm text-gray-500 truncate max-w-xs">${order.title}</div>
+          </div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColors(order.status)}">
+            ${getStatusLabel(order.status)}
+          </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityColors(order.priority)}">
+            ${getPriorityLabel(order.priority)}
+          </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <div class="flex items-center">
+            <div class="flex-1 bg-gray-200 rounded-full h-2 mr-2">
+              <div class="bg-teal-600 h-2 rounded-full" style="width: ${order.progress}%"></div>
+            </div>
+            <span class="text-sm text-gray-600">${order.progress}%</span>
+          </div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+          ${order.requestedDeliveryDate ? new Date(order.requestedDeliveryDate).toLocaleDateString('es-ES') : '-'}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+          ${order.assignedTo ? order.assignedTo.name : 'Sin asignar'}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+          <button onclick="event.stopPropagation(); openOrderDetail('${order.id}')" class="text-teal-600 hover:text-teal-900 mr-2">
+            Ver detalle
+          </button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // Actualizar estadísticas
+  function updateStats() {
+    const stats = currentOrders.reduce((acc, order) => {
+      acc.total++;
+      switch (order.status) {
+        case 'IN_PROGRESS':
+        case 'IN_REVIEW':
+          acc.inProgress++;
+          break;
+        case 'COMPLETED':
+          acc.completed++;
+          break;
+        case 'PENDING':
+          acc.pending++;
+          break;
+      }
+      return acc;
+    }, { total: 0, inProgress: 0, completed: 0, pending: 0 });
+
+    // En realidad, deberíamos usar los totales reales de la API, no solo de la página actual
+    document.getElementById('stat-total').textContent = totalOrders;
+    document.getElementById('headerActiveOrders').textContent = stats.inProgress;
+    document.getElementById('stat-in-progress').textContent = stats.inProgress;
+    document.getElementById('stat-completed').textContent = stats.completed;
+    document.getElementById('stat-pending').textContent = stats.pending;
+  }
+
+  // Actualizar paginación
+  function updatePagination(pagination) {
+    const { page, limit, total, totalPages, hasNext, hasPrev } = pagination;
+    
+    const from = (page - 1) * limit + 1;
+    const to = Math.min(page * limit, total);
+    
+    document.getElementById('pagination-from').textContent = from;
+    document.getElementById('pagination-to').textContent = to;
+    document.getElementById('pagination-total').textContent = total;
+    
+    const prevBtn = document.getElementById('prev-page');
+    const nextBtn = document.getElementById('next-page');
+    
+    if (prevBtn) {
+      prevBtn.disabled = !hasPrev;
+    }
+    
+    if (nextBtn) {
+      nextBtn.disabled = !hasNext;
+    }
+    
+    // Actualizar números de página
+    const pageNumbers = document.getElementById('page-numbers');
+    if (pageNumbers) {
+      pageNumbers.innerHTML = generatePageNumbers(page, totalPages);
+    }
+  }
+
+  // Generar números de página
+  function generatePageNumbers(currentPage, totalPages) {
+    let pages = [];
+    const maxVisible = 5;
+    
+    let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+    let end = Math.min(totalPages, start + maxVisible - 1);
+    
+    if (end - start + 1 < maxVisible && start > 1) {
+      start = Math.max(1, end - maxVisible + 1);
+    }
+    
+    for (let i = start; i <= end; i++) {
+      pages.push(`
+        <button 
+          onclick="goToPage(${i})" 
+          class="px-3 py-1 text-sm border rounded ${i === currentPage ? 'bg-teal-600 text-white border-teal-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}"
+        >
+          ${i}
+        </button>
+      `);
+    }
+    
+    return pages.join('');
+  }
+
+  // Ir a página específica
+  window.goToPage = function(page) {
+    if (page >= 1 && page <= totalPages && page !== currentPage) {
+      currentPage = page;
+      loadOrders();
+    }
+  };
+
+  // Manejar búsqueda
+  function handleSearch(event) {
+    currentFilters.search = event.target.value;
+    currentPage = 1;
+    loadOrders();
+  }
+
+  // Manejar cambio de filtros
+  function handleFilterChange() {
+    const statusFilter = document.getElementById('status-filter');
+    const priorityFilter = document.getElementById('priority-filter');
+    
+    currentFilters.status = statusFilter?.value || '';
+    currentFilters.priority = priorityFilter?.value || '';
+    
+    currentPage = 1;
+    loadOrders();
+  }
+
+  // Limpiar todos los filtros
+  function clearAllFilters() {
+    const searchInput = document.getElementById('search-input');
+    const statusFilter = document.getElementById('status-filter');
+    const priorityFilter = document.getElementById('priority-filter');
+    
+    if (searchInput) searchInput.value = '';
+    if (statusFilter) statusFilter.value = '';
+    if (priorityFilter) priorityFilter.value = '';
+    
+    currentFilters = {
+      search: '',
+      status: '',
+      priority: '',
+      sortBy: 'createdAt',
+      sortOrder: 'desc'
+    };
+    
+    currentPage = 1;
+    loadOrders();
+  }
+
+  // Abrir detalle de orden
+  window.openOrderDetail = async function(orderId) {
+    try {
+      const modal = document.getElementById('order-detail-modal');
+      const modalContent = document.getElementById('modal-content');
+      const modalTitle = document.getElementById('modal-order-title');
+      
+      if (!modal || !modalContent) return;
+      
+      // Mostrar modal con loading
+      modalContent.innerHTML = '<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mx-auto"></div>';
+      modal.classList.remove('hidden');
+      
+      // Cargar detalle de la orden
+      const data = await apiClient.request(`/portal-clients/orders/${orderId}`, {
+        method: 'GET'
+      });
+      
+      if (data.success) {
+        const order = data.data;
+        modalTitle.textContent = `${order.orderNumber}: ${order.title}`;
+        modalContent.innerHTML = generateOrderDetailHTML(order);
+      } else {
+        throw new Error(data.message || 'Error obteniendo detalle');
+      }
+      
+    } catch (error) {
+      console.error('Error abriendo detalle:', error);
+      const modalContent = document.getElementById('modal-content');
+      if (modalContent) {
+        modalContent.innerHTML = '<div class="text-red-600 text-center">Error cargando detalle de la orden</div>';
+      }
+    }
+  };
+
+  // Cerrar modal de detalle
+  window.closeOrderDetailModal = function() {
+    const modal = document.getElementById('order-detail-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+    }
+  };
+
+  // Generar HTML del detalle de orden
+  function generateOrderDetailHTML(order) {
+    return `
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div>
+          <h4 class="font-semibold text-gray-900 mb-3">Información General</h4>
+          <dl class="space-y-2">
+            <div class="flex justify-between">
+              <dt class="text-sm text-gray-500">Número:</dt>
+              <dd class="text-sm font-medium text-gray-900">${order.orderNumber}</dd>
+            </div>
+            <div class="flex justify-between">
+              <dt class="text-sm text-gray-500">Estado:</dt>
+              <dd><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColors(order.status)}">${getStatusLabel(order.status)}</span></dd>
+            </div>
+            <div class="flex justify-between">
+              <dt class="text-sm text-gray-500">Prioridad:</dt>
+              <dd><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityColors(order.priority)}">${getPriorityLabel(order.priority)}</span></dd>
+            </div>
+            <div class="flex justify-between">
+              <dt class="text-sm text-gray-500">Progreso:</dt>
+              <dd class="text-sm font-medium text-gray-900">${order.progress}%</dd>
+            </div>
+            <div class="flex justify-between">
+              <dt class="text-sm text-gray-500">Asignado a:</dt>
+              <dd class="text-sm font-medium text-gray-900">${order.assignedTo?.name || 'Sin asignar'}</dd>
+            </div>
+          </dl>
+        </div>
+        
+        <div>
+          <h4 class="font-semibold text-gray-900 mb-3">Fechas</h4>
+          <dl class="space-y-2">
+            <div class="flex justify-between">
+              <dt class="text-sm text-gray-500">Creada:</dt>
+              <dd class="text-sm font-medium text-gray-900">${new Date(order.createdAt).toLocaleDateString('es-ES')}</dd>
+            </div>
+            <div class="flex justify-between">
+              <dt class="text-sm text-gray-500">Entrega solicitada:</dt>
+              <dd class="text-sm font-medium text-gray-900">${order.requestedDeliveryDate ? new Date(order.requestedDeliveryDate).toLocaleDateString('es-ES') : 'No definida'}</dd>
+            </div>
+            <div class="flex justify-between">
+              <dt class="text-sm text-gray-500">Fecha límite:</dt>
+              <dd class="text-sm font-medium text-gray-900">${order.dueDate ? new Date(order.dueDate).toLocaleDateString('es-ES') : 'No definida'}</dd>
+            </div>
+            <div class="flex justify-between">
+              <dt class="text-sm text-gray-500">Completada:</dt>
+              <dd class="text-sm font-medium text-gray-900">${order.completedDate ? new Date(order.completedDate).toLocaleDateString('es-ES') : 'Pendiente'}</dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+      
+      <div class="mt-6">
+        <h4 class="font-semibold text-gray-900 mb-3">Descripción</h4>
+        <p class="text-sm text-gray-700">${order.description || 'Sin descripción'}</p>
+      </div>
+      
+      ${order.requirements ? `
+        <div class="mt-6">
+          <h4 class="font-semibold text-gray-900 mb-3">Requerimientos</h4>
+          <p class="text-sm text-gray-700">${order.requirements}</p>
+        </div>
+      ` : ''}
+      
+      ${order.orderItems && order.orderItems.length > 0 ? `
+        <div class="mt-6">
+          <h4 class="font-semibold text-gray-900 mb-3">Items de la Orden</h4>
+          <div class="space-y-2">
+            ${order.orderItems.map(item => `
+              <div class="border border-gray-200 rounded p-3">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <h5 class="font-medium text-gray-900">${item.name}</h5>
+                    ${item.description ? `<p class="text-sm text-gray-600 mt-1">${item.description}</p>` : ''}
+                  </div>
+                  <div class="text-right">
+                    <p class="text-sm font-medium text-gray-900">Cantidad: ${item.quantity}</p>
+                    ${item.estimatedHours ? `<p class="text-xs text-gray-500">${item.estimatedHours}h estimadas</p>` : ''}
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
+    `;
+  }
+
+  // Funciones auxiliares para estilos
+  function getStatusColors(status) {
+    const colors = {
+      'DRAFT': 'bg-gray-100 text-gray-800',
+      'PENDING': 'bg-yellow-100 text-yellow-800',
+      'IN_PROGRESS': 'bg-blue-100 text-blue-800',
+      'IN_REVIEW': 'bg-purple-100 text-purple-800',
+      'COMPLETED': 'bg-green-100 text-green-800',
+      'CANCELLED': 'bg-red-100 text-red-800',
+      'ON_HOLD': 'bg-orange-100 text-orange-800'
+    };
+    return colors[status] || 'bg-gray-100 text-gray-800';
+  }
+
+  function getStatusLabel(status) {
+    const labels = {
+      'DRAFT': 'Borrador',
+      'PENDING': 'Pendiente',
+      'IN_PROGRESS': 'En Progreso',
+      'IN_REVIEW': 'En Revisión',
+      'COMPLETED': 'Completada',
+      'CANCELLED': 'Cancelada',
+      'ON_HOLD': 'En Espera'
+    };
+    return labels[status] || status;
+  }
+
+  function getPriorityColors(priority) {
+    const colors = {
+      'LOW': 'bg-green-100 text-green-800',
+      'MEDIUM': 'bg-yellow-100 text-yellow-800',
+      'HIGH': 'bg-orange-100 text-orange-800',
+      'CRITICAL': 'bg-red-100 text-red-800'
+    };
+    return colors[priority] || 'bg-gray-100 text-gray-800';
+  }
+
+  function getPriorityLabel(priority) {
+    const labels = {
+      'LOW': 'Baja',
+      'MEDIUM': 'Media',
+      'HIGH': 'Alta',
+      'CRITICAL': 'Crítica'
+    };
+    return labels[priority] || priority;
+  }
+
+  // Mostrar error en la tabla
+  function showOrdersError() {
+    const tbody = document.getElementById('orders-table-body');
+    if (tbody) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" class="px-6 py-12 text-center">
+            <div class="text-red-500">
+              <svg class="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <p class="text-lg font-medium">Error cargando órdenes</p>
+              <p class="text-sm">Hubo un problema al cargar tus órdenes. Inténtalo de nuevo.</p>
+              <button onclick="loadOrders()" class="mt-4 px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-700">
+                Reintentar
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }
+  }
+
+  // Función debounce para búsqueda
+  function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  }
+
+  // Limpiar al cerrar la página
+  window.addEventListener('beforeunload', () => {
+    if (unsubscribe) {
+      unsubscribe();
+    }
+  });
+</script> 

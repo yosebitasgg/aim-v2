@@ -1,0 +1,716 @@
+---
+import PortalClientLayoutSidebar from '../../layouts/PortalClientLayoutSidebar.astro';
+import { Icon } from 'astro-icon/components';
+---
+
+<PortalClientLayoutSidebar title="Facturación - Portal Cliente AIM">
+  <!-- Header con estadísticas -->
+  <div class="mb-8">
+    <div class="bg-gradient-to-r from-teal-600 to-emerald-600 rounded-xl p-6 text-white">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold mb-2">Facturación de Mi Empresa</h1>
+          <p class="text-teal-100">Estado de pagos y facturación de nuestros servicios</p>
+        </div>
+        <div class="text-right">
+          <div class="text-teal-100 text-sm">Total Facturado</div>
+          <div class="text-3xl font-bold" id="totalBilled">$0</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500 mb-1">Total Facturado</p>
+          <p class="text-2xl font-bold text-gray-900" id="statsTotalBilled">$0</p>
+          <p class="text-sm text-blue-600 flex items-center mt-2">
+            <Icon name="tabler:receipt" class="w-4 h-4 mr-1" />
+            Historial
+          </p>
+        </div>
+        <div class="p-3 bg-blue-50 rounded-lg">
+          <Icon name="tabler:receipt" class="w-6 h-6 text-blue-600" />
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500 mb-1">Facturas Pagadas</p>
+          <p class="text-2xl font-bold text-green-600" id="paidInvoices">0</p>
+          <p class="text-sm text-green-600 flex items-center mt-2">
+            <Icon name="tabler:check" class="w-4 h-4 mr-1" />
+            Al día
+          </p>
+        </div>
+        <div class="p-3 bg-green-50 rounded-lg">
+          <Icon name="tabler:check" class="w-6 h-6 text-green-600" />
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500 mb-1">Pendientes</p>
+          <p class="text-2xl font-bold text-yellow-600" id="pendingInvoices">0</p>
+          <p class="text-sm text-yellow-600 flex items-center mt-2">
+            <Icon name="tabler:clock" class="w-4 h-4 mr-1" />
+            Por pagar
+          </p>
+        </div>
+        <div class="p-3 bg-yellow-50 rounded-lg">
+          <Icon name="tabler:clock" class="w-6 h-6 text-yellow-600" />
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm text-gray-500 mb-1">Vencidas</p>
+          <p class="text-2xl font-bold text-red-600" id="overdueInvoices">0</p>
+          <p class="text-sm text-red-600 flex items-center mt-2">
+            <Icon name="tabler:alert-triangle" class="w-4 h-4 mr-1" />
+            Atención
+          </p>
+        </div>
+        <div class="p-3 bg-red-50 rounded-lg">
+          <Icon name="tabler:alert-triangle" class="w-6 h-6 text-red-600" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gráfico de Ingresos Mensuales -->
+  <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-6">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="text-lg font-semibold text-gray-900">Historial de Facturación</h3>
+      <div class="flex space-x-2">
+        <button class="px-3 py-1 text-xs bg-teal-100 text-teal-700 rounded-full">6M</button>
+        <button class="px-3 py-1 text-xs text-gray-500 hover:bg-gray-100 rounded-full">1A</button>
+      </div>
+    </div>
+    <div class="h-64 flex items-end space-x-3" id="monthlyChart">
+      <!-- Chart will be populated by JavaScript -->
+      <div class="w-full flex items-center justify-center text-gray-500">
+        <div class="text-center">
+          <Icon name="tabler:chart-bar" class="w-12 h-12 mx-auto mb-2 text-gray-300" />
+          <p>Cargando datos del historial...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtros y Búsqueda -->
+  <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-6">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+      <div class="flex items-center space-x-4">
+        <div class="relative">
+          <Icon name="tabler:search" class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+          <input 
+            type="text" 
+            id="searchInput"
+            placeholder="Buscar facturas..." 
+            class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+          />
+        </div>
+        <select id="statusFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+          <option value="">Todos los estados</option>
+          <option value="PAID">Pagada</option>
+          <option value="PENDING">Pendiente</option>
+          <option value="OVERDUE">Vencida</option>
+          <option value="CANCELLED">Cancelada</option>
+        </select>
+        <input 
+          type="month" 
+          id="monthFilter"
+          class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+        />
+      </div>
+      <div class="flex items-center space-x-2">
+        <button onclick="exportInvoices()" class="p-2 text-gray-400 hover:text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50" title="Exportar">
+          <Icon name="tabler:download" class="w-4 h-4" />
+        </button>
+        <button onclick="refreshData()" class="p-2 text-gray-400 hover:text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50" title="Actualizar">
+          <Icon name="tabler:refresh" class="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla de Facturas -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-gray-50 border-b border-gray-200">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Factura</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Orden</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vencimiento</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Monto</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="invoicesTableBody" class="bg-white divide-y divide-gray-200">
+          <!-- Loading placeholder -->
+          <tr class="animate-pulse">
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="h-4 bg-gray-200 rounded w-24"></div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="h-4 bg-gray-200 rounded w-32"></div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="h-4 bg-gray-200 rounded w-20"></div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="h-4 bg-gray-200 rounded w-20"></div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="h-4 bg-gray-200 rounded w-16"></div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="h-6 bg-gray-200 rounded-full w-16"></div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-right">
+              <div class="h-8 bg-gray-200 rounded w-20"></div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Paginación -->
+    <div class="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+      <div class="text-sm text-gray-500">
+        Mostrando <span id="currentRange">0-0</span> de <span id="totalInvoices">0</span> facturas
+      </div>
+      
+      <div class="flex items-center space-x-2">
+        <button id="prevPage" class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+          <Icon name="tabler:chevron-left" class="w-4 h-4" />
+        </button>
+        
+        <div id="pageNumbers" class="flex items-center space-x-1">
+          <!-- Page numbers will be populated by JavaScript -->
+        </div>
+        
+        <button id="nextPage" class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+          <Icon name="tabler:chevron-right" class="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Resumen del mes -->
+  <div class="mt-6 bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+    <h3 class="text-lg font-semibold text-gray-900 mb-4">Resumen del Mes Actual</h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="text-center p-4 bg-green-50 rounded-lg">
+        <Icon name="tabler:trending-up" class="w-8 h-8 text-green-600 mx-auto mb-2" />
+        <p class="text-2xl font-bold text-green-600" id="monthlyPaid">$0</p>
+        <p class="text-sm text-gray-600">Pagos realizados</p>
+      </div>
+      
+      <div class="text-center p-4 bg-yellow-50 rounded-lg">
+        <Icon name="tabler:clock" class="w-8 h-8 text-yellow-600 mx-auto mb-2" />
+        <p class="text-2xl font-bold text-yellow-600" id="monthlyPending">$0</p>
+        <p class="text-sm text-gray-600">Pendiente de pago</p>
+      </div>
+      
+      <div class="text-center p-4 bg-red-50 rounded-lg">
+        <Icon name="tabler:alert-triangle" class="w-8 h-8 text-red-600 mx-auto mb-2" />
+        <p class="text-2xl font-bold text-red-600" id="monthlyOverdue">$0</p>
+        <p class="text-sm text-gray-600">Facturas vencidas</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Detalles de Factura -->
+  <div id="invoiceModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+      <div class="mt-3">
+        <!-- Header del Modal -->
+        <div class="flex items-center justify-between pb-4 border-b border-gray-200">
+          <h3 class="text-lg font-semibold text-gray-900" id="modalInvoiceTitle">Detalles de Factura</h3>
+          <button onclick="closeInvoiceModal()" class="text-gray-400 hover:text-gray-600">
+            <Icon name="tabler:x" class="w-6 h-6" />
+          </button>
+        </div>
+
+        <!-- Contenido del Modal -->
+        <div class="py-6 space-y-6" id="modalContent">
+          <div class="animate-pulse">
+            <div class="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+            <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+            <div class="h-4 bg-gray-200 rounded w-5/6"></div>
+          </div>
+        </div>
+
+        <!-- Footer del Modal -->
+        <div class="flex items-center justify-end pt-4 border-t border-gray-200 space-x-3">
+          <button 
+            onclick="closeInvoiceModal()" 
+            class="px-4 py-2 text-gray-500 hover:text-gray-700 font-medium"
+          >
+            Cerrar
+          </button>
+          <button 
+            id="downloadInvoiceBtn"
+            onclick="downloadInvoice()"
+            class="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Icon name="tabler:download" class="w-4 h-4 inline mr-2" />
+            Descargar PDF
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</PortalClientLayoutSidebar>
+
+<script>
+  import { createAuthChecker } from '../../lib/auth.js';
+const authChecker = createAuthChecker();
+  import { apiClient } from '../../lib/apiClient.js';
+
+  // Variables globales
+  let invoicesData = [];
+  let filteredInvoices = [];
+  let currentPage = 1;
+  let invoicesPerPage = 10;
+  let totalInvoices = 0;
+  let selectedInvoice = null;
+  let currentUser = null;
+
+  // Inicializar la página
+  document.addEventListener('DOMContentLoaded', async function() {
+    try {
+      console.log('🚀 Inicializando página de facturación del cliente...');
+      
+      // Verificar autenticación y rol de cliente
+      currentUser = await authChecker.getCurrentUser();
+      if (!currentUser) {
+        console.error('❌ Usuario no autenticado');
+        window.location.href = '/login';
+        return;
+      }
+
+      if (currentUser.role !== 'client') {
+        console.error('❌ Usuario no es cliente, redirigiendo al portal normal');
+        window.location.href = '/portal';
+        return;
+      }
+
+      console.log('✅ Usuario cliente autenticado:', currentUser.email);
+
+      // Cargar datos de facturación
+      await loadInvoices();
+      setupEventListeners();
+      
+      console.log('✅ Página de facturación del cliente inicializada correctamente');
+    } catch (error) {
+      console.error('❌ Error inicializando página de facturación:', error);
+      showErrorMessage('Error al cargar la página de facturación');
+    }
+  });
+
+  // Cargar facturas del cliente
+  async function loadInvoices() {
+    try {
+      console.log('📄 Cargando facturas del cliente...');
+      
+      // Por ahora usaremos datos mock ya que no hay endpoint específico de facturación
+      // En una implementación real, esto sería: await apiClient.request('/portal-clients/invoices')
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simular carga
+      
+      // Datos mock para demostración
+      invoicesData = [
+        {
+          id: 'FAC-2024-001',
+          orderId: 'ORD-001',
+          orderTitle: 'Sistema de Automatización',
+          date: '2024-01-15',
+          dueDate: '2024-02-14',
+          amount: 125000,
+          status: 'PAID',
+          notes: 'Pago recibido por transferencia bancaria'
+        },
+        {
+          id: 'FAC-2024-002',
+          orderId: 'ORD-002', 
+          orderTitle: 'Consultoría Tecnológica',
+          date: '2024-01-20',
+          dueDate: '2024-02-19',
+          amount: 89500,
+          status: 'PENDING',
+          notes: 'Pendiente de pago'
+        },
+        {
+          id: 'FAC-2024-003',
+          orderId: 'ORD-003',
+          orderTitle: 'Mantenimiento Sistemas',
+          date: '2024-01-10',
+          dueDate: '2024-02-09',
+          amount: 45000,
+          status: 'OVERDUE',
+          notes: 'Factura vencida - contactar administración'
+        }
+      ];
+
+      totalInvoices = invoicesData.length;
+      filteredInvoices = [...invoicesData];
+
+      console.log(`✅ Facturas cargadas: ${invoicesData.length}`);
+      
+      updateStatistics();
+      renderInvoices();
+      updatePagination();
+      updateMonthlySummary();
+      
+    } catch (error) {
+      console.error('❌ Error cargando facturas:', error);
+      showErrorMessage('Error al cargar las facturas');
+      invoicesData = [];
+      filteredInvoices = [];
+      renderInvoices();
+    }
+  }
+
+  // Actualizar estadísticas
+  function updateStatistics() {
+    const stats = {
+      total: invoicesData.reduce((sum, inv) => sum + inv.amount, 0),
+      paid: invoicesData.filter(inv => inv.status === 'PAID').length,
+      pending: invoicesData.filter(inv => inv.status === 'PENDING').length,
+      overdue: invoicesData.filter(inv => inv.status === 'OVERDUE').length
+    };
+
+    document.getElementById('totalBilled').textContent = `$${stats.total.toLocaleString()}`;
+    document.getElementById('statsTotalBilled').textContent = `$${stats.total.toLocaleString()}`;
+    document.getElementById('paidInvoices').textContent = stats.paid;
+    document.getElementById('pendingInvoices').textContent = stats.pending;
+    document.getElementById('overdueInvoices').textContent = stats.overdue;
+  }
+
+  // Renderizar tabla de facturas
+  function renderInvoices() {
+    const tableBody = document.getElementById('invoicesTableBody');
+    
+    if (!filteredInvoices || filteredInvoices.length === 0) {
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="7" class="py-8 text-center text-gray-500">
+            <div class="flex flex-col items-center">
+              <Icon name="tabler:receipt-off" class="w-12 h-12 text-gray-300 mb-4" />
+              <p class="text-lg font-medium">No hay facturas disponibles</p>
+              <p class="text-sm">Las facturas aparecerán aquí cuando se generen.</p>
+            </div>
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    const startIndex = (currentPage - 1) * invoicesPerPage;
+    const endIndex = Math.min(startIndex + invoicesPerPage, filteredInvoices.length);
+    const pageInvoices = filteredInvoices.slice(startIndex, endIndex);
+
+    tableBody.innerHTML = pageInvoices.map(invoice => `
+      <tr class="hover:bg-gray-50 transition-colors duration-200 cursor-pointer" onclick="showInvoiceDetails('${invoice.id}')">
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+          ${invoice.id}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+          <div>
+            <div class="font-medium">${invoice.orderTitle}</div>
+            <div class="text-gray-500 text-xs">#${invoice.orderId}</div>
+          </div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+          ${formatDate(invoice.date)}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+          ${formatDate(invoice.dueDate)}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+          $${invoice.amount.toLocaleString()}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(invoice.status)}">
+            ${getStatusLabel(invoice.status)}
+          </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+          <div class="flex items-center justify-end space-x-2">
+            <button onclick="event.stopPropagation(); showInvoiceDetails('${invoice.id}')" class="text-teal-600 hover:text-teal-900 p-1" title="Ver detalles">
+              <Icon name="tabler:eye" class="w-4 h-4" />
+            </button>
+            <button onclick="event.stopPropagation(); downloadInvoicePDF('${invoice.id}')" class="text-blue-600 hover:text-blue-900 p-1" title="Descargar PDF">
+              <Icon name="tabler:download" class="w-4 h-4" />
+            </button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // Mostrar detalles de factura
+  function showInvoiceDetails(invoiceId) {
+    selectedInvoice = invoicesData.find(inv => inv.id === invoiceId);
+    if (!selectedInvoice) {
+      showErrorMessage('Factura no encontrada');
+      return;
+    }
+
+    document.getElementById('modalInvoiceTitle').textContent = `Factura ${selectedInvoice.id}`;
+    
+    const modalContent = document.getElementById('modalContent');
+    modalContent.innerHTML = `
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <h4 class="font-semibold text-gray-900 mb-3">Información de la Factura</h4>
+          <div class="space-y-3">
+            <div>
+              <label class="text-sm font-medium text-gray-500">Número de Factura</label>
+              <p class="text-gray-900 font-mono">${selectedInvoice.id}</p>
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-500">Fecha de Emisión</label>
+              <p class="text-gray-900">${formatDate(selectedInvoice.date)}</p>
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-500">Fecha de Vencimiento</label>
+              <p class="text-gray-900">${formatDate(selectedInvoice.dueDate)}</p>
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-500">Monto</label>
+              <p class="text-gray-900 text-lg font-bold">$${selectedInvoice.amount.toLocaleString()}</p>
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-500">Estado</label>
+              <span class="inline-flex px-3 py-1 text-sm font-semibold rounded-full ${getStatusColor(selectedInvoice.status)}">
+                ${getStatusLabel(selectedInvoice.status)}
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        <div>
+          <h4 class="font-semibold text-gray-900 mb-3">Información de la Orden</h4>
+          <div class="space-y-3">
+            <div>
+              <label class="text-sm font-medium text-gray-500">Orden</label>
+              <p class="text-gray-900">${selectedInvoice.orderTitle}</p>
+            </div>
+            <div>
+              <label class="text-sm font-medium text-gray-500">ID de Orden</label>
+              <p class="text-gray-900 font-mono text-sm">${selectedInvoice.orderId}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      ${selectedInvoice.notes ? `
+        <div class="mt-6">
+          <h4 class="font-semibold text-gray-900 mb-3">Notas</h4>
+          <div class="bg-gray-50 rounded-lg p-4">
+            <p class="text-gray-700">${selectedInvoice.notes}</p>
+          </div>
+        </div>
+      ` : ''}
+    `;
+
+    document.getElementById('invoiceModal').classList.remove('hidden');
+  }
+
+  // Cerrar modal
+  function closeInvoiceModal() {
+    document.getElementById('invoiceModal').classList.add('hidden');
+    selectedInvoice = null;
+  }
+
+  // Descargar factura
+  function downloadInvoice() {
+    if (!selectedInvoice) return;
+    downloadInvoicePDF(selectedInvoice.id);
+  }
+
+  function downloadInvoicePDF(invoiceId) {
+    // Simular descarga
+    showSuccessMessage(`Descargando factura ${invoiceId}...`);
+    console.log(`Descargando PDF de factura: ${invoiceId}`);
+  }
+
+  // Actualizar resumen mensual
+  function updateMonthlySummary() {
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    
+    const monthlyInvoices = invoicesData.filter(inv => {
+      const invDate = new Date(inv.date);
+      return invDate.getMonth() === currentMonth && invDate.getFullYear() === currentYear;
+    });
+
+    const monthlyPaid = monthlyInvoices.filter(inv => inv.status === 'PAID').reduce((sum, inv) => sum + inv.amount, 0);
+    const monthlyPending = monthlyInvoices.filter(inv => inv.status === 'PENDING').reduce((sum, inv) => sum + inv.amount, 0);
+    const monthlyOverdue = monthlyInvoices.filter(inv => inv.status === 'OVERDUE').reduce((sum, inv) => sum + inv.amount, 0);
+
+    document.getElementById('monthlyPaid').textContent = `$${monthlyPaid.toLocaleString()}`;
+    document.getElementById('monthlyPending').textContent = `$${monthlyPending.toLocaleString()}`;
+    document.getElementById('monthlyOverdue').textContent = `$${monthlyOverdue.toLocaleString()}`;
+  }
+
+  // Configurar event listeners
+  function setupEventListeners() {
+    // Búsqueda y filtros
+    document.getElementById('searchInput').addEventListener('input', filterInvoices);
+    document.getElementById('statusFilter').addEventListener('change', filterInvoices);
+    document.getElementById('monthFilter').addEventListener('change', filterInvoices);
+    
+    // Paginación
+    document.getElementById('prevPage').addEventListener('click', () => changePage(currentPage - 1));
+    document.getElementById('nextPage').addEventListener('click', () => changePage(currentPage + 1));
+    
+    // Modal
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeInvoiceModal();
+      }
+    });
+    
+    document.getElementById('invoiceModal').addEventListener('click', (e) => {
+      if (e.target.id === 'invoiceModal') {
+        closeInvoiceModal();
+      }
+    });
+  }
+
+  // Filtrar facturas
+  function filterInvoices() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const statusFilter = document.getElementById('statusFilter').value;
+    const monthFilter = document.getElementById('monthFilter').value;
+    
+    filteredInvoices = invoicesData.filter(invoice => {
+      const matchesSearch = !searchTerm || 
+        invoice.id.toLowerCase().includes(searchTerm) ||
+        invoice.orderTitle.toLowerCase().includes(searchTerm) ||
+        invoice.orderId.toLowerCase().includes(searchTerm);
+      
+      const matchesStatus = !statusFilter || invoice.status === statusFilter;
+      
+      const matchesMonth = !monthFilter || invoice.date.startsWith(monthFilter);
+      
+      return matchesSearch && matchesStatus && matchesMonth;
+    });
+    
+    currentPage = 1;
+    renderInvoices();
+    updatePagination();
+  }
+
+  // Cambiar página
+  function changePage(page) {
+    const totalPages = Math.ceil(filteredInvoices.length / invoicesPerPage);
+    if (page < 1 || page > totalPages) return;
+    
+    currentPage = page;
+    renderInvoices();
+    updatePagination();
+  }
+
+  // Actualizar paginación
+  function updatePagination() {
+    const totalPages = Math.ceil(filteredInvoices.length / invoicesPerPage);
+    const startIndex = (currentPage - 1) * invoicesPerPage;
+    const endIndex = Math.min(startIndex + invoicesPerPage, filteredInvoices.length);
+    
+    document.getElementById('currentRange').textContent = 
+      filteredInvoices.length > 0 ? `${startIndex + 1}-${endIndex}` : '0-0';
+    document.getElementById('totalInvoices').textContent = filteredInvoices.length;
+    
+    document.getElementById('prevPage').disabled = currentPage === 1;
+    document.getElementById('nextPage').disabled = currentPage === totalPages || totalPages === 0;
+    
+    const pageNumbers = document.getElementById('pageNumbers');
+    pageNumbers.innerHTML = '';
+    
+    for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
+      const button = document.createElement('button');
+      button.textContent = i;
+      button.className = `px-3 py-2 rounded-lg ${
+        i === currentPage 
+          ? 'bg-teal-600 text-white' 
+          : 'border border-gray-300 hover:bg-gray-50'
+      }`;
+      button.onclick = () => changePage(i);
+      pageNumbers.appendChild(button);
+    }
+  }
+
+  // Funciones auxiliares
+  function getStatusColor(status) {
+    const colors = {
+      'PAID': 'bg-green-100 text-green-800',
+      'PENDING': 'bg-yellow-100 text-yellow-800',
+      'OVERDUE': 'bg-red-100 text-red-800',
+      'CANCELLED': 'bg-gray-100 text-gray-800'
+    };
+    return colors[status] || 'bg-gray-100 text-gray-800';
+  }
+
+  function getStatusLabel(status) {
+    const labels = {
+      'PAID': 'Pagada',
+      'PENDING': 'Pendiente',
+      'OVERDUE': 'Vencida',
+      'CANCELLED': 'Cancelada'
+    };
+    return labels[status] || 'Desconocido';
+  }
+
+  function formatDate(dateString) {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  }
+
+  function showErrorMessage(message) {
+    console.error('Error:', message);
+  }
+
+  function showSuccessMessage(message) {
+    console.log('Success:', message);
+  }
+
+  // Funciones globales
+  function exportInvoices() {
+    showSuccessMessage('Exportando facturas...');
+    console.log('Exportando facturas a Excel/PDF');
+  }
+
+  function refreshData() {
+    loadInvoices();
+    showSuccessMessage('Datos actualizados');
+  }
+
+  // Hacer funciones globales para uso en onclick
+  window.showInvoiceDetails = showInvoiceDetails;
+  window.closeInvoiceModal = closeInvoiceModal;
+  window.downloadInvoice = downloadInvoice;
+  window.downloadInvoicePDF = downloadInvoicePDF;
+  window.exportInvoices = exportInvoices;
+  window.refreshData = refreshData;
+</script> 

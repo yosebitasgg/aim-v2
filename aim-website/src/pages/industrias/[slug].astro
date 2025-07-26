@@ -5,7 +5,12 @@ import { agents } from '../../data/agents.js'; // Importamos agentes para mostra
 import { Icon } from 'astro-icon/components';
 import AgentCard from '../../components/soluciones/AgentCard.astro';
 
-export const prerender = false;
+// Generate static paths for all industries
+export async function getStaticPaths() {
+  return industriesData.map((industry) => ({
+    params: { slug: industry.slug },
+  }));
+}
 
 // Get the industry based on the slug from the URL
 const { slug } = Astro.params;

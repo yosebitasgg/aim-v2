@@ -26,33 +26,7 @@ export async function verifyUser(email, password) {
     }
 }
 
-// Crear usuario con nuevo backend
-export async function createUser(userData) {
-    try {
-        console.log('👤 Creando usuario con backend JWT...');
-        
-        const response = await authApi.register({
-            name: userData.name,
-            email: userData.email,
-            password: userData.password,
-            confirmPassword: userData.password // El backend requiere confirmación
-        });
-        
-        if (response.user) {
-            console.log('✅ Usuario creado:', {
-                id: response.user.id,
-                email: response.user.email,
-                name: response.user.name
-            });
-            return response.user;
-        }
-        
-        throw new Error('Error al crear usuario');
-    } catch (error) {
-        console.error('❌ Error creando usuario:', error);
-        throw error;
-    }
-}
+
 
 // Crear sesión (ahora maneja tokens JWT automáticamente)
 export async function createSession(userId) {
@@ -194,15 +168,15 @@ export async function verifyAuthPortal(request = null) {
         }
         
         // Del lado del cliente, verificamos JWT
-        const user = await authApi.getMe();
+        const response = await authApi.getMe();
         
-        if (user) {
+        if (response && response.data) {
             return {
-                id: user.id,
-                email: user.email,
-                name: user.name,
-                role: user.role,
-                emailVerified: user.emailVerified || false
+                id: response.data.id,
+                email: response.data.email,
+                name: response.data.name,
+                role: response.data.role,
+                emailVerified: response.data.emailVerified || false
             };
         }
         
@@ -226,14 +200,17 @@ export function createAuthChecker() {
         getCurrentUser: async () => {
             try {
                 if (typeof window === 'undefined') return null;
-                const user = await authApi.getMe();
-                return user ? {
-                    id: user.id,
-                    email: user.email,
-                    name: user.name,
-                    role: user.role,
-                    emailVerified: user.emailVerified || false
-                } : null;
+                const response = await authApi.getMe();
+                if (response && response.data) {
+                    return {
+                        id: response.data.id,
+                        email: response.data.email,
+                        name: response.data.name,
+                        role: response.data.role,
+                        emailVerified: response.data.emailVerified || false
+                    };
+                }
+                return null;
             } catch (error) {
                 return null;
             }
@@ -249,8 +226,8 @@ export function createAuthChecker() {
             }
             
             try {
-                const user = await authApi.getMe();
-                return !!user;
+                const response = await authApi.getMe();
+                return !!(response && response.data);
             } catch (error) {
                 window.location.href = '/login';
                 return false;

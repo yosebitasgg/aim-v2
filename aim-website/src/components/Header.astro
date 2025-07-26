@@ -2,10 +2,8 @@
 import { Icon } from 'astro-icon/components';
 import UserDropdown from './UserDropdown.jsx';
 
-export const prerender = false;
-
-// Por ahora, no verificamos el usuario en SSR ya que JWT está en localStorage
-// La verificación se hará del lado del cliente
+// La autenticación se maneja del lado del cliente con JWT en localStorage
+// No necesitamos SSR para esto
 const userSession = null;
 const user = null;
 
@@ -46,10 +44,10 @@ const navLinks = [
             <div id="not-authenticated-desktop">
               <a 
                 href="/login" 
-                class="inline-flex items-center text-teal-800 hover:text-teal-600 transition-colors duration-300 font-medium px-3 py-2 rounded-lg hover:bg-teal-50"
+                class="inline-flex items-center justify-center text-teal-800 hover:text-teal-600 transition-colors duration-300 font-medium px-3 py-2 rounded-lg hover:bg-teal-50 h-[44px] align-middle"
+                style="min-width:44px;"
               >
-                <Icon name="tabler:login" class="w-4 h-4 mr-2" />
-                Iniciar Sesión
+                <Icon name="tabler:login" class="w-7 h-7" style="margin-right:0;" />
               </a>
               <a 
                 href="/demo" 
@@ -179,6 +177,11 @@ const navLinks = [
 
   // Función para mostrar UI autenticada
   function displayAuthenticatedUI(user) {
+    // Determinar portal y texto según rol
+    const isClient = user.role === 'client';
+    const portalUrl = isClient ? '/portal-cliente' : '/portal';
+    const portalText = isClient ? 'Portal de Clientes' : 'Portal de Usuarios';
+    
     // Ocultar botones de no autenticado
     desktopNotAuth?.classList.add('hidden');
     mobileNotAuth?.classList.add('hidden');
@@ -203,11 +206,11 @@ const navLinks = [
               ${user.role ? `<p class="text-xs text-teal-600 font-medium mt-1">${user.role}</p>` : ''}
             </div>
             <div class="py-1">
-              <a href="/portal" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-teal-50">
+              <a href="${portalUrl}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-teal-50">
                 <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
-                Portal
+                ${portalText}
               </a>
               <button type="button" onclick="handleLogout()" class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50">
                 <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -242,11 +245,11 @@ const navLinks = [
             </div>
           </div>
         </div>
-        <a href="/portal" class="flex items-center text-teal-800 hover:text-teal-600 font-medium text-lg py-2">
+        <a href="${portalUrl}" class="flex items-center text-teal-800 hover:text-teal-600 font-medium text-lg py-2">
           <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a3 3 0 012 2v2M7 7h10" />
           </svg>
-          Portal
+          ${portalText}
         </a>
         <button type="button" onclick="handleLogout()" class="flex items-center w-full text-red-600 hover:text-red-700 font-medium text-lg py-2">
           <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

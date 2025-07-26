@@ -21,6 +21,7 @@ import { createOrdersRoutes } from '@/modules/orders/orders.routes';
 import { createGalleryRoutes } from '@/modules/gallery/gallery.routes';
 import { createAgentsRoutes } from '@/modules/agents/agents.routes';
 import { createDocumentsRoutes } from '@/modules/documents/documents.routes';
+import portalClientsRoutes from '@/modules/portal-clients/portal-clients.routes';
 
 class Server {
   private app: express.Application;
@@ -145,6 +146,7 @@ class Server {
     this.app.use('/api/gallery', createGalleryRoutes(db.client));
     this.app.use('/api/agents', createAgentsRoutes(db.client));
     this.app.use('/api/documents', createDocumentsRoutes(db.client));
+    this.app.use('/api/portal-clients', portalClientsRoutes);
 
     // 404 handler
     this.app.use('*', (req, res) => {

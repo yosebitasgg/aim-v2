@@ -3,8 +3,6 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { caseStudies } from '../../data/caseStudies.js';
 
-export const prerender = false;
-
 export async function getStaticPaths() {
   return caseStudies.map(study => ({
     params: { slug: study.slug },

@@ -1,6 +1,9 @@
 // src/pages/api/auth/login.ts
 import type { APIRoute } from 'astro';
 
+// Configurar como server-side rendered
+export const prerender = false;
+
 export const POST: APIRoute = async ({ request }) => {
     console.log('🔄 Procesando login con nuevo backend JWT...');
     
@@ -25,8 +28,10 @@ export const POST: APIRoute = async ({ request }) => {
 
         console.log('🔍 Verificando credenciales con backend...');
 
-        // Hacer petición al backend JWT
-        const backendResponse = await fetch('http://localhost:3001/api/auth/login', {
+        // Hacer petición al backend JWT (compatible con desarrollo local y Docker)
+        const backendURL = process.env.BACKEND_URL || 'http://localhost:3001';
+        console.log('🌐 Usando backend URL:', backendURL);
+        const backendResponse = await fetch(`${backendURL}/api/auth/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -68,15 +73,25 @@ export const POST: APIRoute = async ({ request }) => {
         console.log('✅ Usuario autenticado:', { 
             id: userData.id, 
             email: userData.email, 
-            name: userData.name 
+            name: userData.name,
+            role: userData.role 
         });
 
-        // Crear respuesta con script para guardar tokens en localStorage
-        const loginScript = `
-            <script>
-                localStorage.setItem('access_token', '${accessToken}');
-                localStorage.setItem('refresh_token', '${refreshToken}');
-                window.location.href = '/portal';
+        // Determinar portal de destino según el rol del usuario
+        const isClient = userData.role === 'client';
+        const portalUrl = isClient ? '/portal-cliente' : '/portal';
+        const portalName = isClient ? 'Portal de Clientes' : 'Portal de Usuarios';
+
+        console.log(`🔀 Redirigiendo a ${portalName} (${portalUrl}) para usuario con rol: ${userData.role}`);
+
+                 // Crear respuesta con script para guardar tokens en localStorage
+         const loginScript = `
+             <script>
+                 localStorage.setItem('access_token', '${accessToken}');
+                 localStorage.setItem('accessToken', '${accessToken}');
+                 localStorage.setItem('refresh_token', '${refreshToken}');
+                 localStorage.setItem('refreshToken', '${refreshToken}');
+                window.location.href = '${portalUrl}';
             </script>
         `;
 

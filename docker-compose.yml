@@ -99,6 +99,7 @@ services:
       NODE_ENV: ${NODE_ENV:-development}
       # Variables para el build de Astro
       PUBLIC_API_URL: ${PUBLIC_API_URL:-http://localhost:3001}
+      PUBLIC_BACKEND_URL: ${PUBLIC_BACKEND_URL:-http://backend:3001}
       BACKEND_URL: ${BACKEND_URL:-http://backend:3001}
     volumes:
       # Solo en desarrollo: bind mount para hot-reloading
@@ -122,9 +123,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
+          memory: 1G
         reservations:
-          memory: 128M
+          memory: 512M
 
 # Configuración de redes
 networks:

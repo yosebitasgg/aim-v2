@@ -1,17 +1,36 @@
 // src/lib/apiClient.js
 // Cliente para comunicación con aim-backend API (puerto 3001)
 
-const API_BASE_URL = 'http://localhost:3001/api';
+// Configuración automática para desarrollo local y Docker
+function getApiBaseUrl() {
+  if (typeof window !== 'undefined') {
+    // EN EL CLIENTE (navegador): Siempre usar localhost porque el navegador
+    // no puede acceder a la red interna de Docker
+    console.log('💻 Cliente (navegador): Usando localhost:3001');
+    return 'http://localhost:3001/api';
+  }
+  
+  // EN EL SERVIDOR (SSR): Usar variables de entorno para Docker
+  const serverUrl = (process.env.BACKEND_URL || 'http://localhost:3001') + '/api';
+  console.log('🖥️ Servidor SSR: Usando', serverUrl);
+  return serverUrl;
+}
+
+const API_BASE_URL = getApiBaseUrl();
 
 class ApiClient {
   constructor() {
     this.baseURL = API_BASE_URL;
+    console.log('🌐 ApiClient inicializado con URL:', this.baseURL);
   }
 
   // Obtener token desde localStorage/cookies
   getToken() {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('access_token');
+      // Buscar token con diferentes nombres para compatibilidad
+      return localStorage.getItem('access_token') || 
+             localStorage.getItem('accessToken') ||
+             localStorage.getItem('authToken');
     }
     return null;
   }
@@ -19,16 +38,25 @@ class ApiClient {
   // Guardar tokens
   setTokens(accessToken, refreshToken) {
     if (typeof window !== 'undefined') {
+      // Guardar con ambos nombres para compatibilidad
       localStorage.setItem('access_token', accessToken);
+      localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('refresh_token', refreshToken);
+      localStorage.setItem('refreshToken', refreshToken);
+      console.log('💾 Tokens guardados en localStorage');
     }
   }
 
   // Limpiar tokens
   clearTokens() {
     if (typeof window !== 'undefined') {
+      // Limpiar todos los nombres posibles de tokens
       localStorage.removeItem('access_token');
+      localStorage.removeItem('accessToken');
       localStorage.removeItem('refresh_token');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('authToken');
+      console.log('🗑️ Tokens limpiados del localStorage');
     }
   }
 
@@ -131,19 +159,7 @@ class ApiClient {
     return response;
   }
 
-  // Registro
-  async register(userData) {
-    const response = await this.request('/auth/register', {
-      method: 'POST',
-      body: JSON.stringify(userData),
-    });
 
-    if (response.accessToken) {
-      this.setTokens(response.accessToken, response.refreshToken);
-    }
-
-    return response;
-  }
 
   // Logout
   async logout() {
@@ -422,6 +438,11 @@ class ApiClient {
 
   // --- MÉTODOS DE CLIENTES ---
 
+  // Obtener lista simple de clientes para selects
+  async getClientsList() {
+    return await this.request('/clients/list');
+  }
+
   // Obtener lista de clientes (con filtros y paginación)
   async getClients(params = {}) {
     const queryString = new URLSearchParams(params).toString();
@@ -485,7 +506,6 @@ export const apiClient = new ApiClient();
 // Métodos de conveniencia para importar individualmente
 export const authApi = {
   login: (email, password) => apiClient.login(email, password),
-  register: (userData) => apiClient.register(userData),
   logout: () => apiClient.logout(),
   getMe: () => apiClient.getMe(),
 };

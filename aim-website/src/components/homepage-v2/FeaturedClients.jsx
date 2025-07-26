@@ -21,17 +21,11 @@ const CompanyLogos = {
     ABB: () => (
         <div className="text-xl font-bold text-red-600 tracking-wider">ABB</div>
     ),
-    Schneider: () => (
-        <div className="text-lg font-bold text-green-600 tracking-wider">Schneider Electric</div>
-    ),
-    Rockwell: () => (
-        <div className="text-lg font-bold text-blue-600 tracking-wider">Rockwell Automation</div>
-    ),
-    Honeywell: () => (
-        <div className="text-lg font-bold text-orange-600 tracking-wider">Honeywell</div>
-    ),
     Bosch: () => (
         <div className="text-lg font-bold text-gray-700 tracking-wider">BOSCH</div>
+    ),
+    AIM: () => (
+        <img src="/images/logo.png" alt="AIM Logo" className="h-8 w-auto" />
     )
 };
 
@@ -40,14 +34,12 @@ const clients = [
     { name: 'Intel', component: CompanyLogos.Intel },
     { name: 'Siemens', component: CompanyLogos.Siemens },
     { name: 'ABB', component: CompanyLogos.ABB },
-    { name: 'Schneider Electric', component: CompanyLogos.Schneider },
-    { name: 'Rockwell Automation', component: CompanyLogos.Rockwell },
-    { name: 'Honeywell', component: CompanyLogos.Honeywell },
     { name: 'Bosch', component: CompanyLogos.Bosch },
+    { name: 'AIM', component: CompanyLogos.AIM },
 ];
 
-// Duplicamos para el efecto infinito
-const allClients = [...clients, ...clients]; 
+// Creamos múltiples copias para animación fluida sin huecos
+const allClients = [...clients, ...clients, ...clients]; 
 
 export default function FeaturedClients() {
     return (
@@ -56,16 +48,26 @@ export default function FeaturedClients() {
                  <h3 className="text-sm font-bold text-gray-600 uppercase tracking-widest">Con la Confianza de Líderes de la Industria</h3>
             </div>
             <div className="mt-8 w-full inline-flex flex-nowrap overflow-hidden [mask-image:_linear-gradient(to_right,transparent_0,_black_128px,_black_calc(100%-128px),transparent_100%)]">
-                <ul className="flex items-center justify-center md:justify-start [&_li]:mx-8 [&_img]:max-w-none animate-infinite-scroll">
+                <div className="flex items-center justify-center md:justify-start animate-infinite-scroll">
                     {allClients.map((client, index) => {
                         const LogoComponent = client.component;
                         return (
-                            <li key={index} className="flex items-center justify-center min-w-[120px]">
+                            <div key={`${client.name}-${index}`} className="flex items-center justify-center min-w-[180px] mx-8">
                                 <LogoComponent />
-                            </li>
+                            </div>
                         );
                     })}
-                </ul>
+                </div>
+                <div className="flex items-center justify-center md:justify-start animate-infinite-scroll" aria-hidden="true">
+                    {allClients.map((client, index) => {
+                        const LogoComponent = client.component;
+                        return (
+                            <div key={`duplicate-${client.name}-${index}`} className="flex items-center justify-center min-w-[180px] mx-8">
+                                <LogoComponent />
+                            </div>
+                        );
+                    })}
+                </div>
             </div>
         </div>
     );

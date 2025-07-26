@@ -24,6 +24,7 @@ services:
     environment:
       # Variables específicas para desarrollo
       PUBLIC_API_URL: http://localhost:3001
+      # PUBLIC_BACKEND_URL se hereda del archivo principal (http://backend:3001 en Docker)
       ASTRO_TELEMETRY_DISABLED: 1
     # volumes:
       # Bind mounts deshabilitados temporalmente para evitar problemas de permisos

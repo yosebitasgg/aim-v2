@@ -10,7 +10,7 @@ import { Icon } from 'astro-icon/components';
     <div id="auth-loading" class="min-h-screen bg-gray-50 flex items-center justify-center">
       <div class="text-center">
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
-        <p class="text-gray-600">Cargando departamentos...</p>
+        <p class="text-gray-600">Verificando autenticación...</p>
       </div>
     </div>
 
@@ -351,55 +351,124 @@ import { Icon } from 'astro-icon/components';
 </PortalLayoutSidebar>
 
 <script>
-  import { apiClient } from '../../lib/apiClient.js';
+  import { initializePortalAuth } from '../../lib/portalAuthScript.js';
 
   let departments = [];
   let userStats = {};
   let isLoading = true;
 
-  document.addEventListener('DOMContentLoaded', async () => {
-    await initializePage();
-  });
+  // Función para mostrar el contenido principal
+  function showMainContent() {
+    const authLoading = document.getElementById('auth-loading');
+    const mainContent = document.getElementById('main-content');
+    
+    if (authLoading) authLoading.classList.add('hidden');
+    if (mainContent) mainContent.classList.remove('hidden');
+    
+    // Cargar datos iniciales
+    loadInitialData();
+  }
 
-  async function initializePage() {
+  // Función para mostrar error de autenticación
+  function showAuthError(message) {
+    const authLoading = document.getElementById('auth-loading');
+    const authError = document.getElementById('auth-error');
+    
+    if (authLoading) authLoading.classList.add('hidden');
+    if (authError) {
+      authError.classList.remove('hidden');
+      // Si hay un elemento para mostrar el mensaje específico
+      const errorMessage = document.querySelector('#auth-error p');
+      if (errorMessage) {
+        errorMessage.textContent = message || 'No tienes permisos para acceder a esta página.';
+      }
+    }
+  }
+
+  // Cargar datos iniciales
+  async function loadInitialData() {
     try {
-      // Verificar autenticación
-      const authCheck = await verifyAuth();
-      if (!authCheck) return;
-
-      // Mostrar contenido principal
-      showMainContent();
-
-      // Cargar datos
-      await loadDepartments();
-      await loadUserStats();
+      console.log('🔄 Cargando datos de departamentos...');
+      
+      await Promise.all([
+        loadDepartments(),
+        loadUserStats()
+      ]);
+      
       updateStats();
+      console.log('✅ Datos de departamentos cargados');
       
     } catch (error) {
-      console.error('Error inicializando página:', error);
+      console.error('❌ Error cargando datos:', error);
       showError();
     }
   }
 
-  async function verifyAuth() {
+  // Declarar apiClient variable
+  let apiClient;
+
+  // Verificar permisos específicos para departamentos
+  async function checkDepartmentPermissions() {
     try {
-      const userInfo = await apiClient.getMe();
-      return userInfo && userInfo.success;
+      // Inicializar apiClient si no está disponible
+      if (!apiClient) {
+        const apiModule = await import('../../lib/apiClient.js');
+        apiClient = apiModule.default;
+      }
+      
+      // Verificar autenticación básica
+      const user = await apiClient.getMe();
+      
+      // Usuarios master y admin tienen acceso automático
+      if (['master', 'admin'].includes(user.data.role)) {
+        console.log('✅ Acceso automático por rol:', user.data.role);
+        return true;
+      }
+      
+      // Para otros roles, verificar permisos específicos
+      try {
+        console.log('🔍 Verificando permisos granulares para departamentos...');
+        const response = await apiClient.checkPermission('departments', 'read');
+        const hasPermission = response.data?.hasPermission;
+        console.log('📋 Resultado de permisos:', { hasPermission, response: response.data });
+        return hasPermission;
+      } catch (permError) {
+        console.warn('Error verificando permisos específicos:', permError);
+        return false;
+      }
     } catch (error) {
-      showAuthError();
+      console.error('Error verificando permisos:', error);
       return false;
     }
   }
 
-  function showMainContent() {
-    document.getElementById('auth-loading').classList.add('hidden');
-    document.getElementById('main-content').classList.remove('hidden');
+  // Inicializar aplicación
+  async function initializeApp() {
+    try {
+      await initializePortalAuth(
+        async () => {
+          // Verificar permisos específicos (en este caso solo autenticación)
+          const hasPermission = await checkDepartmentPermissions();
+                     if (hasPermission) {
+             showMainContent();
+           } else {
+             showAuthError('No tienes permisos para gestionar departamentos. Se requiere acceso de lectura al módulo de departamentos.');
+           }
+        },
+        (error) => {
+          showAuthError(error || 'Error de autenticación');
+        }
+      );
+    } catch (error) {
+      console.error('Error inicializando app:', error);
+      showAuthError('Error al cargar la aplicación');
+    }
   }
 
-  function showAuthError() {
-    document.getElementById('auth-loading').classList.add('hidden');
-    document.getElementById('auth-error').classList.remove('hidden');
-  }
+  // Inicializar cuando el DOM esté listo
+  document.addEventListener('DOMContentLoaded', async () => {
+    await initializeApp();
+  });
 
   async function loadDepartments() {
     try {

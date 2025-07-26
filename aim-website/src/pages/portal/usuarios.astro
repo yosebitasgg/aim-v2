@@ -408,6 +408,13 @@ import PortalLayoutSidebar from '../../layouts/PortalLayoutSidebar.astro';
               <option value="">Seleccionar rol...</option>
             </select>
           </div>
+          <div id="client-association-field" class="hidden">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Cliente Asociado *</label>
+            <select id="create-client" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent">
+              <option value="">Seleccionar cliente...</option>
+            </select>
+            <p class="text-xs text-gray-500 mt-1">Los usuarios con rol "client" deben estar asociados a un cliente existente</p>
+          </div>
         </form>
         <div class="flex justify-end space-x-3 mt-6">
           <button onclick="closeCreateUserModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg">
@@ -434,6 +441,7 @@ import PortalLayoutSidebar from '../../layouts/PortalLayoutSidebar.astro';
   let filteredUsers = [];
   let availableRoles = [];
   let availableDepartments = [];
+  let availableClients = [];
   let selectedUser = null;
   let currentFilters = {
     search: '',
@@ -523,11 +531,12 @@ import PortalLayoutSidebar from '../../layouts/PortalLayoutSidebar.astro';
       console.log('🔄 Cargando datos iniciales...');
       
       // Cargar datos en paralelo
-      const [usersResult, statsResult, rolesResult, deptResult] = await Promise.allSettled([
+      const [usersResult, statsResult, rolesResult, deptResult, clientsResult] = await Promise.allSettled([
         loadUsers(),
         loadStats(),
         loadRoles(),
-        loadDepartments()
+        loadDepartments(),
+        loadClients()
       ]);
       
       // Verificar resultados
@@ -535,12 +544,14 @@ import PortalLayoutSidebar from '../../layouts/PortalLayoutSidebar.astro';
       if (statsResult.status === 'rejected') console.error('❌ Error cargando stats:', statsResult.reason);
       if (rolesResult.status === 'rejected') console.error('❌ Error cargando roles:', rolesResult.reason);
       if (deptResult.status === 'rejected') console.error('❌ Error cargando departamentos:', deptResult.reason);
+      if (clientsResult.status === 'rejected') console.error('❌ Error cargando clientes:', clientsResult.reason);
       
       console.log('✅ Datos iniciales cargados');
       console.log('📊 Status final:');
       console.log('   Usuarios:', currentUsers.length);
       console.log('   Roles:', availableRoles.length);
       console.log('   Departamentos:', availableDepartments.length);
+      console.log('   Clientes:', availableClients.length);
       
       } catch (error) {
       console.error('❌ Error cargando datos iniciales:', error);
@@ -635,6 +646,31 @@ import PortalLayoutSidebar from '../../layouts/PortalLayoutSidebar.astro';
     }
   }
 
+  // Cargar clientes disponibles
+  async function loadClients() {
+    try {
+      console.log('🔄 Cargando clientes...');
+      const response = await apiClient.getClientsList();
+      console.log('📦 Respuesta clientes recibida:', response);
+      
+      if (response && response.success && Array.isArray(response.data)) {
+        availableClients = response.data.map(client => ({
+          id: client.id,
+          companyName: client.companyName,
+          industry: client.industry,
+          status: client.status
+        }));
+        console.log('✅ Clientes cargados:', availableClients.length);
+      } else {
+        console.error('❌ Estructura de datos de clientes inesperada:', response);
+        availableClients = [];
+      }
+    } catch (error) {
+      console.error('❌ Error cargando clientes:', error);
+      availableClients = [];
+    }
+  }
+
   // Renderizar tabla de usuarios
   function renderUsersTable(users) {
     const tbody = document.getElementById('users-table-body');
@@ -652,6 +688,9 @@ import PortalLayoutSidebar from '../../layouts/PortalLayoutSidebar.astro';
       const lastLogin = user.lastLoginAt 
         ? new Date(user.lastLoginAt).toLocaleDateString('es-ES')
         : 'Nunca';
+      const clientInfo = user.associatedClient 
+        ? `${user.associatedClient.companyName} (${user.associatedClient.industry})`
+        : null;
 
       row.innerHTML = `
         <td class="px-6 py-4 whitespace-nowrap">
@@ -673,7 +712,8 @@ import PortalLayoutSidebar from '../../layouts/PortalLayoutSidebar.astro';
           </span>
         </td>
         <td class="px-6 py-4 whitespace-nowrap">
-          <span class="text-sm text-gray-900">${department}</span>
+          <div class="text-sm text-gray-900">${department}</div>
+          ${clientInfo ? `<div class="text-xs text-teal-600">Cliente: <strong>${clientInfo}</strong></div>` : ''}
         </td>
         <td class="px-6 py-4 whitespace-nowrap">
           <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeClass(status)}">
@@ -1041,6 +1081,18 @@ import PortalLayoutSidebar from '../../layouts/PortalLayoutSidebar.astro';
       });
     }
     
+    // Cargar clientes en el select del modal
+    const clientSelect = document.getElementById('create-client');
+    if (clientSelect) {
+      clientSelect.innerHTML = '<option value="">Seleccionar cliente...</option>';
+      availableClients.forEach(client => {
+        const option = document.createElement('option');
+        option.value = client.id;
+        option.textContent = `${client.companyName} (${client.industry})`;
+        clientSelect.appendChild(option);
+      });
+    }
+    
     // Cargar todos los roles disponibles en el select del modal
     const roleSelect = document.getElementById('create-role');
     if (roleSelect) {
@@ -1062,7 +1114,8 @@ import PortalLayoutSidebar from '../../layouts/PortalLayoutSidebar.astro';
           { name: 'user', label: 'Usuario' },
           { name: 'manager', label: 'Gerente' },
           { name: 'admin', label: 'Administrador' },
-          { name: 'master', label: 'Master' }
+          { name: 'master', label: 'Master' },
+          { name: 'client', label: 'Cliente' }
         ];
         
         defaultRoles.forEach(role => {
@@ -1072,6 +1125,17 @@ import PortalLayoutSidebar from '../../layouts/PortalLayoutSidebar.astro';
           roleSelect.appendChild(option);
         });
       }
+      
+      // Agregar event listener para mostrar/ocultar campo de cliente
+      roleSelect.addEventListener('change', function() {
+        const clientField = document.getElementById('client-association-field');
+        if (this.value === 'client') {
+          clientField.classList.remove('hidden');
+        } else {
+          clientField.classList.add('hidden');
+          document.getElementById('create-client').value = ''; // Limpiar selección
+        }
+      });
     }
     
     document.getElementById('create-user-modal').classList.remove('hidden');
@@ -1080,6 +1144,12 @@ import PortalLayoutSidebar from '../../layouts/PortalLayoutSidebar.astro';
   window.closeCreateUserModal = function() {
     document.getElementById('create-user-modal').classList.add('hidden');
     document.getElementById('create-user-form').reset();
+    
+    // Ocultar campo de cliente
+    const clientField = document.getElementById('client-association-field');
+    if (clientField) {
+      clientField.classList.add('hidden');
+    }
   };
 
   window.confirmCreateUser = async function() {
@@ -1090,6 +1160,7 @@ import PortalLayoutSidebar from '../../layouts/PortalLayoutSidebar.astro';
     const phone = document.getElementById('create-phone').value.trim();
     const department = document.getElementById('create-department').value;
     const role = document.getElementById('create-role').value;
+    const clientId = document.getElementById('create-client').value;
 
     // Validaciones
     if (!name || !email || !password) {
@@ -1099,6 +1170,12 @@ import PortalLayoutSidebar from '../../layouts/PortalLayoutSidebar.astro';
 
     if (!role) {
       showNotification('Por favor selecciona un rol para el usuario', 'error');
+      return;
+    }
+
+    // Validación específica para usuarios con rol "client"
+    if (role === 'client' && !clientId) {
+      showNotification('Los usuarios con rol "client" deben tener un cliente asociado', 'error');
       return;
     }
 
@@ -1126,12 +1203,15 @@ import PortalLayoutSidebar from '../../layouts/PortalLayoutSidebar.astro';
         password,
         phoneNumber: phone || undefined,
         department: department || undefined,
-        role
+        role,
+        clientId: role === 'client' ? clientId : undefined
       };
 
       const response = await apiClient.createUser(userData);
       if (response.success) {
-        showNotification(`Usuario creado exitosamente con rol: ${role}`, 'success');
+        const clientInfo = role === 'client' && clientId ? 
+          ` y asociado al cliente ${availableClients.find(c => c.id === clientId)?.companyName || 'seleccionado'}` : '';
+        showNotification(`Usuario creado exitosamente con rol: ${role}${clientInfo}`, 'success');
         closeCreateUserModal();
         await loadUsers();
         await loadStats();

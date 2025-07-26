@@ -53,6 +53,12 @@ export const CreateRoleSchema = z.object({
       update: z.boolean().optional().default(false),
       delete: z.boolean().optional().default(false),
     }).optional().default({}),
+    departments: z.object({
+      read: z.boolean().optional().default(false),
+      create: z.boolean().optional().default(false),
+      update: z.boolean().optional().default(false),
+      delete: z.boolean().optional().default(false),
+    }).optional().default({}),
   }),
 });
 
@@ -108,6 +114,12 @@ export const UpdateRoleSchema = z.object({
       update: z.boolean().optional(),
       delete: z.boolean().optional(),
     }).optional(),
+    departments: z.object({
+      read: z.boolean().optional(),
+      create: z.boolean().optional(),
+      update: z.boolean().optional(),
+      delete: z.boolean().optional(),
+    }).optional(),
   }).optional(),
 });
 
@@ -150,6 +162,7 @@ export interface ModulePermissions {
   quotes?: ActionPermissions;
   billing?: ActionPermissions;
   reports?: ActionPermissions;
+  departments?: ActionPermissions;
 }
 
 export interface ActionPermissions {

@@ -215,4 +215,19 @@ export class ClientsController {
       ApiResponseUtil.error(res, error.message, 500);
     }
   };
+
+  /**
+   * GET /api/clients/list
+   * Obtener lista simple de clientes para selects
+   */
+  getClientsList = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const clients = await this.clientsService.getClientsList();
+
+      ApiResponseUtil.success(res, clients, 'Lista de clientes obtenida exitosamente');
+    } catch (error: any) {
+      logger.error('Error en get clients list controller', { error });
+      ApiResponseUtil.error(res, error.message, 500);
+    }
+  };
 } 

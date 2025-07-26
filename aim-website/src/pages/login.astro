@@ -1,14 +1,8 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { getCurrentUser } from '../lib/session.js';
 
-export const prerender = false;
-
-// Redirigir si ya está autenticado
-const user = await getCurrentUser(Astro.request);
-if (user) {
-    return Astro.redirect('/portal');
-}
+// La autenticación se maneja del lado del cliente con JWT en localStorage
+// No necesitamos SSR para esto
 
 let error = '';
 if (Astro.url.searchParams.has('error')) {
@@ -19,14 +13,14 @@ if (Astro.url.searchParams.has('error')) {
 <BaseLayout 
     title="Iniciar Sesión" 
     description="Accede a tu cuenta de Automatización Industrial Mireles"
+    hideHeaderSpacer={true}
 >
-    <div class="min-h-screen bg-gradient-to-br from-teal-50 to-white flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="min-h-screen bg-gradient-to-br from-teal-50 to-white flex items-center justify-center px-4 sm:px-6 lg:px-8">
         <div class="max-w-md w-full space-y-8">
             <!-- Header -->
             <div class="text-center">
                 <div class="flex justify-center items-center space-x-3 mb-6">
-                    <img src="/img/AIMblanco.png" alt="AIM Logo" class="h-12 w-auto" />
-                    <span class="text-2xl font-bold text-teal-800">AIM</span>
+                    <img src="/img/AIMblanco.png" alt="AIM Logo" class="h-36 w-auto" />
                 </div>
                 <h2 class="text-3xl font-black text-teal-800">
                     Bienvenido de vuelta
@@ -103,11 +97,6 @@ if (Astro.url.searchParams.has('error')) {
 
                 <!-- Links -->
                 <div class="text-center space-y-3">
-                    <div class="text-sm">
-                        <a href="/register" class="font-medium text-teal-600 hover:text-teal-500 transition-colors">
-                            ¿No tienes cuenta? Regístrate aquí
-                        </a>
-                    </div>
                     <div class="text-sm">
                         <a href="/" class="font-medium text-gray-600 hover:text-gray-500 transition-colors">
                             ← Volver al inicio

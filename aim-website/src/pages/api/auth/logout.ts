@@ -1,6 +1,9 @@
 // src/pages/api/auth/logout.ts
 import type { APIRoute } from 'astro';
 
+// Configurar como server-side rendered
+export const prerender = false;
+
 export const POST: APIRoute = async ({ request }) => {
     console.log('🔄 Procesando logout con backend JWT...');
     

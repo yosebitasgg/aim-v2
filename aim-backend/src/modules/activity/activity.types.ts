@@ -79,6 +79,7 @@ export enum ActivityModule {
   QUOTES = 'quotes',
   BILLING = 'billing',
   REPORTS = 'reports',
+  DEPARTMENTS = 'departments',
   SETTINGS = 'settings',
   API = 'api',
   SECURITY = 'security'

@@ -25,6 +25,7 @@ model User {
   avatarUrl         String?   @map("avatar_url") @db.Text
   lastLoginAt       DateTime? @map("last_login_at") @db.Timestamptz(6)
   isFirstLogin      Boolean   @default(true) @map("is_first_login")
+  clientId          String?   @map("client_id") @db.VarChar(30)
   createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt         DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
   createdBy         String?   @map("created_by") @db.VarChar(15)
@@ -41,6 +42,7 @@ model User {
   creator                  User?     @relation("UserCreatedBy", fields: [createdBy], references: [id])
   createdDepartments       Department[] @relation("DepartmentCreatedBy")
   createdClients           Client[]  @relation("ClientCreatedBy")
+  associatedClient         Client?   @relation("ClientUsers", fields: [clientId], references: [id])
   createdOrders            Order[]   @relation("OrderCreatedBy")
   assignedOrders           Order[]   @relation("OrderAssignedTo")
   orderStatusChanges       OrderStatusHistory[]
@@ -203,6 +205,7 @@ model Client {
   
   // Relaciones
   creator               User?              @relation("ClientCreatedBy", fields: [createdBy], references: [id])
+  associatedUsers       User[]             @relation("ClientUsers")
   contacts              ClientContact[]
   addresses             ClientAddress[]
   orders                Order[]

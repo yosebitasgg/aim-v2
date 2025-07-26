@@ -3,7 +3,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import { agents } from '../../data/agents';
 import { Icon } from 'astro-icon/components';
 
-export const prerender = false;
+// Generate static paths for all agents
+export async function getStaticPaths() {
+  return agents.map((agent) => ({
+    params: { slug: agent.slug },
+  }));
+}
 
 // Get the agent based on the slug from the URL
 const { slug } = Astro.params;
